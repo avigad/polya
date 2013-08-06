@@ -344,6 +344,7 @@ class Heuristic_data:
                     pi,pj = (si,0),(0,sj)
                     if not point_satisfies_comparison(comps[0],*pi) and not point_satisfies_comparison(comps[0],*pj):
                         if not (self.sign(i)==self.sign(j)==0 and not strong): #If this is false, we have x_i=x_j=0. Can we do something here?
+                            print 'from 1'
                             self.raise_contradiction(provenance)
                 
                 elif si!=0: #sign of xi is known. learn sign of xj
@@ -385,14 +386,26 @@ class Heuristic_data:
                 #Otherwise, no sign info is known. No contradiction and nothing to learn.
                     
             else: #two comparisons.
-                #si,sj = self.weak_sign(i),self.weak_sign(j)
+                si,sj = self.weak_sign(i),self.weak_sign(j)
                 p1,p2 = get_point_from_comparisons(comps[0],comps[1]),get_point_from_comparisons(comps[1],comps[0])
                 
-                #Learning sign information will bring about a contradiction if it exists
+                #Learning sign information could bring about a contradiction, if it exists
                 if p1[0]*p2[0]>0:
                     self.learn_zero_comparison(i, (GT if p1[0]>0 else LT), provenance)
                 if p1[1]*p2[1]>0:
                     self.learn_zero_comparison(j, (GT if p1[1]>0 else LT), provenance)
+                
+                #Check for cases like x>-2y,x>-1/2y, x<0,y<0. Can only happen if we know both sign info
+                #These cases occur only if the vertices are in opposite quadrants,
+                #where the non-contained quadrant is the one determined by the sign info    
+                if (si!=0 and sj!=0): 
+                    p = (-si,-sj)
+                    if (point_satisfies_comparison(comps[0],*p) and point_satisfies_comparison(comps[1],*p)
+                        and
+                        (p1[0]*si<0 or p1[1]*sj<0) and (p2[0]*si<0 or p2[1]*sj<0)):
+                        self.raise_contradiction(provenance)
+                    
+                # Otherwise, no contradiction, and no more sign info to learn.
                     
         ###################################### 
         

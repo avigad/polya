@@ -166,6 +166,17 @@ def learn_add_comparisons_poly(H):
     #learn_add_comparisons_poly_2(H) #Uncomment these two lines to run the alternative algorithm
     #return
     
+#     print '******'
+#     for i in range(H.num_terms):
+#         if H.weak_sign(i)!=0:
+#             print IVar(i),("<=" if H.weak_sign(i)<0 else ">="), 0
+#         else:
+#             print IVar(i),'sign unknown'
+#             
+#     for (i,j) in combinations(range(H.num_terms),2):
+#         print (i,j),':',H.term_comparisons.get((i,j),"No comparisons")
+#     print '******'
+    
     #Sends a potentially new term comparison to the heuristic
     def learn_term_comparison(i,j,comp,coeff):
         if coeff == None:

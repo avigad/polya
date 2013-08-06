@@ -1,5 +1,6 @@
 from classes import *
 from heuristic import *
+from itertools import combinations
 
 ###############################################################################
 #
@@ -114,7 +115,8 @@ def learn_additive_sign_info(H):
         if H.sign(j) == 0:
             addpairs = H.name_defs[j].addpairs
             sign = addpairs[0].coeff * H.weak_sign(addpairs[0].term.index)
-            if sign != 0 and all(addpairs[i].coeff * H.weak_sign(addpairs[i].term.index) == sign for i in range(len(addpairs))):
+            if (sign != 0 and 
+                all(addpairs[i].coeff * H.weak_sign(addpairs[i].term.index) == sign for i in range(len(addpairs)))):
                 if any(H.sign(addpairs[i].term.index) != 0 for i in range(len(addpairs))):
                     H.learn_zero_comparison(j, (GT if sign > 0 else LT), HYP)
                 else:
@@ -133,6 +135,23 @@ def learn_additive_sign_info(H):
             H.learn_term_comparison(i, k, comp, c, HYP)
 
 def learn_add_comparisons(H):
+
+#     print '******'
+#     for i in range(H.num_terms):
+#         if H.weak_sign(i)!=0:
+#             print IVar(i),("<=" if H.weak_sign(i)<0 else ">="), 0,','
+#         else:
+#             pass#print IVar(i),'sign unknown'
+#             
+#     for (i,j) in combinations(range(H.num_terms),2):
+#         try:
+#             comp = H.term_comparisons[i,j]
+#             for c in comp:
+#                 print IVar(i),comp_str[c.comp],c.coeff,'*',IVar(j),','
+#         except Exception:
+#             pass
+# #        print (i,j),':',H.term_comparisons.get((i,j),"No comparisons")
+#     print '******'
 
     def learn_add_comparison(c):
         length = len(c.term.addpairs)

@@ -460,7 +460,7 @@ def run_heuristic_on_list():
         
         # If the last inequality is >=, this one has a model. Blowup in FM
         # if the last inequality is changed to <, it does not have a model. FM finds contr. WEIRD BEHAVIOR IN POLY ON THIS ONE
-         "x<1<y", "x*y>1", "u+x>=y+1", "x^2*y>=2-u*x*y"
+         "x<1<y", "x*y>1", "u+x>=y+1", "x^2*y<2-u*x*y"
         
         # This example has a model if the last inequality is <. FM blows up here, poly doesn't
         # It does not have a model if the last inequality is >=. Contradiction is found.
@@ -521,6 +521,6 @@ def multirun():
 
 #multirun()
 
-stop = timeit.default_timer()
-print round(stop - start, 3)
+#stop = timeit.default_timer()
+#print round(stop - start, 3)
 #print round(timecount.time/timecount.runs,3)

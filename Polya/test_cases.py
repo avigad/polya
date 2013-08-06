@@ -1,4 +1,4 @@
-import run_code
+import run_code, timeit
 
 # This class runs through a number of examples to see if the given method gets the right answer.
 # It will run the procedure in test_code.run_heuristic_on_heuristic_data, without splitting cases.
@@ -63,6 +63,7 @@ def run_example(ineqs):
         # "(a+b)*(1/2)<(a*b)^(1/2)"
 
 def run_all_tests():
+    start = timeit.default_timer()
     tests = [
              ["1<x", "1<y", "1<z", "1>=x*(1+z*y)"],
              ["a>0", "a<1", "b>0", "b<1", "a+b<a*b"],
@@ -81,6 +82,9 @@ def run_all_tests():
             print 'WRONG RESULT'
         else:
             print 'CORRECT RESULT'
+            
+    time = timeit.default_timer()-start
+    print round(time,3)
             
 run_all_tests()
     
