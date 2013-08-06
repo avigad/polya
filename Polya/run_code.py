@@ -504,7 +504,7 @@ def run_heuristic_on_list():
 
 #run_heuristic_on_input()
 #run_heuristic_on_list()
-test_heuristic()
+#test_heuristic()
 #test_heuristic_2()
 #test_heuristic_3()
 #test_heuristic_4()

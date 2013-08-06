@@ -1,7 +1,6 @@
 from classes import *
 from heuristic import *
 from itertools import combinations
-from math import sqrt
 import cdd
   
                   
@@ -94,75 +93,69 @@ def get_2d_inequalities(i, j, vertices):
     return ineqs
 
 
-#Computes the square of the Euclidean distance between two ordered pairs.
-def distance_squared(p1,p2):
-    return (p2[0]-p1[0])**2+(p2[1]-p1[1])**2
+#The following functions are helpers for get_boundary_vertices,
+#which itself is a helper for the main routine.
+def point_satisfies_comparison_weak(comp,x,y):
+    if comp.comp in [LE,LT]:
+        return x <= comp.coeff * y
+    else:
+        return x >= comp.coeff * y
+    
+def slope(point):
+    if point[0]!=0:
+        return Fraction(point[1],point[0])
+    else:
+        return float('inf')
+
+#Line, given by coordinates (x,y)
+#Points is an array of pairs
+#Returns true if all points are on the same side (weak) of line
+def fall_on_same_side(line,points):
+    if line[1]!=0:
+        m = Fraction(line[0],line[1])
+        le_comp = Comparison_data(LE,m,ADD)
+        ge_comp = Comparison_data(GE,m,ADD)
+        return (all(point_satisfies_comparison_weak(le_comp,*point) for point in points)
+            or (all(point_satisfies_comparison_weak(ge_comp,*point) for point in points)))
+    else:
+        sign = next((point[1] for point in points if point[1]!=0),None)
+        if sign==None:
+            return True
+        return all(point[1]*sign>=0 for point in points)
+    
 
 class VertexSetException(Exception):
     def __init__(self,s=''):
         self.message = s 
     pass
 
-
-#Vertices is a list of 3-tuples (x,y).
-#Normalize all (x,y) to the unit circle. By hypothesis, they all fall on the same semicircle.
-#Returns the pair of original vertices (0,x1,y1),(0,x2,y2) that are at the extremes:
+#Vertices is a list of pairs (x,y) != (0,0).
+#If the vertices fall within the same semicircle,
+#returns the pair of original vertices (0,x1,y1),(0,x2,y2) that are at the extremes:
 #The angle between these two vertices is greater than between any other pair.
-#IT WOULD BE NICE TO DO THIS WITHOUT SQRT
+#Otherwise, raises a VertexSetException
 def get_boundary_vertices(vertices):
-    #print 'VERTICES: ',vertices
     if len(vertices)<2:
         raise VertexSetException('fewer than two vertices')
-    normalized_vertices = []
-    for v in vertices:
-        scale = 1.0/sqrt(v[0]**2+v[1]**2)
-        normalized_vertices.append((scale*v[0],scale*v[1]))
-    max_i,max_j,max_d = 0,1,0
-    for (i,j) in combinations(range(len(normalized_vertices)),2):
-        d = distance_squared(normalized_vertices[i],normalized_vertices[j])
-        if d>max_d:
-            max_i,max_j,max_d = i,j,d 
-            
-            
-    #max_i, max_j are the indices of the vertices with the largest separating angle.
-    #All the other points should fall on one side or the other of the line between these two vertices.
-    #If not, we're in a degenerate situation.
-    if normalized_vertices[max_j][0]-normalized_vertices[max_i][0] != 0:
-        nvi,nvj = normalized_vertices[max_j],normalized_vertices[max_i]
-        m = Fraction(nvj[1]-nvi[1])/Fraction(nvj[0]-nvi[0])
-        try:
-            p = next(v for v in normalized_vertices if v!=nvi and v!=nvj)
-        
-        except StopIteration: #There are no other vertices, so all vertices fall in one semicircle
-            return vertices[max_i],vertices[max_j]
-        
-        if p[1]>=nvi[1]+m*(p[0]-nvi[0]):
-            dir = GE
-        else:
-            dir = LE
-        
-        #Check each vertex to make sure it falls on the same side of the chord as p
-        for v in (n for n in normalized_vertices if n!=nvi and n!=nvj):
-            if dir == GE:
-                if v[1]<nvi[1]+m*(v[0]-nvi[0]):
-                    raise VertexSetException('not in a semicircle GE max i,j'+str(i)+' '+str(j)+' '+str(normalized_vertices))
-            elif dir == LE:
-                if v[1]>nvi[1]+m*(v[0]-nvi[0]):
-                    raise VertexSetException('not in a semicircle LE max i,j'+str(i)+' '+str(j)+' m='+str(m)+' '+str(normalized_vertices))
-        
-        return vertices[max_i],vertices[max_j]
     
-    else: #Our normalized max and min points have the same x coordinate.
-        x = normalized_vertices[max_i][0]
-        try:
-            p = next(v for v in normalized_vertices if (v[0]!=x))
-        except StopIteration:
-            return vertices[max_i],vertices[max_j]
+    b1,b2 = vertices[0], next((v for v in vertices if 
+                               (slope(v)!=slope(vertices[0]) or v[0]*vertices[0][0]<0 or v[1]*vertices[0][1]<0))
+                              ,None)
+    if b2==None: #all vertices point in the same direction
+        raise VertexSetException('all vertices point in same direction')
+    
+    for v in vertices:
+        if fall_on_same_side(v,[b1,b2]):
+            if not fall_on_same_side(b1,[v,b2]): #replace b1 with v
+                b1 = v
+            elif not fall_on_same_side(b2,[v,b1]):
+                b2 = v
+                
+    for v in vertices:
+        if (not fall_on_same_side(b1,vertices)) or (not fall_on_same_side(b2,vertices)):
+            raise VertexSetException('points not in semicircle.')
         
-        if any((p[0]-x)*(v[0]-x)<0 for v in normalized_vertices):
-            raise VertexSetException('= x coords, not in a semicircle')
-        
-        return vertices[max_i],vertices[max_j]
+    return b1,b2
 
 
 #The main routine
@@ -170,8 +163,8 @@ def get_boundary_vertices(vertices):
 # - for each xy-pair, find the extreme bounds in the xy-plane if they exist.
 # - learn these inequalities
 def learn_add_comparisons_poly(H):
-    learn_add_comparisons_poly_2(H) #Uncomment these two lines to run the alternative algorithm
-    return
+    #learn_add_comparisons_poly_2(H) #Uncomment these two lines to run the alternative algorithm
+    #return
     
     #Sends a potentially new term comparison to the heuristic
     def learn_term_comparison(i,j,comp,coeff):
