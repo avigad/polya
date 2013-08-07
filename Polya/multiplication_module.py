@@ -463,6 +463,8 @@ def learn_mul_comparisons(H):
     # MAIN ROUTINE OF learn_mul_comparisons(H)
     #
     ############################
+    
+    #H.info_dump()
 
     if H.verbose:
         print "Learning multiplicative facts..."

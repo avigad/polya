@@ -22,7 +22,7 @@ def run_heuristic_on_heuristic_data(H, split_cases):
         try:
             H.changed = False
             #t = timeit.default_timer()
-            learn_add_comparisons_poly(H)
+            learn_add_comparisons(H)
             #timecount.time += timeit.default_timer()-t
             #timecount.runs+=1
             learn_mul_comparisons(H)
@@ -456,11 +456,11 @@ def run_heuristic_on_list():
         # "x+y>=2", "z+w>=2", "u*x^2<u*x", "u*y^2<u*y", "u*w^2>u*w", "u*z^2>u*z"
         
         # This example takes a few seconds, fails. There is a model.
-         #"n<=(1/2)*k*x", "0<c", "0<p<1", "(1+p/(3*(c+3)))*n>=k*x"
+        # "n<=(1/2)*k*x", "0<c", "0<p<1", "(1+p/(3*(c+3)))*n>=k*x"
         
         # If the last inequality is >=, this one has a model. Blowup in FM
-        # if the last inequality is changed to <, it does not have a model. FM finds contr. WEIRD BEHAVIOR IN POLY ON THIS ONE
-         "x<1<y", "x*y>1", "u+x>=y+1", "x^2*y<2-u*x*y"
+        # if the last inequality is changed to <, it does not have a model. Contradiction is found.
+        "x<1<y", "x*y>1", "u+x>=y+1", "x^2*y<2-u*x*y"
         
         # This example has a model if the last inequality is <. FM blows up here, poly doesn't
         # It does not have a model if the last inequality is >=. Contradiction is found.
@@ -468,7 +468,7 @@ def run_heuristic_on_list():
         
         # This is a simple example with extraneous info,
         # where the contradiction is found very quickly.
-         #"x*(y+z)<=0", "y+z>0", "x>=0", "x*w>0"
+        # "x*(y+z)<=0", "y+z>0", "x>=0", "x*w>0"
         
         # This example performs splitting, fails
         # "x+y+z<=0", "x+y>=-z"
@@ -491,6 +491,7 @@ def run_heuristic_on_list():
         
         #"x<y","x>-y","y<5"
         #"0<x<a+b","a<5","b<3"
+        #"x>=0","y>=0","2*(x+y)<10"
       ]
     args = []
     try:
@@ -503,7 +504,7 @@ def run_heuristic_on_list():
     return run_heuristic_on_hypotheses(args,split_cases = False)
 
 #run_heuristic_on_input()
-#run_heuristic_on_list()
+run_heuristic_on_list()
 #test_heuristic()
 #test_heuristic_2()
 #test_heuristic_3()
@@ -521,6 +522,6 @@ def multirun():
 
 #multirun()
 
-#stop = timeit.default_timer()
-#print round(stop - start, 3)
+stop = timeit.default_timer()
+print round(stop - start, 3)
 #print round(timecount.time/timecount.runs,3)

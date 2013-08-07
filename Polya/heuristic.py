@@ -58,28 +58,29 @@ class Heuristic_data:
 
         # store hypotheses as zero comparisons
         self.zero_comparisons = {0 : Zero_comparison_data(GT, HYP)}
-        equals_0 = []
+        #equals_0 = []
         for h in hypotheses:
-            i = self.terms.index(h.term)
-            if i in self.zero_comparisons.keys():
-                icomp = self.zero_comparisons[i].comp
-                if ((icomp == LT and h.comp in [GE, GT]) or (icomp == GT and h.comp in [LE, LT])
-                      or (icomp == LE and h.comp == GT) or (icomp == GE and h.comp == LT)):
-                    self.raise_contradiction(HYP)
-                    return
-                elif (icomp == LE and h.comp == GE) or (icomp == GE and h.comp == LE):  # learn equality. Not handled yet.
-                    equals_0.append(i)
-                elif (icomp in [LE, GE] and h.comp in [LT, GT]):
-                    self.learn_zero_comparison(i,h.comp,HYP)
-            else:
-                self.learn_zero_comparison(i, h.comp, HYP)
+            self.learn_zero_comparison(self.terms.index(h.term), h.comp, HYP)
+#             i = self.terms.index(h.term)
+#             if i in self.zero_comparisons.keys():
+#                 icomp = self.zero_comparisons[i].comp
+#                 if ((icomp == LT and h.comp in [GE, GT]) or (icomp == GT and h.comp in [LE, LT])
+#                       or (icomp == LE and h.comp == GT) or (icomp == GE and h.comp == LT)):
+#                     self.raise_contradiction(HYP)
+#                     return
+#                 elif (icomp == LE and h.comp == GE) or (icomp == GE and h.comp == LE):  # learn equality. Not handled yet.
+#                     equals_0.append(i)
+#                 elif (icomp in [LE, GE] and h.comp in [LT, GT]):
+#                     self.learn_zero_comparison(i,h.comp,HYP)
+#             else:
+#                 self.learn_zero_comparison(i, h.comp, HYP)
             # This should be redundant; leaving it here just in case. 
             # if isinstance(self.name_defs[i],Mul_term) and len(self.name_defs[i].mulpairs)==1 and Fraction(self.name_defs[i].mulpairs[0].exp).numerator%2==0:
             #     self.learn_zero_comparison(i,GE,HYP)
 
 
-        for i in equals_0:
-            self.learn_zero_equality(i, HYP)
+        #for i in equals_0:
+        #    self.learn_zero_equality(i, HYP)
             
         self.verbose = verbose
 
@@ -112,6 +113,17 @@ class Heuristic_data:
                       (isinstance(m.exp, float) and Fraction(m.exp).denominator % 2 == 0)):
                         self.learn_zero_comparison(m.term.index, GE, HYP)
         self.verbose = verbose_switch
+        
+    def info_dump(self):
+        print '**********'
+        for i in self.zero_comparisons.keys():
+            print IVar(i),comp_str[self.zero_comparisons[i].comp],'0'
+        print
+        
+        for (i,j) in self.term_comparisons.keys():
+            for c in self.term_comparisons[i,j]:
+                print IVar(i), comp_str[c.comp], c.coeff,'*',IVar(j)
+        print '**********'
             
     
     def get_index_of_name_def(self, term):
