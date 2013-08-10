@@ -78,7 +78,54 @@ class Term:
 
     def __radd__(self, other):
         return self +other
+    
+    def __lt__(self,other):
+        if other==0:
+            return Zero_comparison(self,LT)
+        elif isinstance(other,Term):
+            return Zero_comparison(self-other,LT)
+        elif isinstance(other,(Fraction,int)):
+            return Zero_comparison(self-one*other,LT)
+        elif isinstsance(other,float):
+            return Zero_comparison(self-one*Fraction(other),LT)
+        else:
+            raise Exception("Bad term comparison.")
 
+    def __le__(self,other):
+        if other==0:
+            return Zero_comparison(self,LE)
+        elif isinstance(other,Term):
+            return Zero_comparison(self-other,LE)
+        elif isinstance(other,(Fraction,int)):
+            return Zero_comparison(self-one*other,LE)
+        elif isinstsance(other,float):
+            return Zero_comparison(self-one*Fraction(other),LE)
+        else:
+            raise Exception("Bad term comparison.")
+        
+    def __gt__(self,other):
+        if other==0:
+            return Zero_comparison(self,GT)
+        elif isinstance(other,Term):
+            return Zero_comparison(self-other,GT)
+        elif isinstance(other,(Fraction,int)):
+            return Zero_comparison(self-one*other,GT)
+        elif isinstsance(other,float):
+            return Zero_comparison(self-one*Fraction(other),GT)
+        else:
+            raise Exception("Bad term comparison.")
+        
+    def __ge__(self,other):
+        if other==0:
+            return Zero_comparison(self,GE)
+        elif isinstance(other,Term):
+            return Zero_comparison(self-other,GE)
+        elif isinstance(other,(Fraction,int)):
+            return Zero_comparison(self-one*other,GE)
+        elif isinstsance(other,float):
+            return Zero_comparison(self-one*Fraction(other),GE)
+        else:
+            raise Exception("Bad term comparison.")
 
 class Const(Term):
 
@@ -255,7 +302,11 @@ class Add_pair:
         return self.__str__()
 
     def __cmp__(self, other):
-        return cmp((self.term, self.coeff), (other.term, other.coeff))
+        j = cmp(self.term,other.term)
+        if j==0:
+            return cmp(self.coeff,other.coeff)
+        return j
+        #return cmp((self.term, self.coeff), (other.term, other.coeff))
 
     # used only to scale an addpair by a constant
     def __div__(self, factor):
@@ -380,7 +431,11 @@ class Mul_pair:
 
     def __cmp__(self, other):
         if isinstance(other,Mul_pair):
-            return cmp((self.term, self.exp), (other.term, other.exp))
+            j = cmp(self.term,other.term)
+            if j==0:
+                return cmp(self.exp,other.exp)
+            return j
+#            return cmp((self.term, self.exp), (other.term, other.exp))
         return -1
 
     def __pow__(self, n):

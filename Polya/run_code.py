@@ -4,8 +4,8 @@ from heuristic import *
 #from addition_module import *
 #from multiplication_module import *
 #from function_module import *
-from poly_add_module import * #change this to polyhedron_module_cdd, polyhedron_module_lrs or polyhedron_module (which doesn't handle > vs >=)
-from poly_mult_module import *
+import poly_add_module as add #change this to polyhedron_module_cdd, polyhedron_module_lrs or polyhedron_module (which doesn't handle > vs >=)
+import poly_mult_module as mul
 #from random import randint
 #from math import floor, ceil
 import timeit
@@ -25,10 +25,10 @@ def run_heuristic_on_heuristic_data(H, split_cases):
             H.changed = False
             #H.info_dump()
             #t = timeit.default_timer()
-            learn_add_comparisons_poly(H)
+            add.learn_add_comparisons_poly(H)
             #timecount.time += timeit.default_timer()-t
             #timecount.runs+=1
-            learn_mul_comparisons_poly(H)
+            mul.learn_mul_comparisons_poly(H)
             #learn_func_comparisons(H)
             #comparisons.compare_matrix_methods(H.num_terms,H.term_comparisons,H.zero_comparisons,[H.name_defs[i]-IVar(i) for i in range(H.num_terms) if isinstance(H.name_defs[i],Add_term)])
         except Contradiction:
@@ -529,6 +529,6 @@ def multirun():
 
 #multirun()
 
-stop = timeit.default_timer()
-print round(stop - start, 3)
+#stop = timeit.default_timer()
+#print round(stop - start, 3)
 #print round(timecount.time/timecount.runs,3)

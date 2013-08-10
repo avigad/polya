@@ -84,7 +84,7 @@ def run_all_tests():
             print 'CORRECT RESULT'
             
     time = timeit.default_timer()-start
-    print round(time,3)
+    print round(time,3)  
 
 run_all_tests()
 
