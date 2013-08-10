@@ -212,8 +212,7 @@ class Heuristic_data:
         
         if not isinstance(t, Var):
             self.zero_equations.append(t)
-        else:
-            self.zero_equations.append(IVar(i))
+        self.zero_equations.append(IVar(i))
                 
     # Adds information about how a_i compares to 0.
     # If the new information contradicts old, raises contradiction.
@@ -223,6 +222,7 @@ class Heuristic_data:
             if ((old_comp == GE and comp == LE) or 
                 (old_comp == LE and comp == GE)):
                 self.learn_zero_equality(i, provenance)
+                return
                 # raise Error('Learn equality - not handled yet')
             elif ((old_comp in [GE, GT] and comp in [LE, LT]) or
                   (old_comp in [LT, LE] and comp in [GE, GT])):

@@ -2,6 +2,7 @@ from classes import *
 from heuristic import *
 from itertools import combinations
 import cdd
+from timeit import default_timer
   
 # Used in a number of routines below
 cdict = {LE:(lambda x,y: x<=y),LT:(lambda x,y:x<y),GE:(lambda x,y:x>=y),GT:(lambda x,y: x>y)}
@@ -157,6 +158,9 @@ def get_boundary_vertices(vertices):
         
     return b1,b2
 
+class timecount_p:
+    time = 0
+    runs = 0
 
 #The main routine
 # - get vertices of polyhedron
@@ -235,7 +239,12 @@ def learn_add_comparisons_poly(H):
     matrix = create_H_format_matrix(H,add_eqs)
     
     #Convert to V-representation
+    t = default_timer()
     vertices = cdd.Polyhedron(matrix).get_generators()
+    t = default_timer()-t
+    timecount_p.time+=t
+    timecount_p.runs+=1
+    print 'vertices found in',round(t,3),'seconds'
     
     if H.verbose:
         print

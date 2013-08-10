@@ -85,6 +85,10 @@ def run_all_tests():
             
     time = timeit.default_timer()-start
     print round(time,3)
-            
+
 run_all_tests()
-    
+
+#print run_code.timecount.time
+#for i in range(10):            
+#    run_all_tests()
+#print round(run_code.timecount.time/run_code.timecount.runs,3)

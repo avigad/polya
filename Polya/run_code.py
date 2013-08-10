@@ -1,13 +1,15 @@
 from __future__ import division  # This makes Python interpret / as float division.
 from classes import *
 from heuristic import *
-from addition_module import *
-from multiplication_module import *
-from function_module import *
-from polyhedron_module import *
-from random import randint
-from math import floor, ceil
+#from addition_module import *
+#from multiplication_module import *
+#from function_module import *
+from poly_add_module import * #change this to polyhedron_module_cdd, polyhedron_module_lrs or polyhedron_module (which doesn't handle > vs >=)
+from poly_mult_module import *
+#from random import randint
+#from math import floor, ceil
 import timeit
+#import comparisons
 start = timeit.default_timer()
 
 #Ignore this, benchmarking code
@@ -21,12 +23,14 @@ def run_heuristic_on_heuristic_data(H, split_cases):
     while H.changed:
         try:
             H.changed = False
+            #H.info_dump()
             #t = timeit.default_timer()
-            learn_add_comparisons(H)
+            learn_add_comparisons_poly(H)
             #timecount.time += timeit.default_timer()-t
             #timecount.runs+=1
-            learn_mul_comparisons(H)
+            learn_mul_comparisons_poly(H)
             #learn_func_comparisons(H)
+            #comparisons.compare_matrix_methods(H.num_terms,H.term_comparisons,H.zero_comparisons,[H.name_defs[i]-IVar(i) for i in range(H.num_terms) if isinstance(H.name_defs[i],Add_term)])
         except Contradiction:
             print "Contradiction found!"
             return True
@@ -453,18 +457,18 @@ def run_heuristic_on_list():
     
         # This example takes a while and fails. No large constants. It does not have a model.
         # The contradiction is NOT found, by FM or either polyhedron method
-        # "x+y>=2", "z+w>=2", "u*x^2<u*x", "u*y^2<u*y", "u*w^2>u*w", "u*z^2>u*z"
+         #"x+y>=2", "z+w>=2", "u*x^2<u*x", "u*y^2<u*y", "u*w^2>u*w", "u*z^2>u*z"
         
         # This example takes a few seconds, fails. There is a model.
-        # "n<=(1/2)*k*x", "0<c", "0<p<1", "(1+p/(3*(c+3)))*n>=k*x"
+         "n<=(1/2)*k*x", "0<c", "0<p<1", "(1+p/(3*(c+3)))*n>=k*x"
         
         # If the last inequality is >=, this one has a model. Blowup in FM
         # if the last inequality is changed to <, it does not have a model. Contradiction is found.
-        "x<1<y", "x*y>1", "u+x>=y+1", "x^2*y<2-u*x*y"
+        #"x<1<y", "x*y>1", "u+x>=y+1", "x^2*y<2-u*x*y"
         
         # This example has a model if the last inequality is <. FM blows up here, poly doesn't
         # It does not have a model if the last inequality is >=. Contradiction is found.
-        # "0<x<3*y", "u<v<0", "1<v^2<x", "u*(3*y)^2+1 >= x^2*v+x" 
+        # "0<x<3*y", "u<v<0", "1<v^2<x", "u*(3*y)^2+1 < x^2*v+x" 
         
         # This is a simple example with extraneous info,
         # where the contradiction is found very quickly.
@@ -477,8 +481,10 @@ def run_heuristic_on_list():
         # "x>=0", "x^3<=0"
         
         # warning: the next example blows up!
-        #When using the polyhedron version, it blows up in the mult routine, which is a good sign
-        # "x^(1/2)+y^(1/2) < 30", "x^(7/2)-1<y", "y^(1/5)>4"
+        #When using the polyhedron add, it blows up in the mult routine, which is a good sign
+        #When using polyhedron add and mul, it does not blow up.
+        #There is a model.
+        #"x^(1/2)+y^(1/2) < 30", "x^(7/2)-1<y", "y^(1/5)>4"
         
         # The contradiction here is found relatively quickly.
         # "x+1/y<2", "y<0", "y/x>1", "-2<=x<=2", "-2<=y<=2", "x^2*y^(-1)>1-x"
@@ -491,7 +497,7 @@ def run_heuristic_on_list():
         
         #"x<y","x>-y","y<5"
         #"0<x<a+b","a<5","b<3"
-        #"x>=0","y>=0","2*(x+y)<10"
+        #"x>=0","y>=0"#,"2*(x+y)<10"
       ]
     args = []
     try:
@@ -504,7 +510,7 @@ def run_heuristic_on_list():
     return run_heuristic_on_hypotheses(args,split_cases = False)
 
 #run_heuristic_on_input()
-run_heuristic_on_list()
+#run_heuristic_on_list()
 #test_heuristic()
 #test_heuristic_2()
 #test_heuristic_3()
@@ -513,12 +519,13 @@ run_heuristic_on_list()
 #test_heuristic_on_functions2()
 
 def multirun():
-    for k in range(20):
+    for k in range(10):
         run_heuristic_on_list()
-        test_heuristic()
-        test_heuristic_2()
-        test_heuristic_3()
-        test_heuristic_4()
+        #test_heuristic()
+        #test_heuristic_2()
+        #test_heuristic_3()
+        #test_heuristic_4()
+    print 'average time finding vertices:',round(timecount_p.time/timecount_p.runs,4)
 
 #multirun()
 

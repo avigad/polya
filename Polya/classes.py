@@ -151,6 +151,10 @@ class Const(Term):
     def structure(self):
         return "Const"
 
+class LogConst(Const):
+    def __init__(self,val):
+        self.name = 'log('+str(val)+')'
+        self.val = val
 
 one = Const("1")
 zero = Const("0")
@@ -208,7 +212,7 @@ class Var(Term):
 
     def __pow__(self, other):
         if not isinstance(other, (int, float, Fraction)):
-            raise Exception("Cannot have variables in the exponent")
+            raise Exception("Cannot have variables in the exponent "+str(other)+' '+str(type(other)))
         if other == 0:
             return one
         if other == 1:
