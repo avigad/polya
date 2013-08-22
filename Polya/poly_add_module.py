@@ -1,5 +1,5 @@
 from classes import *
-from heuristic import *
+#from heuristic import *
 import lrs_polyhedron_util as lrs_util
   
 

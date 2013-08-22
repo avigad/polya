@@ -2,6 +2,7 @@ import subprocess
 from fractions import Fraction
 import pipes
 import tempfile
+import timecount
 
 def make_frac(str):
     i = str.find('/')
@@ -47,11 +48,16 @@ def get_generators(matrix):
     out = t.read()
     t.close()
     
-    return output_to_matrix(out)
+    try:
+        return output_to_matrix(out)
+    except StopIteration:
+        print matrix
+        exit()
 
 #Given a matrix in v-rep, gets the h-rep
 def get_inequalities(matrix):
     s = str(matrix)
+    #timecount.start()
     p = pipes.Template()
     p.append("./lrs", "--")
     p.debug(False)
@@ -64,5 +70,31 @@ def get_inequalities(matrix):
     t.seek(0)
     out = t.read()
     t.close()
+    #timecount.stop()
     
-    return output_to_matrix(out)
+    try:
+        return output_to_matrix(out)
+    except StopIteration:
+        print matrix
+        print out
+        exit()
+        
+def redund_and_generate(matrix):
+    s = str(matrix)
+    p = pipes.Template()
+    p.append("./redund", "--")
+    p.debug(False)
+    t = tempfile.NamedTemporaryFile(mode='r')
+    f = p.open(t.name, 'w')
+    try:
+        f.write(s)
+    finally:
+        f.close()
+    t.seek(0)
+    out = t.read()
+    t.close()
+    #print matrix
+    #print 'turned into'
+    #print out
+    
+    return get_inequalities(out)

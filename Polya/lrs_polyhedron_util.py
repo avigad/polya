@@ -146,7 +146,7 @@ class timecount_p:
 
 def get_generators(zero_equations,zero_comparisons,num_terms):
     matrix = create_H_format_matrix(zero_equations,zero_comparisons,num_terms)
-    vertices,lin_set = lrs.get_generators(matrix)
+    vertices,lin_set = lrs.redund_and_generate(matrix)#lrs.get_generators(matrix)
     return vertices,lin_set
 
 def get_2d_comparisons(vertices,lin_set):

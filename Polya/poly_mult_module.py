@@ -2,10 +2,12 @@ from classes import *
 from itertools import combinations
 import primes
 import lrs_polyhedron_util as lrs_util
+#import lrs
 import cdd
 import operator
-from math import floor,ceil
-from copy import deepcopy
+from math import floor,ceil#,log
+#from copy import deepcopy
+#import timecount
 
 ###############################################################################
 #
@@ -16,7 +18,7 @@ from copy import deepcopy
 
 # These are used for rounding square roots properly.
 # Take fractions,  return fractions
-precision = 100000
+precision = 100
 def round_down(f):
     if f.denominator > precision:
         return Fraction(int(floor(float(f.numerator * precision) / f.denominator)), precision)
@@ -36,7 +38,9 @@ def round_coeff(coeff, comp):
     else:
         return round_down(Fraction(coeff))
 
-def learn_mul_comparisons_poly(H):
+
+
+def learn_mul_comparisons(H):
     
     ##############################
     #
@@ -105,6 +109,12 @@ def learn_mul_comparisons_poly(H):
     #  where a_i really represents |a_i|.
 
     def learn_mul_comparison(i,j,comp,coeff,e0,e1):
+        if e0==e1==0:
+            return
+        elif e0==0:
+            i=0
+        elif e1==0:
+            j=0
         if j<i:
             i,j,e0,e1 = j,i,e1,e0    
         coeff = 1/Fraction(coeff)
@@ -117,12 +127,14 @@ def learn_mul_comparisons_poly(H):
             if comp in [LT, LE]:  # pos < neg
                 H.raise_contradiction(MUL)
             return  # pos > neg. not useful.
+
         
         if i==0: #a_i = 1, so we can set e0 to whatever we want.
             e0 = e1
             
         # Otherwise, both sides of the inequality are positive
         # a_i and a_j are still abs values, coeff is positive
+        
         
         if e0 == e1:  # we have |a_i|^p comp coeff * |a_j|^p
             take_roots_and_learn(i, j, e0, e1, comp, coeff)
@@ -244,6 +256,7 @@ def learn_mul_comparisons_poly(H):
             comps = [mulpair_zero_comparison(m) for m in t.mulpairs]
             rightsign = prod_zero_comparisons(comps)
             
+            
             if ((leftsign in [GE, GT] and rightsign == LT) or (leftsign in [LT, LE] and rightsign == GT)
                 or (leftsign == GT and rightsign in [LE, LT]) or (leftsign == LT and rightsign in [GE, GT])):
                 H.raise_contradiction(MUL)
@@ -254,7 +267,7 @@ def learn_mul_comparisons_poly(H):
                         newcomp = (GT if comps[j] == GE else LT)
                         H.learn_zero_comparison(t.mulpairs[j].term.index, newcomp, HYP)
                         
-            elif rightsign in [GT, LT] and leftsign not in [GT, LT]:  # strict info on right implies strict info on left
+            elif (rightsign in [GT, LT] and leftsign not in [GT, LT]) or (leftsign==None and rightsign!=None):  # strict info on right implies strict info on left
                 H.learn_zero_comparison(i, rightsign, HYP)
                 
             elif (rightsign == GE and leftsign == LE) or (rightsign == LE and leftsign == GE):  # we have zero equality.
@@ -265,6 +278,8 @@ def learn_mul_comparisons_poly(H):
                 elif comps.count(LE) == 1 and comps.count(GE) == 0:
                     index = comps.index(LE)
                     H.learn_zero_equality(t.mulpairs[index].term.index, HYP)
+                    
+
 
             # Reset these with potentially new info
             leftsign = ivar_zero_comparison(i)
@@ -343,11 +358,69 @@ def learn_mul_comparisons_poly(H):
                 t = Mul_term([(IVar(i), -1), (IVar(j), 1)], C)
         return One_comparison(t, new_comp)
     
+    def sign_of_det(a,b,c):
+       # print a,b,c
+        rhs = ((a[2]**(b[0]*c[1]-b[1]*c[2]))*(c[2]**(a[0]*b[1]-a[1]*b[0])))
+        lhs = (b[2]**(a[0]*c[1]-a[1]*c[0]))
+        if rhs>lhs: return 1
+        elif rhs<lhs: return -1
+        else: return 0
+        
+    def find_bounds_given_vertices(i,j,vertices,ind_to_prime):
+        trips = []
+        for v in vertices:
+            if v[1]==v[0]==0:
+                continue
+            c = 1
+            for i in range(2,len(v)):
+                c*=(ind_to_prime(i)**v[i])
+            trips.append((v[0],v[1],c))
+#         
+#         lines = []    
+#         for (q,r) in combinations(range(len(trips)),2):
+#             if len(set([sign_of_det(trips[q],trips[r],t) for t in trips]))<=1:
+#                 lines.append(q,r)
+        if len(trips)<2:
+            raise lrs_util.VertexSetException
+        
+        bounds = []
+        dirs = []
+        print i,j,trips
+        for (q,r) in combinations(range(len(trips)),2):
+            #print 'checking',i,j, 'in pair',q,r
+            try:
+                i = next(i for i in range(len(trips)) if sign_of_det(trips[q],trips[r],trips[i])!=0)
+            except StopIteration: #All points lie on the line between q and r
+                return [],[]
+            s = sign_of_det(trips[q],trips[r],trips[i])
+            if all(sign_of_det(trips[q],trips[r],trips[j])*s>=0 for j in range(i,len(trips))):
+                bounds.append((q,r))
+                dirs.append(s)
+                
+        return bounds,dirs
+    
+    def convert_and_learn_bounds(i,j,vertices,ind_to_prime,bounds,dirs):
+        for k in range(len(bounds)):
+            a,b = vertices[bounds[k][1]],vertices[bounds[k][0]]
+            line = [a[l]-b[l] for l in range(len(a))]
+            ei,ej = line[0],line[1]
+            c = 1
+            for l in range(2,len(a)):
+                if line[l]!=0:
+                    c*=(ind_to_prime(l)**line[l])
+            comp = LE if dirs[k]<0 else GE
+                    
+            #we have c*a_i^{e_i}*a_j^{e_j} comp 1
+            #print 'trying to learn: {1}*|{2}|^{3}*|{4}|^{5} {6} 1'.format(c,IVar(i),ei,IVar(j),ej,comp_str[comp])
+            learn_mul_comparison(i,j,comp,c,ei,ej)
+    
     ########################
     #
     # MAIN ROUTINE
     #
     #######################
+    
+    #H.info_dump()
     
     if H.verbose:
         print 'Learning multiplicative facts (polyhedron style...)'
@@ -450,8 +523,14 @@ def learn_mul_comparisons_poly(H):
         add_comps.append(Zero_comparison(term,c.comp))
         
     plist = sorted(index_of_prime.keys())
+    if H.verbose:
+        print 'We have',len(plist),'prime factors in play.'
     for i in range(len(plist)-1):
         add_comps.append(Zero_comparison(IVar(index_of_prime[plist[i+1]])-IVar(index_of_prime[plist[i]]),GT))
+        #add_comps.append(Zero_comparison(IVar(index_of_prime[plist[i]]) - under*IVar(index_of_prime[plist[i+1]]),GT))
+        #add_comps.append(Zero_comparison(IVar(index_of_prime[plist[i]]) - over*IVar(index_of_prime[plist[i+1]]),LT))
+    
+    #if plist: add_comps.append(Zero_comparison(IVar(index_of_prime[plist[0]]),GT))
     
     vertices,lin_set = lrs_util.get_generators(add_eqs,add_comps,H.num_terms+len(plist))
     
@@ -462,50 +541,71 @@ def learn_mul_comparisons_poly(H):
         print
         print 'Linear set:'
         print lin_set
+        
+    #H.info_dump()
     
     
     for (i,j) in combinations(range(H.num_terms),2):
-        base_matrix = [vertices[k][:2]+[vertices[k][i+2],vertices[k][j+2]]+vertices[k][H.num_terms+2:] for k in range(len(vertices)) if k not in lin_set]
+        
+        base_matrix = [[vertices[k][0],vertices[k][i+2],vertices[k][j+2]]+vertices[k][H.num_terms+2:] for k in range(len(vertices)) if k not in lin_set]
         matrix = cdd.Matrix(base_matrix,number_type = 'fraction')
         matrix.rep_type = cdd.RepType.GENERATOR
         for k in lin_set:
-            matrix.extend([vertices[k][:2]+[vertices[k][i+2],vertices[k][j+2]]+vertices[k][H.num_terms+2:]],linear=True)
-            
+            matrix.extend([[vertices[k][0],vertices[k][i+2],vertices[k][j+2]]+vertices[k][H.num_terms+2:]],linear=True)
+         
+        #print (i,j)    
+        #print matrix
         
+        #matrix.canonicalize()
+        
+        #print len(matrix),'vertices'
+        #print 'generating::'
+        #print lrs.redund_and_generate(matrix)
+        #exit()
+             
+        #timecount.start()
+        #ineqs, lin_set2 = lrs.get_inequalities(matrix) 
         ineqs = cdd.Polyhedron(matrix).get_inequalities()
-        #ineqs,lin_set2 = lrs.get_inequalities(matrix) #This will have the same effect, but right now it is slower. Need to import lrs to use
-        
+        #timecount.stop()
+        #print len(ineqs), 'inequalities'
+        #ineqs,lin_set2 = lrs.redund_and_generate(matrix) #This will have the same effect, but right now it is slower. Need to import lrs to use
+         
+        #print len([c for c in ineqs if c[2]!=0 or c[3]!=0]),'inequalities for',(i,j)
+         
+         
         for c in ineqs:
-            if c[2]==c[3]==0: #no comp
+            if c[2]==c[1]==0: #no comp
                 continue 
-                
-            strong = (c[1]<0)
-                
+                 
+            strong = not any(v[1]!=0 and v[i+2]*c[1]+v[j+2]*c[2]+sum(c[k]*v[H.num_terms+k-1] for k in range(3,len(c)))==0 for v in vertices)
+                 
             const = 1
             #Don't want constant to a non-int power
-            scale = int(reduce(operator.mul,(Fraction(c[k]).denominator for k in range(4,len(c))),1))
+            scale = int(reduce(operator.mul,(Fraction(c[k]).denominator for k in range(3,len(c))),1))
             if scale!=1:
-                c = [c[0],c[1]]+[scale*v for v in c[2:]]
-                
+                c = [c[0]]+[scale*v for v in c[1:]]
+                 
             skip = False
-            for k in range(4,len(c)):
+            for k in range(3,len(c)):
                 if c[k]!=0:
-                    if c[k]>=10000000 or c[k]<=-10000000:
+                    if c[k]>=1000000 or c[k]<=-1000000:
                         #Not going to get much here. Causes arithmetic errors.
                         skip = True
+                        break
                     else:
-                        const*=(prime_of_index[k+H.num_terms-4]**c[k])
-
+                        const*=(prime_of_index[k+H.num_terms-3]**c[k])
+ 
             if skip:
                 continue        
-  
-            if c[2]==0: #const*a_j^c[3] comp 1
-                learn_mul_comparison(0,j,(GT if strong else GE),const,1,c[3])
-            elif c[3]==0:
+   
+            if c[1]==0: #const*a_j^c[3] comp 1
+                learn_mul_comparison(0,j,(GT if strong else GE),const,1,c[2])
+            elif c[2]==0:
                 if i!=0:
-                    learn_mul_comparison(0,i,(GT if strong else GE),const,1,c[2])
+                    learn_mul_comparison(0,i,(GT if strong else GE),const,1,c[1])
             else: 
-                learn_mul_comparison(i,j,(GT if strong else GE),const,c[2],c[3])
+                learn_mul_comparison(i,j,(GT if strong else GE),const,c[1],c[2])
     
     if H.verbose:
         print    
+        

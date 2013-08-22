@@ -126,6 +126,9 @@ class Term:
             return Zero_comparison(self-one*Fraction(other),GE)
         else:
             raise Exception("Bad term comparison.")
+        
+    def __hash__(self):
+        return hash(str(self))
 
 class Const(Term):
 
@@ -763,6 +766,9 @@ class One_comparison:
 
     def __repr__(self):
         return self.__str__()
+    
+    def __hash__(self):
+        return hash(str(self))
 
 ###############################################################################
 #

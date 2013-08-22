@@ -6,6 +6,7 @@ from heuristic import *
 #from function_module import *
 import poly_add_module as add #change this to polyhedron_module_cdd, polyhedron_module_lrs or polyhedron_module (which doesn't handle > vs >=)
 import poly_mult_module as mul
+#import multiplication_module as mul
 #from random import randint
 #from math import floor, ceil
 import timeit
@@ -28,7 +29,7 @@ def run_heuristic_on_heuristic_data(H, split_cases):
             add.learn_add_comparisons_poly(H)
             #timecount.time += timeit.default_timer()-t
             #timecount.runs+=1
-            mul.learn_mul_comparisons_poly(H)
+            mul.learn_mul_comparisons(H)
             #learn_func_comparisons(H)
             #comparisons.compare_matrix_methods(H.num_terms,H.term_comparisons,H.zero_comparisons,[H.name_defs[i]-IVar(i) for i in range(H.num_terms) if isinstance(H.name_defs[i],Add_term)])
         except Contradiction:
@@ -450,7 +451,7 @@ def run_heuristic_on_list():
     ineqs = [
         # This example is similar to one from S. McLaughlin and J. Harrison (2005),
         # which their algorithm solves in 23.5 seconds
-         #"1<x", "1<y", "1<z", "1>=x*(1+z*y)"
+        # "1<x", "1<y", "1<z", "1>=x*(1+z*y)"
         
         # This is not provable by Isabelle, from a post to the Isabelle mailing list.
         # "a>0", "a<1", "b>0", "b<1", "a+b<a*b"
@@ -460,11 +461,11 @@ def run_heuristic_on_list():
          #"x+y>=2", "z+w>=2", "u*x^2<u*x", "u*y^2<u*y", "u*w^2>u*w", "u*z^2>u*z"
         
         # This example takes a few seconds, fails. There is a model.
-         "n<=(1/2)*k*x", "0<c", "0<p<1", "(1+p/(3*(c+3)))*n>=k*x"
+        # "n<=(1/2)*k*x", "0<c", "0<p<1", "(1+p/(3*(c+3)))*n>=k*x"
         
         # If the last inequality is >=, this one has a model. Blowup in FM
         # if the last inequality is changed to <, it does not have a model. Contradiction is found.
-        #"x<1<y", "x*y>1", "u+x>=y+1", "x^2*y<2-u*x*y"
+        #"x<1<y", "x*y>1", "u+x>=y+1", "x^2*y>=2-u*x*y"
         
         # This example has a model if the last inequality is <. FM blows up here, poly doesn't
         # It does not have a model if the last inequality is >=. Contradiction is found.
@@ -497,7 +498,10 @@ def run_heuristic_on_list():
         
         #"x<y","x>-y","y<5"
         #"0<x<a+b","a<5","b<3"
-        #"x>=0","y>=0"#,"2*(x+y)<10"
+        #"x>=0","y>=0","2*(x+y)<10"
+        "x>=5","y>=5","x*y<50"
+        
+        #"x+y<30","x^2-1<y","y^2>16","x^2>9"
       ]
     args = []
     try:

@@ -1,4 +1,9 @@
-There are currently five modules that can be enabled.
+In order to run Polya, import run_code.py, and then:
+>  x,y,z = Var('x'), Var('y'), Var('z')
+>  run_heuristic_on_hypotheses([x>y,y>z,z>x])
+
+There are currently five modules that can be enabled by adding appropriate lines
+in run_code.py.
 
 - addition_module 
 This is the original Fourier-Motzkin additive elimination routine.

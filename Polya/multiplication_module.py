@@ -31,6 +31,12 @@ def round_coeff(coeff, comp):
         return round_up(Fraction(coeff))
     else:
         return round_down(Fraction(coeff))
+    
+def round_float_coeff(coeff,comp):
+    if comp in [LE, LT]:
+        return Fraction(int(ceil(coeff * precision)),precision)
+    else:
+        return Fraction(int(floor(coeff * precision)),precision)
 
 
 ###############################################################################
@@ -39,6 +45,15 @@ def round_coeff(coeff, comp):
 #
 ###############################################################################
 
+# def lcm(args):
+#     if len(args)==0:
+#         return 1
+#     elif len(args)==1:
+#         return args[0]
+#     if len(args)==2:
+#         return args[0]*args[1]/gcd(args[0],args[1])
+#     else:
+#         return lcm([args[0],lcm(args[1:])])
 
 
 #
@@ -60,6 +75,17 @@ def round_coeff(coeff, comp):
 # v is not assumed to appear in t1.
 #
 def mul_subst(t1, t2, v):
+#     denoms = []
+#     for m in t1.mulpairs:
+#         if isinstance(m.exp,Fraction) and m.exp.denominator!=0:
+#             denoms.append(m.exp.denominator)
+#     scaled_t1 = pow(t1,lcm(denoms))
+#     
+#     denoms = []
+#     for m in t2.mulpairs:
+#         if isinstance(m.exp,Fraction) and m.exp.denominator!=0:
+#             denoms.append(m.exp.denominator)
+#     scaled_t2 = pow(t2,lcm(denoms))
 
     m1 = next((m for m in t1.mulpairs if m.term == v), None)
     if m1 is None:
@@ -414,7 +440,7 @@ def learn_mul_comparisons(H):
             elif exp < 0:  # 1 is being compared to a negative number. Comparison should not change.
                 exp, coeff = -exp, Fraction(1, Fraction(coeff))
                 
-            coeff = round_coeff(coeff, comp)
+            coeff = (-1 if coeff<0 else 1)*round_float_coeff(pow(abs(coeff),1/Fraction(exp)), comp)
             
             H.learn_term_comparison(0, j, comp, coeff, MUL)
             
@@ -535,10 +561,12 @@ def learn_mul_comparisons(H):
             ij_mul_eqs = i_mul_eqs
             ij_mul_comps = i_mul_comps
             for k in range(j + 1, H.num_terms):
+                #if (i,j)==(0,2): print ij_mul_comps
                 ij_mul_eqs, ij_mul_comps = (
                     mul_elim(ij_mul_eqs, ij_mul_comps, IVar(k)))
             # add any new information
             for c in ij_mul_comps:
+                #if (i,j)==(0,2): print 'learning from',c
                 learn_mul_comparison(c)
             # eliminate j
             i_mul_eqs, i_mul_comps = mul_elim(i_mul_eqs, i_mul_comps, IVar(j))
