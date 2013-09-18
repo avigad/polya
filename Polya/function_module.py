@@ -3,6 +3,8 @@ from heuristic import *
 from itertools import product, ifilter
 from inspect import getargspec
 
+init = True
+
 # Represents the conclusion of a Function_restriction.    
 class Function_conclusion:
     
@@ -74,11 +76,24 @@ class Function_restriction:
     def __str__(self):
         # return 'Function name: '+self.name+'. For all '+str(self.free_vars)+'('+str(self.hypotheses)+'=>'+str(self.conclusion)+')'
         return self.name
+        
+
+# This class represents an instantiated axiom.
+class Axiom_inst:
+    def __init__(self,clauses):
+        self.clauses = clauses
+        
+    # Checks to see if any clauses can be eliminated based on info in Heuristic_data H.
+    def update_on_info(self,H):
+        
 
 # used to generate all k_tuples of IVars  in range(0,n)    
 def generate_tuples(n, k):
     ivs = [IVar(i) for i in range(n + 1)]
     return product(ivs, repeat=k)  # This returns an iterator
+
+def set_up_axioms():
+    pass
     
     
     
@@ -97,6 +112,8 @@ def learn_func_comparisons(H):
         for c in ifilter(lambda t: hyp(H, *t), iterator):  # c is an ordered tuple of IVars that satisfies hyp
             conclusion.learn_term_comparison(c, H)
             
+    if init:
+        set_up_axioms()
         
     if H.verbose:   
         print 'Learning functional facts...'

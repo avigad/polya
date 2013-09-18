@@ -8,9 +8,6 @@ from timeit import default_timer
 #Nearly all of the machinery for the additive routine is here.
 #The multiplicative routine uses some of this as well, but since inferring inequalities
 #from projected vertices is more difficult there, much of its code is isolated.
-  
-# Used in a number of routines below
-cdict = {LE:(lambda x,y: x<=y),LT:(lambda x,y:x<y),GE:(lambda x,y:x>=y),GT:(lambda x,y: x>y)}
            
 
             

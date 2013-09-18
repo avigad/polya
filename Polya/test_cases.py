@@ -1,4 +1,4 @@
-import run_code, timeit,z3, timecount
+import run_code, timeit, z3#, timecount
 
 # This class runs through a number of examples to see if the given method gets the right answer.
 # It will run the procedure in test_code.run_heuristic_on_heuristic_data, without splitting cases.

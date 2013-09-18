@@ -19,7 +19,11 @@ from copy import deepcopy
 #   o a flag, 'changed', to indicate whether anything has been learned in
 #     since the flag was last set to False
 
+def psc(c,x,y):
+    return cdict[c.comp](x,c.coeff*y)
 
+def psc_weak(c,x,y):
+    return psc(Comparison_data((LE if c.comp in [LE,LT] else GE),c.coeff,c.provenance),x,y)   
 
 class Heuristic_data:
 
@@ -167,6 +171,87 @@ class Heuristic_data:
     def raise_contradiction(self, provenance):
         raise Contradiction('Contradiction!')
     
+    def match_points(self,comps,i_zc,j_zc):
+ 
+        
+        
+        points = [(c.coeff,1,c.comp,c.provenance) for c in comps]+[(-c.coeff,-1,c.comp,c.provenance) for c in comps]
+        if len(i_zc)>0:
+            points.extend([(0,1,i_zc[0].comp,i_zc[0].provenance),(0,-1,i_zc[0].comp,i_zc[0].provenance)])
+            
+        if len(j_zc)>0:
+            points.extend([(1,0,j_zc[0].comp,j_zc[0].provenance),(-1,0,j_zc[0].comp,j_zc[0].provenance)])    
+        
+        for c in comps:
+            points = [p for p in points if psc_weak(c,p[0],p[1])]
+                    
+        for c in i_zc:
+            points = [p for p in points if cdict[(GE if c.comp in [GE,GT] else LE)](p[0],0)]
+
+        for c in j_zc:
+            points = [p for p in points if cdict[(GE if c.comp in [GE,GT] else LE)](p[1],0)]
+        
+        return points
+    
+    #Returns true if the known data implies a_i comp coeff * a_j, false otherwise.
+    def implies(self,i,j,comp,coeff):
+        #CHECK FOR EQUALITY. NOT IMPLEMENTED YET        
+        
+        if coeff == 0:
+            try: 
+                c = self.zero_comparisons[i]
+                if c.comp == comp:
+                    return True
+                elif c.comp == GT and comp == GE:
+                    return True
+                elif c.comp == LT and comp == LE:
+                    return True
+                else:
+                    return False
+            except KeyError:
+                return False
+            
+
+        comps = self.term_comparisons.get((i,j),[])
+        if len(comps)==2 and comps[0].coeff==comps[1].coeff:
+            print 'equality',i,j,comp_str[comp],coeff,comps
+            return True
+        for c in comps:
+            if (c.coeff == coeff):
+                if ((c.comp == comp) or (c.comp==GT and comp==GE) or (c.comp==LT and comp==LE)):
+                    return True
+                return False
+        #We know coeff!=0, comps is populated, and the comparison being checked is not collinear
+        #with any known comparison in comps.
+        
+        #Find the two points representing the strongest known comparison rays, including sign info.
+        try:
+            i_zc = [self.zero_comparisons[i]]
+        except KeyError:
+            i_zc = []
+        try:
+            j_zc = [self.zero_comparisons[j]]
+        except KeyError:
+            j_zc = []
+            
+        points = self.match_points(comps,i_zc,j_zc)
+                    
+        if len(points) == 0:
+            return False
+        
+        if len(points)!=2:
+            print "Problem in implies! there are",len(points),"points left."
+            print points
+            print " ",IVar(i),comp_str[comp],coeff,IVar(j)
+            print comps, self.sign(i),self.sign(j)
+            
+        for p in points:
+            if not psc(Comparison_data(comp,coeff,HYP),p[0],p[1]):
+                return False
+        return True
+                 
+        #FINISH WRITING THIS
+    
     # Learn a_i = 0.
     # Eliminates a_i from all stored data
     def learn_zero_equality(self, i, provenance):
@@ -311,8 +396,76 @@ class Heuristic_data:
             return True
             
         return False
-
+    
     def learn_term_comparison(self,i,j,comp,coeff,provenance):
+        # swap i and j if necessary, so i < j
+        if i >= j:
+            i, j, coeff = j, i, Fraction(1, Fraction(coeff))
+            if coeff > 0:
+                comp = comp_reverse(comp)
+                
+                
+        if self.implies(i,j,comp,coeff):
+            return
+        
+        elif self.implies(i,j,comp_negate(comp),coeff):
+            if self.verbose:
+                print 'Learned:', new_comp.to_string(IVar(i), IVar(j))
+                print '  In other words:', \
+                       new_comp.to_string(self.terms[i], self.terms[j])
+            self.raise_contradiction(provenance)
+            return
+        
+        #Otherwise, we know we have new information.
+        
+        if coeff == 0:
+            self.learn_zero_comparison(i, comp, provenance)
+            return
+        
+#         # See if we can get any zero_comparisons from 1 comp c*a_j.
+#         if i == 0:
+#             if coeff > 0 and comp in [LE, LT]:  # a_j >= 1/c > 0
+#                 self.learn_zero_comparison(j, GT, provenance)
+#             elif coeff < 0 and comp in [LE, LT]:  # a_j <= 1/c < 0
+#                 self.learn_zero_comparison(j, LT, provenance)
+        new_comp=Comparison_data(comp,coeff,provenance)
+        comps = self.term_comparisons.get((i,j),[])+[new_comp]
+        try:
+            i_zc = [self.zero_comparisons[i]]
+        except KeyError:
+            i_zc = []
+            
+        try:
+            j_zc = [self.zero_comparisons[j]]
+        except KeyError:
+            j_zc = []
+            
+        points = self.match_points(comps,i_zc,j_zc)
+        if len(points)!=2:
+            print 'Not enough points in learn_term_comparison'
+            
+        if points[0][0]*points[0][1]==points[1][0]*points[1][1]:
+            points = [points[0]]
+            
+        self.term_comparisons[i,j] = [Comparison_data(p[2],p[0]*p[1],p[3]) for p in points if (p[0]!=0 and p[1]!=0)]
+        
+        if self.verbose:
+            print 'Learned:', new_comp.to_string(IVar(i), IVar(j))
+            print '  In other words:', \
+                   new_comp.to_string(self.terms[i], self.terms[j])
+            
+
+    def learn_term_comparison2(self,i,j,comp,coeff,provenance):
+        
+        if self.implies(i,j,comp,coeff):
+            imp = True
+            print 'nothing happens'
+        elif self.implies(i,j,comp_reverse(comp),coeff):
+            imp = False
+            print 'contradiction'
+        else:
+            imp = False
+            print 'new info'
         
         ##################
         #
@@ -452,7 +605,8 @@ class Heuristic_data:
                 print 'Learned:', new_comp.to_string(IVar(i), IVar(j))
                 print '  In other words:', \
                        new_comp.to_string(self.terms[i], self.terms[j])   
-            check_against_zero_comparisons()            
+            if imp: print 'shouldnt be new *',i,j,new_comp 
+            check_against_zero_comparisons()
             return
         
         for c in (c for c in comp_list if c.coeff == coeff):
@@ -485,7 +639,7 @@ class Heuristic_data:
                 print 'Learned:', new_comp.to_string(IVar(i), IVar(j))
                 print '  In other words:', \
                        new_comp.to_string(self.terms[i], self.terms[j])
-            
+            if imp: print 'shouldnt be new **',i,j,new_comp 
             check_against_zero_comparisons()
             return
         
@@ -528,6 +682,5 @@ class Heuristic_data:
             print 'Learned:', new_comp.to_string(IVar(i), IVar(j))
             print '  In other words:', \
                    new_comp.to_string(self.terms[i], self.terms[j])
-    
+            if imp: print 'shouldnt be new ***',i,j,new_comp 
         check_against_zero_comparisons()
-            

@@ -13,10 +13,7 @@ import timeit
 #import comparisons
 start = timeit.default_timer()
 
-#Ignore this, benchmarking code
-class timecount:
-    time = 0
-    runs = 0
+
             
 # Runs the heuristic procedure on an initialized Heuristic_data object.
 # If split_cases is true, will look at all unsigned variables and split on them being > or < 0.    
@@ -25,13 +22,9 @@ def run_heuristic_on_heuristic_data(H, split_cases):
         try:
             H.changed = False
             #H.info_dump()
-            #t = timeit.default_timer()
             add.learn_add_comparisons_poly(H)
-            #timecount.time += timeit.default_timer()-t
-            #timecount.runs+=1
             mul.learn_mul_comparisons(H)
             #learn_func_comparisons(H)
-            #comparisons.compare_matrix_methods(H.num_terms,H.term_comparisons,H.zero_comparisons,[H.name_defs[i]-IVar(i) for i in range(H.num_terms) if isinstance(H.name_defs[i],Add_term)])
         except Contradiction:
             print "Contradiction found!"
             return True
@@ -461,7 +454,7 @@ def run_heuristic_on_list():
          #"x+y>=2", "z+w>=2", "u*x^2<u*x", "u*y^2<u*y", "u*w^2>u*w", "u*z^2>u*z"
         
         # This example takes a few seconds, fails. There is a model.
-        # "n<=(1/2)*k*x", "0<c", "0<p<1", "(1+p/(3*(c+3)))*n>=k*x"
+         "n<=(1/2)*k*x", "0<c", "0<p<1", "(1+p/(3*(c+3)))*n>=k*x"
         
         # If the last inequality is >=, this one has a model. Blowup in FM
         # if the last inequality is changed to <, it does not have a model. Contradiction is found.
@@ -499,9 +492,10 @@ def run_heuristic_on_list():
         #"x<y","x>-y","y<5"
         #"0<x<a+b","a<5","b<3"
         #"x>=0","y>=0","2*(x+y)<10"
-        "x>=5","y>=5","x*y<50"
+        #"x>=5","y>=5","x*y<50"
         
         #"x+y<30","x^2-1<y","y^2>16","x^2>9"
+        #"x>0","y>0","(x+y)/2<(x*y)^(1/2)"
       ]
     args = []
     try:

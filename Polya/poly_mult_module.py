@@ -135,26 +135,13 @@ def learn_mul_comparisons(H):
         # Otherwise, both sides of the inequality are positive
         # a_i and a_j are still abs values, coeff is positive
         
-        
-        if e0 == e1:  # we have |a_i|^p comp coeff * |a_j|^p
-            take_roots_and_learn(i, j, e0, e1, comp, coeff)
-            
-        elif e0 < e1 and comp in [LE, LT] and abs_le_one(j):
-            # making e1 smaller makes rhs bigger, which doesn't mess up comparison.
-            # so pretend e1=e0 and take e0th root
-            take_roots_and_learn(i, j, e0, e1, comp, coeff)
-            
-        elif e0 > e1 and comp in [GE, GT] and abs_le_one(j):
-            # making e1 bigger makes rhs smaller, which doesn't mess up comparison.
-            # so pretend e1 = e0 and take e0th root
-            take_roots_and_learn(i, j, e0, e1, comp, coeff)
-            
-        elif e0 < e1 and comp in [GE, GT] and abs_ge_one(j):
-            # making e1 smaller makes RHS smaller, which doesn't mess up comparison.
-            take_roots_and_learn(i, j, e0, e1, comp, coeff)
-            
-        elif e0 > e1 and comp in [LE, LT] and abs_ge_one(j):
-            # making e1 bigger makes RHS bigger, which doesn't mess up comparison.
+        if (
+            (e0 == e1) # we have |a_i|^p comp coeff * |a_j|^p
+            or (e0 < e1 and comp in [LE, LT] and abs_le_one(j)) # making e1 smaller makes rhs bigger, which doesn't mess up comparison.
+            or (e0 > e1 and comp in [GE, GT] and abs_le_one(j)) # making e1 bigger makes rhs smaller
+            or (e0 < e1 and comp in [GE, GT] and abs_ge_one(j)) # making e1 smaller makes RHS smaller
+            or (e0 > e1 and comp in [LE, LT] and abs_ge_one(j)) # making e1 bigger makes RHS bigger
+            ):
             take_roots_and_learn(i, j, e0, e1, comp, coeff)
     
 
@@ -358,61 +345,6 @@ def learn_mul_comparisons(H):
                 t = Mul_term([(IVar(i), -1), (IVar(j), 1)], C)
         return One_comparison(t, new_comp)
     
-    def sign_of_det(a,b,c):
-       # print a,b,c
-        rhs = ((a[2]**(b[0]*c[1]-b[1]*c[2]))*(c[2]**(a[0]*b[1]-a[1]*b[0])))
-        lhs = (b[2]**(a[0]*c[1]-a[1]*c[0]))
-        if rhs>lhs: return 1
-        elif rhs<lhs: return -1
-        else: return 0
-        
-    def find_bounds_given_vertices(i,j,vertices,ind_to_prime):
-        trips = []
-        for v in vertices:
-            if v[1]==v[0]==0:
-                continue
-            c = 1
-            for i in range(2,len(v)):
-                c*=(ind_to_prime(i)**v[i])
-            trips.append((v[0],v[1],c))
-#         
-#         lines = []    
-#         for (q,r) in combinations(range(len(trips)),2):
-#             if len(set([sign_of_det(trips[q],trips[r],t) for t in trips]))<=1:
-#                 lines.append(q,r)
-        if len(trips)<2:
-            raise lrs_util.VertexSetException
-        
-        bounds = []
-        dirs = []
-        print i,j,trips
-        for (q,r) in combinations(range(len(trips)),2):
-            #print 'checking',i,j, 'in pair',q,r
-            try:
-                i = next(i for i in range(len(trips)) if sign_of_det(trips[q],trips[r],trips[i])!=0)
-            except StopIteration: #All points lie on the line between q and r
-                return [],[]
-            s = sign_of_det(trips[q],trips[r],trips[i])
-            if all(sign_of_det(trips[q],trips[r],trips[j])*s>=0 for j in range(i,len(trips))):
-                bounds.append((q,r))
-                dirs.append(s)
-                
-        return bounds,dirs
-    
-    def convert_and_learn_bounds(i,j,vertices,ind_to_prime,bounds,dirs):
-        for k in range(len(bounds)):
-            a,b = vertices[bounds[k][1]],vertices[bounds[k][0]]
-            line = [a[l]-b[l] for l in range(len(a))]
-            ei,ej = line[0],line[1]
-            c = 1
-            for l in range(2,len(a)):
-                if line[l]!=0:
-                    c*=(ind_to_prime(l)**line[l])
-            comp = LE if dirs[k]<0 else GE
-                    
-            #we have c*a_i^{e_i}*a_j^{e_j} comp 1
-            #print 'trying to learn: {1}*|{2}|^{3}*|{4}|^{5} {6} 1'.format(c,IVar(i),ei,IVar(j),ej,comp_str[comp])
-            learn_mul_comparison(i,j,comp,c,ei,ej)
     
     ########################
     #

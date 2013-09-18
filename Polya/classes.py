@@ -20,8 +20,15 @@ comp_str = {GT: '>', GE: '>=', LT: '<', LE: '<='}
 def comp_reverse(i):
     return 3 - i
 
+# swaps GT and LE, GE and LT
+def comp_negate(i):
+    return (i+2) % 4
+
 # to record where each fact came from
 ADD, MUL, HYP, FUN = range(4)
+
+#Used in heuristic and polyhedron_util
+cdict = {LE:(lambda x,y: x<=y),LT:(lambda x,y:x<y),GE:(lambda x,y:x>=y),GT:(lambda x,y: x>y)}
 
 ###############################################################################
 #
@@ -677,6 +684,12 @@ class Func_term(Term):
 
 # Comparison between one term a_i and 0
 # a_i comp 0
+class Equality_data:
+    
+    def __init__(self,coeff,provenance):
+        self.coeff = coeff
+        self.provenance = provenance
+
 class Zero_comparison_data:
 
     def __init__(self, comp, provenance=None):
@@ -685,6 +698,7 @@ class Zero_comparison_data:
 
     def to_string(self, term):
         return str(term) + ' ' + comp_str[self.comp] + ' 0'
+    
 
 
 # comparison between two terms, a_i and a_j
