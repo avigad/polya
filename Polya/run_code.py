@@ -454,7 +454,7 @@ def run_heuristic_on_list():
          #"x+y>=2", "z+w>=2", "u*x^2<u*x", "u*y^2<u*y", "u*w^2>u*w", "u*z^2>u*z"
         
         # This example takes a few seconds, fails. There is a model.
-         "n<=(1/2)*k*x", "0<c", "0<p<1", "(1+p/(3*(c+3)))*n>=k*x"
+         #"n<=(1/2)*k*x", "0<c", "0<p<1", "(1+p/(3*(c+3)))*n>=k*x"
         
         # If the last inequality is >=, this one has a model. Blowup in FM
         # if the last inequality is changed to <, it does not have a model. Contradiction is found.
@@ -466,7 +466,7 @@ def run_heuristic_on_list():
         
         # This is a simple example with extraneous info,
         # where the contradiction is found very quickly.
-        # "x*(y+z)<=0", "y+z>0", "x>=0", "x*w>0"
+         "x*(y+z)<=0", "y+z>0", "x>=0", "x*w>0"
         
         # This example performs splitting, fails
         # "x+y+z<=0", "x+y>=-z"
@@ -496,6 +496,8 @@ def run_heuristic_on_list():
         
         #"x+y<30","x^2-1<y","y^2>16","x^2>9"
         #"x>0","y>0","(x+y)/2<(x*y)^(1/2)"
+        
+        #"x^2+1>=2*x"
       ]
     args = []
     try:
@@ -508,7 +510,7 @@ def run_heuristic_on_list():
     return run_heuristic_on_hypotheses(args,split_cases = False)
 
 #run_heuristic_on_input()
-#run_heuristic_on_list()
+run_heuristic_on_list()
 #test_heuristic()
 #test_heuristic_2()
 #test_heuristic_3()

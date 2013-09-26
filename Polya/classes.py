@@ -550,6 +550,8 @@ class Func_term(Term):
         self.args = []
         for a in args:
             if isinstance(a, Term):
+                self.args.append(Add_pair(1,a))
+            elif isinstance(a, Add_pair):
                 self.args.append(a)
             else:
                 print 'a is not a term, but a... ?', type(a)
@@ -837,11 +839,8 @@ def canonize(t):
         args = t.args
         nargs = []
         for p in args:
-            cp = canonize(p)
-            if cp.coeff == 1:
-                nargs.append(cp.term)
-            else:
-                nargs.append(cp.coeff * cp.term)
+            cp = canonize(p.term)
+            nargs.append(Add_pair(p.coeff*cp.coeff,cp.term))
         term = Func_term(t.name, nargs, 1)
         return Add_pair(t.const, term)
 

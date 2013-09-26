@@ -76,24 +76,139 @@ class Function_restriction:
     def __str__(self):
         # return 'Function name: '+self.name+'. For all '+str(self.free_vars)+'('+str(self.hypotheses)+'=>'+str(self.conclusion)+')'
         return self.name
+    
+class Environment:
+    def __init__(self,map={}):
+        self.map = map
+        
+    def assign(self,x,y):
+        self.map[x]=y
+        
+    def val(self,x):
+        return self.map[x]
+    
+# Takes a list of maps from variable names to lists of IVar indices.
+# Generates the intersection of all the maps:
+#  a list of Environments such that each environment maps each variable name
+#  to something in its range in each initial map.
+# INCOMPLETE
+def generate_environments(map):
+    temp_map = {}
+    for d in map:
+        for key in d:
+            if key in temp_map:
+                temp_map[d].intersection_update(set(d[key]))
+            else:
+                temp_map[d]=set(d[key])
+        
+# Represents one clause of an axiom: S(x_1...x_n) comp T(x_1...x_n),
+# where S and T are lambda terms that reduce to Terms.
+# lterm and rterm must have the same arguments.
+class Axiom_clause:
+    def __init__(self,lterm,comp,rterm):
+        if getargspec(lterm).args != getargspec(rterm).args:
+            raise Exception('Bad axiom clause arguments!')
+        self.lterm,self.comp,self.rterm = lterm,comp,rterm
+        
+# Represents an uninstantiated axiom.
+# Clauses is a list of Axiom_clauses.
+# The content of the axiom is that at least one element of clauses is true.
+class Axiom:
+    def __init__(self, clauses):
+        for c in clauses:
+            if getargspec(c.lterm).args!=getargspec(clauses[0].lterm).args:
+                raise Exception('Bad axiom arguments!')
+        self.clauses = clauses
+        self.args = getargspec(clauses[0].lterm).args
+        
+    # Returns a list of Axiom_insts.
+    # Each x_i gets mapped to an IVar a_{f(i)}.
+    # Then, terms in each clause that are not IVars get replaced by equivalent IVars.
+    # Each clause is then of the form a_i R a_j, and things can be turned into an Axiom_inst.
+    
+    #THIS CODE IS VERY MUCH INCOMPLETE RIGHT NOW, DON'T READ IT.
+    def instantiate(self,H):
+        
+        # First, figure out all of the functions in the problem, and which IVars they take as args.
+        func_args = {}
+        for t in (H.name_defs[i] for i in range(H.num_terms) if isinstance(H.name_defs[i],Func_term)):
+            if (t.name in func_args):
+                func_args[t.name].append(t.args)
+            else:
+                func_args[t.name] = [t.args]
+                
+        def match_on_func_terms(term,vars):
+            new_vars = vars.copy()
+            if isinstance(term,Add_term):
+                for p in term.addpairs:
+                    new_vars.intersect()
+                    
+            # Assuming term is a Func_term, none of whose arguments are func_terms:
+            # term has n arguments. For each one, we must find all definitions that fit that pattern.
+            nargs = []
+            for t in term.args:
+                nargs.append(H.get_terms_of_structure(t.term))
+            
+                
+        #FIRST PASS: BRUTE-FORCE INSTANTIATE OVER ALL COMBOS OF VARS,
+        #AND CHECK IF ALL TERMS CREATED ARE ACTUALLY TERMS.
+        #This will miss things like f(3x) when we know y=3x
+        l = len(self.args)
+        vars = [x for x in H.name_defs if isinstance(x,Var)]
+        it = product(vars,repeat=l)
+        matches = []
+        for input in it:
+            nomatch = False
+            for c in clauses:
+                lterm,rterm = c.lterm(*input),c.rterm(*input)
+                if lterm not in H.name_defs or rterm not in H.name_defs:
+                    nomatch = True
+                    break
+            if nomatch == False:
+                matches.append(input)
+                
         
 
 # This class represents an instantiated axiom.
+# Satisfied Axiom_insts cannot produce any new information and can be deleted.
+# clauses is a dictionary, mapping (i,j) to a list of Comparison_datas.
+# clauses represents a disjunction: at least one Comparison_data must be true.
 class Axiom_inst:
     def __init__(self,clauses):
         self.clauses = clauses
+        self.satisfied = False
         
     # Checks to see if any clauses can be eliminated based on info in Heuristic_data H.
+    # If there is only one disjunction left in the list, sends it to be learned by H.
     def update_on_info(self,H):
-        
+        for (i,j) in self.clauses.keys():
+            comps = [c for c in self.clauses[i,j] if not H.implies(i,j,comp_negate(c.comp),c.coeff)]
+            if len(comps)==0:
+                del self.clauses[(i,j)] #self.clauses.pop(i,j)?
+                
+            for comp in comps:
+                if H.implies(i,j,comp.comp,comp.coeff):
+                    #This disjunction is satisfied. Nothing new to be learned.
+                    self.satisfied = True
+                    return
+        if len(self.clauses.keys())==1 and len(self.clauses[self.clauses.keys()[0]])==1:
+            #There is one statement left in the disjunction. It must be true.
+            i,j = self.clauses.keys()[0]
+            comp = self.clauses[i,j]
+            H.learn_term_comparison(i,j,comp.comp,comp.coeff,FUN)
+            self.satisfied = True
+
+# Called the first time learn_func_comparisons is run.
+# Takes the function information from H, and generates a list of all possible instantiations.                    
+def set_up_axioms():
+    pass
 
 # used to generate all k_tuples of IVars  in range(0,n)    
 def generate_tuples(n, k):
     ivs = [IVar(i) for i in range(n + 1)]
     return product(ivs, repeat=k)  # This returns an iterator
 
-def set_up_axioms():
-    pass
+
     
     
     
