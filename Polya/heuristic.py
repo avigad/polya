@@ -1,5 +1,6 @@
 from classes import *
 from copy import deepcopy 
+from itertools import product
 
 
 ###############################################################################
@@ -151,37 +152,97 @@ class Heuristic_data:
         print '**********'
             
     # Returns a list of pairs (c,j), representing a_i = c*a_j
-    def get_equivalences(self,i):
+    # I don't think this is right! Fix it.
+    def get_equivalences(self,i,include_self=False):
         if i not in self.get_class:
-            return []
+            return ((1,i) if include_self else [])
         eqc = self.equiv_classes[self.get_class[i]]
-        return [(pair[1],pair[0]) for pair in eqc.items() if pair[0]!=i]
+        if include_self:
+            return [(pair[1],pair[0]) for pair in eqc.items()]
+        else:
+            return [(pair[1],pair[0]) for pair in eqc.items() if pair[0]!=i]
     
     
     # Given a Term, returns indices of all IVars that represent a term with that top-level structure.
     # If term is an add_term, will return indices of add_terms with matching add_pair coeffs.
     # If term is a mul_term, will return indices of mul_terms with matching exponents.
+    # This version does not do well matching up to constants.
+#     def get_terms_of_struct(self,term):
+#         if isinstance(term,Add_term):
+#             l = len(term.addpairs)
+#             inds = [i for i in range(self.num_terms) if isinstance(self.name_defs[i],Add_term)
+#                      and len(self.name_defs[i].addpairs)==l
+#                      and all(self.name_defs[i].addpairs[j].coeff==term.addpairs[j].coeff for j in range(len(term.addpairs)))]
+#             return inds
+#         
+#         elif isinstance(term,Mul_term):
+#             l = len(term.mulpairs)
+#             inds = [i for i in range(self.num_terms) if isinstance(self.name_defs[i],Mul_term)
+#                      and len(self.name_defs[i].mulpairs)==l
+#                      and all(self.name_defs[i].mulpairs[j].exp==term.mulpairs[j].exp for j in range(len(term.mulpairs)))]
+#             return inds
+#         
+#         elif isinstance(term,Var):
+#             return range(self.num_terms)
+#         
+#         elif isinstance(term,Func_term):
+#             #Not sure yet
+#             return
+
+    # Assumes that each item of term is a Var.
+    # ie, if term is an Add_term, it is a sum of constants times vars.
+    # Returns a list of Arg_assns mapping each variable name to an IVar, and the overall term identity.
+    # Essentially, given a structure, this returns every term that has that structure, along with what
+    # you must plug into the structure to get that term.
     def get_terms_of_struct(self,term):
+        def generate_environments(map,identity):
+            new_maps = []
+            iter = product(*[map[k] for k in map])
+            inds = [k for k in map]
+            for item in iter:
+                new_maps.append(Arg_assn({inds[i]:item[i] for i in range(len(inds))},identity))
+                
+            return new_maps
+        
+        arg_assns = []
         if isinstance(term,Add_term):
             l = len(term.addpairs)
-            inds = [i for i in range(self.num_terms) if isinstance(self.name_defs[i],Add_term)
-                     and len(self.name_defs[i].addpairs)==l
-                     and all(self.name_defs[i].addpairs[j].coeff==term.addpairs[j].coeff for j in range(len(term.addpairs)))]
-            return inds
+            candidates = [(i, self.name_defs[i]) for i in range(self.num_terms) 
+                          if (isinstance(self.name_defs[i],Add_term)
+                          and len(self.name_defs[i].addpairs)==l)]
+            
+            for (i,t) in candidates:
+                map = {}
+                pairs = t.addpairs
+                for i in range(l):
+                    c = Fraction(pairs[i].coeff,term.addpairs[i].coeff)
+                    equivs = set(p[1] for p in self.get_equivalences(pairs[i].term.index,True) if p[0]==c)
+                    if term.addpairs[i].term in map:
+                        map[term.addpairs[i].term].intersection_update(equivs)
+                    else:
+                        map[term.addpairs[i].term] = equivs
+                        
+                    if len(map[term.addpairs[i].term])==0:
+                        empty = True
+                        break
+                
+                if empty:
+                     continue
+                #At this point, map is a complete map from variables of term x to lists of ints i,
+                #where each i is the index of a term that we can map x to to turn term into t.
+                #We turn this into a list of all possible assignments that turn x into t.
+                arg_assns.extend(generate_environments(map))
         
         elif isinstance(term,Mul_term):
-            l = len(term.mulpairs)
-            inds = [i for i in range(self.num_terms) if isinstance(self.name_defs[i],Mul_term)
-                     and len(self.name_defs[i].mulpairs)==l
-                     and all(self.name_defs[i].mulpairs[j].exp==term.mulpairs[j].exp for j in range(len(term.mulpairs)))]
-            return inds
+            pass
         
-        elif isinstance(term,Var):
-            return range(self.num_terms)
+        elif isinstance(term, Var):
+            pass
         
         elif isinstance(term,Func_term):
-            #Not sure yet
-            return
+            pass
+        
+        return arg_assns
     
     def get_index_of_name_def(self, term):
         for k in self.name_defs.keys():

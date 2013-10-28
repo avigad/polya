@@ -59,7 +59,7 @@ def get_inequalities(matrix):
     s = str(matrix)
     #timecount.start()
     p = pipes.Template()
-    p.append("./lrs", "--")
+    p.append("lrs", "--")
     p.debug(False)
     t = tempfile.NamedTemporaryFile(mode='r')
     f = p.open(t.name, 'w')
@@ -82,7 +82,7 @@ def get_inequalities(matrix):
 def redund_and_generate(matrix):
     s = str(matrix)
     p = pipes.Template()
-    p.append("./redund", "--")
+    p.append("redund", "--")
     p.debug(False)
     t = tempfile.NamedTemporaryFile(mode='r')
     f = p.open(t.name, 'w')
@@ -96,5 +96,6 @@ def redund_and_generate(matrix):
     #print matrix
     #print 'turned into'
     #print out
+    
     
     return get_inequalities(out)

@@ -458,7 +458,7 @@ def run_heuristic_on_list():
         
         # If the last inequality is >=, this one has a model. Blowup in FM
         # if the last inequality is changed to <, it does not have a model. Contradiction is found.
-        #"x<1<y", "x*y>1", "u+x>=y+1", "x^2*y>=2-u*x*y"
+        "x<1<y", "x*y>1", "u+x>=y+1", "x^2*y<2-u*x*y"
         
         # This example has a model if the last inequality is <. FM blows up here, poly doesn't
         # It does not have a model if the last inequality is >=. Contradiction is found.
@@ -466,7 +466,7 @@ def run_heuristic_on_list():
         
         # This is a simple example with extraneous info,
         # where the contradiction is found very quickly.
-         "x*(y+z)<=0", "y+z>0", "x>=0", "x*w>0"
+        # "x*(y+z)<=0", "y+z>0", "x>=0", "x*w>0"
         
         # This example performs splitting, fails
         # "x+y+z<=0", "x+y>=-z"
@@ -510,7 +510,7 @@ def run_heuristic_on_list():
     return run_heuristic_on_hypotheses(args,split_cases = False)
 
 #run_heuristic_on_input()
-run_heuristic_on_list()
+#run_heuristic_on_list()
 #test_heuristic()
 #test_heuristic_2()
 #test_heuristic_3()

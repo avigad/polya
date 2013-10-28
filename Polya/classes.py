@@ -604,6 +604,12 @@ class Func_term(Term):
         s = s[:-1] + ')'
         return s
         
+# For function module
+class Arg_assn:
+    def __init__(self,map,identity):
+        self.map = map
+        self.identity = identity        
+
 ###############################################################################
 #
 # COMPARISON CLASSES
@@ -887,6 +893,28 @@ def canonize_zero_comparison(h):
 # "IVars" for the name, e.g. a0, a1, a2, ...
 #
 ###############################################################################
+
+class UVar(Term, Var):
+
+    def __init__(self, index):
+        Var.__init__(self, "v" + str(index))
+        self.index = index
+
+    def __str__(self):
+        return self.name
+
+    def __cmp__(self, other):
+        if isinstance(other, Const):
+            return 1
+        elif isinstance(other, Var):
+            return cmp(self.index, other.index)
+        else:
+            return -1
+        
+    def __eq__(self, other):
+        if isinstance(other, UVar):
+            return self.index == other.index
+        return False
 
 # internal variables -- just an index
 class IVar(Term, Var):

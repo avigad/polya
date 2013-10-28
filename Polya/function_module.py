@@ -2,8 +2,151 @@ from classes import *
 from heuristic import *
 from itertools import product, ifilter
 from inspect import getargspec
+from copy import copy
 
 init = True
+
+# Takes preterms u1...un involving uvars v1...vm
+# arg_uvars is a subset of uvars representing those that occur as arguments
+# to a Func_term in preterms.
+# Returns a list of assignments {vi <- ci*t_{ji}} such that
+# each ui becomes equal to a problem term.
+def unify(H, preterms, uvars, arg_uvars):
+    
+    def occurs_as_arg(term,var):
+        if not isinstance(term,Func_term):
+            return False
+        for a in term.args:
+            if a.term == var:
+                return True
+        return False
+    
+    # Replaces all instances of uvar in preterm with coeff*IVar(iind)
+    # Returns a new Term, and a flag True/False representing whether all
+    # UVars have been replaced.
+    def substitute(preterm, uvar, coeff, iind):
+        if isinstance(preterm, IVar):
+            return (preterm, True)
+            
+        elif isinstance(preterm, UVar):
+            if preterm.index == uvar.index:
+                return (coeff * IVar(iind), True)
+            else:
+                return (preterm, False)
+        
+        elif isinstance(preterm, Add_term):
+            s, flag = substitute(preterm.addpairs[0].term,uvar,coeff,iind)
+            t = preterm.addpairs[0].coeff * s
+            for ap in preterm.addpairs[1:]:
+                s, flag2 = substitute(ap.term,uvar,coeff,iind)
+                flag = flag and flag2
+                t += ap.coeff * s
+            return (t, flag)
+        
+        elif isinstance(preterm, Mul_term):
+            s, flag = substitute(preterm.mulpairs[0].term,uvar,coeff,iind)
+            t = s**preterm.mulpairs[0].exp
+            for mp in preterm.mulpairs[1:]:
+                s, flag2 = substitute(mp.term,uvar,coeff,iind)
+                flag = flag and flag2
+                t *= s**mp.exp
+            return (t, flag)
+        
+        elif isinstance(preterm, Func_term):
+            flag = True
+            nargs = []
+            for a in preterm.args:
+                s, flag2 = substitute(a.term,uvar,coeff,ind)
+                nargs.append((a.coeff, s))
+                flag = flag and flag2
+            return (Func_term(preterm.name, nargs, preterm.const), flag)
+    ####
+    
+    if len(uvars) == 0:
+        return []
+    
+    if len(arg_uvars) == 0:
+        #We are in the unfortunate position where no variables occur alone in function terms.
+        #Pass for now.
+        return []
+    
+    v = arg_uvars[0]
+    t = next(term for term in preterms if occurs_as_arg(term,v))
+    ind = next(j for j in len(term.args) if term.args[j].term==v)
+    c = t.args[ind].coeff
+    
+    prob_f_terms = [i for i in range(H.num_terms) if 
+                  (isinstance(H.name_defs[i],Func_term) 
+                   and len(H.name_defs[i].args)==len(t.args))]
+    
+    S = [(Fraction(H.name_defs[i].args[ind].coeff,c),i) for i in prob_f_terms]
+    # S is a list of pairs (coeff, j) such that c*coeff*a_j occurs as an argument
+    # in a problem term.
+    
+    for (coeff, j) in S:
+        new_preterms = [substitute(p, v, coeff, j) for p in preterms]
+        closed_terms, open_terms = [a for (a,b) in new_preterms if b], [a for (a,b) in new_preterms if not b]
+        prob_terms, imp = [], False
+        for ct in closed_terms:
+            try:
+                prob_terms.append(find_problem_term(ct))
+            except No_Term_Exception:
+                imp = True
+                break
+        if imp:
+            continue
+        
+        map = unify(H, open_terms, [v0 for v0 in uvars if v0!=v], arg_uvars[1:])
+        # add v <- coeff*a_j to map and return that
+        
+class No_Term_Exception(Exception):
+    pass
+
+# u is a preterm such that all variable occurences are IVars
+# returns (c, i) such that u = c*a_i, or raises No_Term_Exception
+def find_problem_term(H, u):
+    if isinstance(u, IVar):
+        return (1, u.index)
+    
+    elif isinstance(u, Func_term):
+        nargs = [(lambda x,y:(x[0]*y,x[1]))(find_problem_term(H,p.term),p.coeff) for p in u.args]
+        for i in [i for i in range(H.num_terms) if 
+          (isinstance(H.name_defs[i],Func_term) 
+          and H.name_defs[i].name == u.name
+          and len(H.name_defs[i].args)==len(nargs))]:
+            t = H.name_defs[i]
+            good = True
+            for k in range(len(t.args)):
+                targ, uarg = (t.args[k].coeff, t.args[k].term.index), nargs[k]
+                if not (targ[0]==uarg[0] and targ[1]==uarg[1]):
+                    eqs = H.get_equivalences(targ.term)
+                    if not any(uarg[0]==targ[0]*e[0] and uarg[1]==e[1] for e in eqs):
+                        good = False
+                        break
+                        #Move on to the next i
+            if good:
+                #a_i is a func_term whose arguments match u
+                return (1, i)
+        # No i has been found that matches.
+        raise No_Term_Exception
+    
+    elif isinstance(u, Add_term):
+        #temporary
+            
+        npairs = [(lambda x,y:(x[0]*y,x[1]))(find_problem_term(H,p.term),p.coeff) for p in u.addpairs]
+        t = npairs[0][0]*IVar(npairs[0][1])
+        for p in npairs[1:]:
+            t+=p[0]*IVar(p[1])
+            
+        for i in range(len(H.num_terms)):
+            if str(u)==str(H.name_defs[i]) or str(p)==str(H.name_defs[i]):
+                return (1, i) 
+        raise No_Term_Exception
+    
+    elif isinstance(u, Mul_term):
+        #temporary- copy above
+        raise No_Term_Exception
+    
 
 # Represents the conclusion of a Function_restriction.    
 class Function_conclusion:
@@ -91,15 +234,15 @@ class Environment:
 # Generates the intersection of all the maps:
 #  a list of Environments such that each environment maps each variable name
 #  to something in its range in each initial map.
-# INCOMPLETE
 def generate_environments(map):
-    temp_map = {}
-    for d in map:
-        for key in d:
-            if key in temp_map:
-                temp_map[d].intersection_update(set(d[key]))
-            else:
-                temp_map[d]=set(d[key])
+    new_maps = []
+    iter = product(*[map[k] for k in map])
+    inds = [k for k in map]
+    for item in iter:
+        new_maps.append({inds[i]:item[i] for i in range(len(inds))})
+        
+    return new_maps
+        
         
 # Represents one clause of an axiom: S(x_1...x_n) comp T(x_1...x_n),
 # where S and T are lambda terms that reduce to Terms.
@@ -109,6 +252,8 @@ class Axiom_clause:
         if getargspec(lterm).args != getargspec(rterm).args:
             raise Exception('Bad axiom clause arguments!')
         self.lterm,self.comp,self.rterm = lterm,comp,rterm
+        
+
         
 # Represents an uninstantiated axiom.
 # Clauses is a list of Axiom_clauses.
@@ -121,52 +266,7 @@ class Axiom:
         self.clauses = clauses
         self.args = getargspec(clauses[0].lterm).args
         
-    # Returns a list of Axiom_insts.
-    # Each x_i gets mapped to an IVar a_{f(i)}.
-    # Then, terms in each clause that are not IVars get replaced by equivalent IVars.
-    # Each clause is then of the form a_i R a_j, and things can be turned into an Axiom_inst.
-    
-    #THIS CODE IS VERY MUCH INCOMPLETE RIGHT NOW, DON'T READ IT.
-    def instantiate(self,H):
         
-        # First, figure out all of the functions in the problem, and which IVars they take as args.
-        func_args = {}
-        for t in (H.name_defs[i] for i in range(H.num_terms) if isinstance(H.name_defs[i],Func_term)):
-            if (t.name in func_args):
-                func_args[t.name].append(t.args)
-            else:
-                func_args[t.name] = [t.args]
-                
-        def match_on_func_terms(term,vars):
-            new_vars = vars.copy()
-            if isinstance(term,Add_term):
-                for p in term.addpairs:
-                    new_vars.intersect()
-                    
-            # Assuming term is a Func_term, none of whose arguments are func_terms:
-            # term has n arguments. For each one, we must find all definitions that fit that pattern.
-            nargs = []
-            for t in term.args:
-                nargs.append(H.get_terms_of_structure(t.term))
-            
-                
-        #FIRST PASS: BRUTE-FORCE INSTANTIATE OVER ALL COMBOS OF VARS,
-        #AND CHECK IF ALL TERMS CREATED ARE ACTUALLY TERMS.
-        #This will miss things like f(3x) when we know y=3x
-        l = len(self.args)
-        vars = [x for x in H.name_defs if isinstance(x,Var)]
-        it = product(vars,repeat=l)
-        matches = []
-        for input in it:
-            nomatch = False
-            for c in clauses:
-                lterm,rterm = c.lterm(*input),c.rterm(*input)
-                if lterm not in H.name_defs or rterm not in H.name_defs:
-                    nomatch = True
-                    break
-            if nomatch == False:
-                matches.append(input)
-                
         
 
 # This class represents an instantiated axiom.
@@ -202,11 +302,6 @@ class Axiom_inst:
 # Takes the function information from H, and generates a list of all possible instantiations.                    
 def set_up_axioms():
     pass
-
-# used to generate all k_tuples of IVars  in range(0,n)    
-def generate_tuples(n, k):
-    ivs = [IVar(i) for i in range(n + 1)]
-    return product(ivs, repeat=k)  # This returns an iterator
 
 
     
