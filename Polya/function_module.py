@@ -5,6 +5,55 @@ from inspect import getargspec
 from copy import copy
 
 init = True
+instantiated_axioms = []
+
+# Replaces all instances of uvar in preterm with coeff*IVar(iind)
+# Returns a new Term, and a flag True/False representing whether all
+# UVars have been replaced.
+def substitute(preterm, uvar, coeff, iind):
+    return reduce(preterm, Environment({uvar:(coeff,iind)}))
+    
+# Replaces all UVars in preterm that are assigned by env with their designated values.
+# Returns a new Term, and a flag True/False representing whether all
+# UVars have been replaced.
+def reduce(preterm,env):
+    if isinstance(preterm, IVar):
+        return (preterm, True)
+        
+    elif isinstance(preterm, UVar):
+        if preterm.index in env:
+            (c,j) = env[preterm.index]
+            return (c * IVar(j), True)
+        else:
+            return (preterm, False)
+    
+    elif isinstance(preterm, Add_term):
+        s, flag = reduce(preterm.addpairs[0].term, env)
+        t = preterm.addpairs[0].coeff * s
+        for ap in preterm.addpairs[1:]:
+            s, flag2 = reduce(ap.term,env)
+            flag = flag and flag2
+            t += ap.coeff * s
+        return (t, flag)
+    
+    elif isinstance(preterm, Mul_term):
+        s, flag = reduce(preterm.mulpairs[0].term,env)
+        t = s**preterm.mulpairs[0].exp
+        for mp in preterm.mulpairs[1:]:
+            s, flag2 = reduce(mp.term,env)
+            flag = flag and flag2
+            t *= s**mp.exp
+        return (t, flag)
+    
+    elif isinstance(preterm, Func_term):
+        flag = True
+        nargs = []
+        for a in preterm.args:
+            s, flag2 = reduce(a.term,env)
+            nargs.append((a.coeff, s))
+            flag = flag and flag2
+        return (Func_term(preterm.name, nargs, preterm.const), flag)
+    
 
 # Takes preterms u1...un involving uvars v1...vm
 # arg_uvars is a subset of uvars representing those that occur as arguments
@@ -21,54 +70,15 @@ def unify(H, preterms, uvars, arg_uvars):
                 return True
         return False
     
-    # Replaces all instances of uvar in preterm with coeff*IVar(iind)
-    # Returns a new Term, and a flag True/False representing whether all
-    # UVars have been replaced.
-    def substitute(preterm, uvar, coeff, iind):
-        if isinstance(preterm, IVar):
-            return (preterm, True)
-            
-        elif isinstance(preterm, UVar):
-            if preterm.index == uvar.index:
-                return (coeff * IVar(iind), True)
-            else:
-                return (preterm, False)
-        
-        elif isinstance(preterm, Add_term):
-            s, flag = substitute(preterm.addpairs[0].term,uvar,coeff,iind)
-            t = preterm.addpairs[0].coeff * s
-            for ap in preterm.addpairs[1:]:
-                s, flag2 = substitute(ap.term,uvar,coeff,iind)
-                flag = flag and flag2
-                t += ap.coeff * s
-            return (t, flag)
-        
-        elif isinstance(preterm, Mul_term):
-            s, flag = substitute(preterm.mulpairs[0].term,uvar,coeff,iind)
-            t = s**preterm.mulpairs[0].exp
-            for mp in preterm.mulpairs[1:]:
-                s, flag2 = substitute(mp.term,uvar,coeff,iind)
-                flag = flag and flag2
-                t *= s**mp.exp
-            return (t, flag)
-        
-        elif isinstance(preterm, Func_term):
-            flag = True
-            nargs = []
-            for a in preterm.args:
-                s, flag2 = substitute(a.term,uvar,coeff,ind)
-                nargs.append((a.coeff, s))
-                flag = flag and flag2
-            return (Func_term(preterm.name, nargs, preterm.const), flag)
     ####
     
     if len(uvars) == 0:
-        return []
+        return [Environment()]
     
     if len(arg_uvars) == 0:
         #We are in the unfortunate position where no variables occur alone in function terms.
         #Pass for now.
-        return []
+        return [Environment()]
     
     v = arg_uvars[0]
     t = next(term for term in preterms if occurs_as_arg(term,v))
@@ -83,6 +93,8 @@ def unify(H, preterms, uvars, arg_uvars):
     # S is a list of pairs (coeff, j) such that c*coeff*a_j occurs as an argument
     # in a problem term.
     
+    envs = []
+    
     for (coeff, j) in S:
         new_preterms = [substitute(p, v, coeff, j) for p in preterms]
         closed_terms, open_terms = [a for (a,b) in new_preterms if b], [a for (a,b) in new_preterms if not b]
@@ -96,8 +108,14 @@ def unify(H, preterms, uvars, arg_uvars):
         if imp:
             continue
         
-        map = unify(H, open_terms, [v0 for v0 in uvars if v0!=v], arg_uvars[1:])
+        #Right now, we do nothing with prob_terms
+        
+        maps = unify(H, open_terms, [v0 for v0 in uvars if v0!=v], arg_uvars[1:])
+        for map in maps:
+            map.assign(v,(coeff,j))
+        envs.extend(maps)
         # add v <- coeff*a_j to map and return that
+    return envs
         
 class No_Term_Exception(Exception):
     pass
@@ -148,77 +166,7 @@ def find_problem_term(H, u):
         raise No_Term_Exception
     
 
-# Represents the conclusion of a Function_restriction.    
-class Function_conclusion:
-    
-    # lterm, rterm are lambda functions with the same arguments that are expected to return Terms.
-    # their first arguments must be a Heuristic_data
-    # comp is GE,GT,LE,LT
-    def __init__(self, lterm, rterm, comp):
-        self.lterm = lterm
-        self.rterm = rterm
-        self.comp = comp
-        
-    def __str__(self):
-        return str(self.lterm) + " " + comp_str[self.comp] + " " + str(self.rterm)
-        
-    # ivars is a tuple of IVars with len(ivars) equal to the number of free variables in lterm and rterm
-    # H is a Heuristic_data
-    # This function computes the term_ or zero_comparison generated by plugging in ivars to lterm and rterm
-    # and sends it to H.
-    def learn_term_comparison(self, ivars, H):
-        left = self.lterm(H, *ivars)
-        right = self.rterm(H, *ivars)
-        comp = self.comp
-        
-        if isinstance(left, IVar):
-            i = left.index
-        elif left == 0:
-            self.learn_zero_comparison(right, comp_reverse(comp), H)
-            return
-        else:
-            i = H.get_index_of_name_def(left)
-            if not i:
-                return 
-            
-        if isinstance(right, IVar):
-            j = right.index
-        elif right == 0:
-            self.learn_zero_comparison(left, comp, H)
-            return
-        else:
-            j = H.get_index_of_name_def(right)
-            if not j:
-                return
-            
-        H.learn_term_comparison(i, j, comp, 1, FUN)
-        
-        
-    def learn_zero_comparison(self, term, comp, H):
-        if isinstance(term, IVar):
-            H.learn_zero_comparison(term.index, comp, FUN)
-        else:
-            i = H.get_index_of_name_def(term)
-            if i:
-                H.learn_zero_comparison(i, comp, FUN)
 
-# This is the main class used to pass information about a function.
-class Function_restriction:
-    # name is a string, only used to identify this piece of info: ie, "monotonicity of exp"
-    # hypotheses is a lambda predicate whose first argument is a Heuristic_data
-    # conclusion is a Function_conclusion whose lterm and rterm have the same arguments as hypotheses
-    # For all {free_vars} in {a0,a1,...,an}, [hypotheses({freevars})] => conclusion({freevars})
-    def __init__(self, name, hypotheses, conclusion):
-        self.name = name
-        hargs, clargs, crargs = getargspec(hypotheses).args, getargspec(conclusion.lterm).args, getargspec(conclusion.rterm).args
-        if hargs != clargs or hargs != crargs:
-            raise Exception("Bad conclusion arguments!")
-        self.hypotheses = hypotheses
-        self.conclusion = conclusion
-        
-    def __str__(self):
-        # return 'Function name: '+self.name+'. For all '+str(self.free_vars)+'('+str(self.hypotheses)+'=>'+str(self.conclusion)+')'
-        return self.name
     
 class Environment:
     def __init__(self,map={}):
@@ -244,14 +192,11 @@ def generate_environments(map):
     return new_maps
         
         
-# Represents one clause of an axiom: S(x_1...x_n) comp T(x_1...x_n),
-# where S and T are lambda terms that reduce to Terms.
-# lterm and rterm must have the same arguments.
+# Represents one clause of an axiom: S(v_1...v_n) comp T(v_1...v_n),
+# where S and T are Terms.
 class Axiom_clause:
-    def __init__(self,lterm,comp,rterm):
-        if getargspec(lterm).args != getargspec(rterm).args:
-            raise Exception('Bad axiom clause arguments!')
-        self.lterm,self.comp,self.rterm = lterm,comp,rterm
+    def __init__(self,lterm,comp,coeff, rterm):
+        self.lterm,self.comp,self.coeff,self.rterm = lterm,comp,coeff,rterm
         
 
         
@@ -260,13 +205,74 @@ class Axiom_clause:
 # The content of the axiom is that at least one element of clauses is true.
 class Axiom:
     def __init__(self, clauses):
-        for c in clauses:
-            if getargspec(c.lterm).args!=getargspec(clauses[0].lterm).args:
-                raise Exception('Bad axiom arguments!')
+        
+        #takes a term
+        #returns two Sets. The first is all uvars that occur in the term.
+        #The second is all uvars that occur alone as function arguments in the term.
+        def find_uvars(term):
+            if isinstance(term, UVar):
+                return set([term]),set()
+            elif isinstance(term, Var):
+                return set(),set()
+            else:
+                vars = set()
+                arg_vars = set()
+                if isinstance(term, Add_term):
+                    pairs = term.addpairs
+                elif isinstance(term, Mul_term):
+                    pairs = term.mulpairs
+                elif isinstance(term, Func_term):
+                    pairs = term.args
+                    arg_vars = Set([p.term for p in pairs if isinstance(p.term, UVar)])
+                for p in pairs:
+                    nvars, narg_vars = find_uvars(p.term)
+                    vars.update(nvars)
+                    arg_vars.update(narg_vars)
+                    
+                return vars, arg_vars
+
         self.clauses = clauses
-        self.args = getargspec(clauses[0].lterm).args
+        uvars = set()
+        arg_uvars = set()
+        for c in clauses:
+            nvars, narg_vars = find_uvars(c.lterm)
+            uvars.update(nvars)
+            arg_uvars.update(narg_vars)
+            nvars, narg_vars = find_uvars(c.rterm)
+            uvars.update(nvars)
+            arg_uvars.update(narg_vars)
         
+        self.vars, self.arg_vars = uvars, arg_uvars
         
+    # Returns all possible Axiom_insts from this axiom scheme and heuristic H.
+    # TODO: handle equalities correctly
+    # TODO: learn if len=1
+    def instantiate(self,H):
+        preterms = Set(c.lterm for c in self.clauses).union(Set(c.rterm for c in self.clauses))
+        envs = unify(H, preterms, self.uvars, self.arg_vars)
+        axiom_insts = []
+        for env in envs:
+            nclauses = {}
+            for c in self.clauses:
+                comp,coeff = c.comp,c.coeff
+                lterm = find_problem_term(H,reduce(c.lterm,env)[0])
+                rterm = find_problem_term(H,reduce(c.rterm,env)[0])
+                rterm[0]*=coeff
+                if lterm[1]==rterm[1]: 
+                    #handle this correctly. Not done yet.
+                    pass
+                if lterm[1]>rterm[1]:
+                    comp,lterm,rterm = comp_reverse(comp), rterm,lterm
+                nclauses[lterm[1],rterm[1]] = nclauses.get((lterm[1],rterm[1]),set()).add(Comparison_data(comp,Fraction(rterm[0],lterm[0])))
+            if len(nclauses)==1 and len(nclauses[nclauses.keys()[0]])==1:
+                #learn the info here. Not done yet
+                pass
+            
+            elif len(nclauses)>0:
+                axiom_insts.append(Axiom_inst(nclauses))
+        
+        return axiom_insts
+                
         
 
 # This class represents an instantiated axiom.
@@ -299,9 +305,12 @@ class Axiom_inst:
             self.satisfied = True
 
 # Called the first time learn_func_comparisons is run.
-# Takes the function information from H, and generates a list of all possible instantiations.                    
-def set_up_axioms():
-    pass
+# Takes a list of Axioms from H, and generates a list of all possible instantiations.                    
+def set_up_axioms(H):
+    axioms = H.axioms
+    for a in axioms:
+        instantiated_axioms.extend(a.instantiate(H))
+    init = False
 
 
     
@@ -309,29 +318,15 @@ def set_up_axioms():
     
 def learn_func_comparisons(H):
             
-    # Iterates through all tuples of IVars that satisfy the hypotheses of restr
-    # and learns of them the conclusion of restr
-    # restr is a Function_restriction
-    def learn_from_function_restriction(restr):
-        hyp = restr.hypotheses
-        num_vars = len(getargspec(hyp).args) - 1
-        num_defs = H.num_terms
-        iterator = generate_tuples(num_defs, num_vars)
-        conclusion = restr.conclusion
-        
-        for c in ifilter(lambda t: hyp(H, *t), iterator):  # c is an ordered tuple of IVars that satisfies hyp
-            conclusion.learn_term_comparison(c, H)
             
     if init:
-        set_up_axioms()
+        instantiated_axioms = set_up_axioms(H)
         
     if H.verbose:   
         print 'Learning functional facts...'
-    restrictions = H.function_information
-    for r in restrictions:
-        if H.verbose:
-            print 
-            print 'From the restriction', r, 'we can learn:'
-        learn_from_function_restriction(r)
+        
+    for inst in instantiated_axioms:
+        inst.update_on_info(H)
+        
     if H.verbose:
         print
