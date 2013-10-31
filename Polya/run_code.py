@@ -3,7 +3,7 @@ from classes import *
 from heuristic import *
 #from addition_module import *
 #from multiplication_module import *
-#from function_module import *
+from function_module import *
 import poly_add_module as add #change this to polyhedron_module_cdd, polyhedron_module_lrs or polyhedron_module (which doesn't handle > vs >=)
 import poly_mult_module as mul
 #import multiplication_module as mul
@@ -13,10 +13,7 @@ import timeit
 #import comparisons
 start = timeit.default_timer()
 
-#Ignore this, benchmarking code
-class timecount:
-    time = 0
-    runs = 0
+
             
 # Runs the heuristic procedure on an initialized Heuristic_data object.
 # If split_cases is true, will look at all unsigned variables and split on them being > or < 0.    
@@ -25,13 +22,9 @@ def run_heuristic_on_heuristic_data(H, split_cases):
         try:
             H.changed = False
             #H.info_dump()
-            #t = timeit.default_timer()
             add.learn_add_comparisons_poly(H)
-            #timecount.time += timeit.default_timer()-t
-            #timecount.runs+=1
             mul.learn_mul_comparisons(H)
-            #learn_func_comparisons(H)
-            #comparisons.compare_matrix_methods(H.num_terms,H.term_comparisons,H.zero_comparisons,[H.name_defs[i]-IVar(i) for i in range(H.num_terms) if isinstance(H.name_defs[i],Add_term)])
+            learn_func_comparisons(H)
         except Contradiction:
             print "Contradiction found!"
             return True
@@ -281,17 +274,12 @@ def test_heuristic_on_functions2():
     
     x = Var("x")
     y = Var("y")
-    hypotheses = [Zero_comparison(Add_term([Add_pair(1, x), Add_pair(-1, y)]), LT), Zero_comparison(Add_term([Add_pair(1, Func_term('exp', [y])), Add_pair(-1, Func_term('exp', [x]))]), LE),
-                  Zero_comparison(Add_term([Add_pair(1, Func_term('exp', [y])), Add_pair(-1, Func_term('exp', [x]))]), GE)]
-    co = Function_conclusion((lambda H, a, b:Func_term("exp", [a])), (lambda H, a, b:Func_term("exp", [b])), GT)
-    fr = Function_restriction('exp', lambda H, a, b:a.neq_rel(b, H), co)
     
-
-    co2 = Function_conclusion(lambda H, a:Func_term("exp", [a]), lambda H, a:0, GT)
-    fr2 = Function_restriction('exp2', lambda H, a:True, co2)
-    # fr2 = Function_restriction('exp',free_vars2,[h2],co2)
-    
-    run_heuristic_on_hypotheses(hypotheses, [fr])
+    u,v = UVar(0), UVar(1)
+    hypotheses = [x<y,Func_term('exp',[x])>Func_term('exp',[y])]
+    axioms = [Axiom([Axiom_clause(u,GE,1,v),Axiom_clause(Func_term('exp',[u]),LT,1,Func_term('exp',[v]))])]
+        
+    run_heuristic_on_hypotheses(hypotheses, axioms)
 
 ###################################################
 #
@@ -461,11 +449,11 @@ def run_heuristic_on_list():
          #"x+y>=2", "z+w>=2", "u*x^2<u*x", "u*y^2<u*y", "u*w^2>u*w", "u*z^2>u*z"
         
         # This example takes a few seconds, fails. There is a model.
-        # "n<=(1/2)*k*x", "0<c", "0<p<1", "(1+p/(3*(c+3)))*n>=k*x"
+         #"n<=(1/2)*k*x", "0<c", "0<p<1", "(1+p/(3*(c+3)))*n>=k*x"
         
         # If the last inequality is >=, this one has a model. Blowup in FM
         # if the last inequality is changed to <, it does not have a model. Contradiction is found.
-        #"x<1<y", "x*y>1", "u+x>=y+1", "x^2*y>=2-u*x*y"
+        "x<1<y", "x*y>1", "u+x>=y+1", "x^2*y<2-u*x*y"
         
         # This example has a model if the last inequality is <. FM blows up here, poly doesn't
         # It does not have a model if the last inequality is >=. Contradiction is found.
@@ -499,9 +487,12 @@ def run_heuristic_on_list():
         #"x<y","x>-y","y<5"
         #"0<x<a+b","a<5","b<3"
         #"x>=0","y>=0","2*(x+y)<10"
-        "x>=5","y>=5","x*y<50"
+        #"x>=5","y>=5","x*y<50"
         
         #"x+y<30","x^2-1<y","y^2>16","x^2>9"
+        #"x>0","y>0","(x+y)/2<(x*y)^(1/2)"
+        
+        #"x^2+1>=2*x"
       ]
     args = []
     try:
@@ -520,7 +511,7 @@ def run_heuristic_on_list():
 #test_heuristic_3()
 #test_heuristic_4()
 #test_heuristic_on_functions()
-#test_heuristic_on_functions2()
+test_heuristic_on_functions2()
 
 def multirun():
     for k in range(10):

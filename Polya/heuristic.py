@@ -1,5 +1,6 @@
 from classes import *
 from copy import deepcopy 
+from itertools import product
 
 
 ###############################################################################
@@ -19,7 +20,30 @@ from copy import deepcopy
 #   o a flag, 'changed', to indicate whether anything has been learned in
 #     since the flag was last set to False
 
+def psc(c,x,y):
+    return cdict[c.comp](x,c.coeff*y)
 
+def psc_weak(c,x,y):
+    return psc(Comparison_data((LE if c.comp in [LE,LT] else GE),c.coeff,c.provenance),x,y)   
+
+class Equiv_class:
+    # rep is an int, representing the index of the class representative
+    # equivs is a list of pairs (c, i) representing a_rep = c*a_i
+    def __init__(self,rep,equivalences):
+        self.rep = rep
+        self.coeffs = {rep:1}
+        for (c,i) in equivalences:
+            self.coeffs[i]=c
+            
+    def coeff(self,k):
+        return self.coeffs[k]
+    
+    def learn_equiv(self,i,coeff):
+        if i in self.coeffs:
+            if self.coeffs[i]!=coeff: #Something is wrong here. Everything is zero.
+                pass
+        self.coeffs[i] = coeff
+        
 
 class Heuristic_data:
 
@@ -39,10 +63,10 @@ class Heuristic_data:
     # takes a list of terms, stores a list of all subterms and 
     # creats names for them
     # TODO: don't have the init function do all the work.
-    def __init__(self, hypotheses, function_information=[], verbose=True):
+    def __init__(self, hypotheses, axioms=[], verbose=True):
         self.verbose = False
         
-        self.function_information = function_information
+        self.axioms = axioms
         
         # initialize term comparisons
         self.term_comparisons = {}
@@ -50,9 +74,12 @@ class Heuristic_data:
         # Stores terms that are equal to 0, that contain information beyond variable definitions.
         self.zero_equations = []
         
+        self.equiv_classes = {}
+        self.get_class = {}
 
         # make the names
         hterms = [h.term for h in hypotheses]
+        print 'hterms:',hterms
         self.terms, self.name_defs = make_term_names(hterms)
         self.num_terms = len(self.terms)
 
@@ -125,6 +152,98 @@ class Heuristic_data:
                 print IVar(i), comp_str[c.comp], c.coeff,'*',IVar(j)
         print '**********'
             
+    # Returns a list of pairs (c,j), representing a_i = c*a_j
+    # I don't think this is right! Fix it.
+    def get_equivalences(self,i,include_self=False):
+        if i not in self.get_class:
+            return ((1,i) if include_self else [])
+        eqc = self.equiv_classes[self.get_class[i]]
+        if include_self:
+            return [(pair[1],pair[0]) for pair in eqc.items()]
+        else:
+            return [(pair[1],pair[0]) for pair in eqc.items() if pair[0]!=i]
+    
+    
+    # Given a Term, returns indices of all IVars that represent a term with that top-level structure.
+    # If term is an add_term, will return indices of add_terms with matching add_pair coeffs.
+    # If term is a mul_term, will return indices of mul_terms with matching exponents.
+    # This version does not do well matching up to constants.
+#     def get_terms_of_struct(self,term):
+#         if isinstance(term,Add_term):
+#             l = len(term.addpairs)
+#             inds = [i for i in range(self.num_terms) if isinstance(self.name_defs[i],Add_term)
+#                      and len(self.name_defs[i].addpairs)==l
+#                      and all(self.name_defs[i].addpairs[j].coeff==term.addpairs[j].coeff for j in range(len(term.addpairs)))]
+#             return inds
+#         
+#         elif isinstance(term,Mul_term):
+#             l = len(term.mulpairs)
+#             inds = [i for i in range(self.num_terms) if isinstance(self.name_defs[i],Mul_term)
+#                      and len(self.name_defs[i].mulpairs)==l
+#                      and all(self.name_defs[i].mulpairs[j].exp==term.mulpairs[j].exp for j in range(len(term.mulpairs)))]
+#             return inds
+#         
+#         elif isinstance(term,Var):
+#             return range(self.num_terms)
+#         
+#         elif isinstance(term,Func_term):
+#             #Not sure yet
+#             return
+
+    # Assumes that each item of term is a Var.
+    # ie, if term is an Add_term, it is a sum of constants times vars.
+    # Returns a list of Arg_assns mapping each variable name to an IVar, and the overall term identity.
+    # Essentially, given a structure, this returns every term that has that structure, along with what
+    # you must plug into the structure to get that term.
+    def get_terms_of_struct(self,term):
+        def generate_environments(map,identity):
+            new_maps = []
+            iter = product(*[map[k] for k in map])
+            inds = [k for k in map]
+            for item in iter:
+                new_maps.append(Arg_assn({inds[i]:item[i] for i in range(len(inds))},identity))
+                
+            return new_maps
+        
+        arg_assns = []
+        if isinstance(term,Add_term):
+            l = len(term.addpairs)
+            candidates = [(i, self.name_defs[i]) for i in range(self.num_terms) 
+                          if (isinstance(self.name_defs[i],Add_term)
+                          and len(self.name_defs[i].addpairs)==l)]
+            
+            for (i,t) in candidates:
+                map = {}
+                pairs = t.addpairs
+                for i in range(l):
+                    c = Fraction(pairs[i].coeff,term.addpairs[i].coeff)
+                    equivs = set(p[1] for p in self.get_equivalences(pairs[i].term.index,True) if p[0]==c)
+                    if term.addpairs[i].term in map:
+                        map[term.addpairs[i].term].intersection_update(equivs)
+                    else:
+                        map[term.addpairs[i].term] = equivs
+                        
+                    if len(map[term.addpairs[i].term])==0:
+                        empty = True
+                        break
+                
+                if empty:
+                     continue
+                #At this point, map is a complete map from variables of term x to lists of ints i,
+                #where each i is the index of a term that we can map x to to turn term into t.
+                #We turn this into a list of all possible assignments that turn x into t.
+                arg_assns.extend(generate_environments(map))
+        
+        elif isinstance(term,Mul_term):
+            pass
+        
+        elif isinstance(term, Var):
+            pass
+        
+        elif isinstance(term,Func_term):
+            pass
+        
+        return arg_assns
     
     def get_index_of_name_def(self, term):
         for k in self.name_defs.keys():
@@ -166,6 +285,87 @@ class Heuristic_data:
 
     def raise_contradiction(self, provenance):
         raise Contradiction('Contradiction!')
+    
+    def match_points(self,comps,i_zc,j_zc):
+ 
+        
+        
+        points = [(c.coeff,1,c.comp,c.provenance) for c in comps]+[(-c.coeff,-1,c.comp,c.provenance) for c in comps]
+        if len(i_zc)>0:
+            points.extend([(0,1,i_zc[0].comp,i_zc[0].provenance),(0,-1,i_zc[0].comp,i_zc[0].provenance)])
+            
+        if len(j_zc)>0:
+            points.extend([(1,0,j_zc[0].comp,j_zc[0].provenance),(-1,0,j_zc[0].comp,j_zc[0].provenance)])    
+        
+        for c in comps:
+            points = [p for p in points if psc_weak(c,p[0],p[1])]
+                    
+        for c in i_zc:
+            points = [p for p in points if cdict[(GE if c.comp in [GE,GT] else LE)](p[0],0)]
+
+        for c in j_zc:
+            points = [p for p in points if cdict[(GE if c.comp in [GE,GT] else LE)](p[1],0)]
+        
+        return points
+    
+    #Returns true if the known data implies a_i comp coeff * a_j, false otherwise.
+    def implies(self,i,j,comp,coeff):
+        #CHECK FOR EQUALITY. NOT IMPLEMENTED YET        
+        
+        if coeff == 0:
+            try: 
+                c = self.zero_comparisons[i]
+                if c.comp == comp:
+                    return True
+                elif c.comp == GT and comp == GE:
+                    return True
+                elif c.comp == LT and comp == LE:
+                    return True
+                else:
+                    return False
+            except KeyError:
+                return False
+            
+
+        comps = self.term_comparisons.get((i,j),[])
+        if len(comps)==2 and comps[0].coeff==comps[1].coeff:
+            print 'equality',i,j,comp_str[comp],coeff,comps
+            return True
+        for c in comps:
+            if (c.coeff == coeff):
+                if ((c.comp == comp) or (c.comp==GT and comp==GE) or (c.comp==LT and comp==LE)):
+                    return True
+                return False
+        #We know coeff!=0, comps is populated, and the comparison being checked is not collinear
+        #with any known comparison in comps.
+        
+        #Find the two points representing the strongest known comparison rays, including sign info.
+        try:
+            i_zc = [self.zero_comparisons[i]]
+        except KeyError:
+            i_zc = []
+        try:
+            j_zc = [self.zero_comparisons[j]]
+        except KeyError:
+            j_zc = []
+            
+        points = self.match_points(comps,i_zc,j_zc)
+                    
+        if len(points) == 0:
+            return False
+        
+        if len(points)!=2:
+            print "Problem in implies! there are",len(points),"points left."
+            print points
+            print " ",IVar(i),comp_str[comp],coeff,IVar(j)
+            print comps, self.sign(i),self.sign(j)
+            
+        for p in points:
+            if not psc(Comparison_data(comp,coeff,HYP),p[0],p[1]):
+                return False
+        return True
+                 
+        #FINISH WRITING THIS
     
     # Learn a_i = 0.
     # Eliminates a_i from all stored data
@@ -258,276 +458,378 @@ class Heuristic_data:
         
         self.zero_equations.append(IVar(i) - IVar(j) * coeff)
         
+        if i in self.get_class and j in self.get_class: 
+            #There are equivalence classes for both a_i and a_j
+            #Merge the one for a_j into the one for a_i
+            ind_i, ind_j = self.get_class[i],self.get_class[j]
+            coeff_i,coeff_j = self.equiv_classes[ind_i].coeff(i),self.equiv_classes[ind_j].coeff(j)
+            conv = Fraction(coeff_i * coeff , coeff_j)
+            for k in self.equiv_classes[ind_j].coeffs:
+                self.equiv_classes[ind_i].learn_equiv(k,conv*self.equiv_classes[ind_j].coeff(k))
+                self.get_class[k] = ind_i
+                
+            self.equiv_classes.pop(ind_j)
+            
+        
+        elif i in self.get_class:
+            ind_i = self.get_class[i]
+            coeff_i = self.equiv_classes[ind_i].coeff(i)
+            coeff_j = coeff_i * coeff
+            self.equiv_classes[ind_i].learn_equiv(j,coeff_j)
+            self.get_class[j] = ind_i
+            
+        elif j in self.get_class:
+            ind_j = self.get_class[j]
+            coeff_j = self.equiv_classes[ind_j].coeff(j)
+            coeff_i = Fraction(coeff,coeff_j)
+            self.equiv_classes[ind_j].learn_equiv(i,coeff_i)
+            self.get_class[i] = ind_j
+        
+        else:
+            #Make a new equiv class with representative a_i
+            new_equiv_class = Equiv_class(i,[(coeff,j)])
+            self.equiv_classes[i] = new_equiv_class
+            self.get_class[i] = i
+            self.get_class[j] = i
+        
 
     # new_comp is Comparison_data to potentially be added. a_i comp coeff a_j,
     #     but this method does not need to know i or j.
     # old_comps is list of comparisons of the same direction as new_comp
     # sign is +1 if a_j positive, -1 if a_j negative, 0 if a_j unknown
     # changes old_comps. returns True if changes are made, False otherwise               
-    def make_new_comps(self, new_comp, old_comps, sign):
-        # print 'make new comps fed:',new_comp,old_comps,sign
-        if not old_comps:  # no comparisons in this direction.
-            old_comps.append(new_comp)
-            return True
-        
-        # If new_comp is already in there, no changes needed.    
-        if any(new_comp.coeff==o.coeff and (new_comp.comp==o.comp or (new_comp.comp==LE and o.comp==LT) or (new_comp.comp==GE and o.comp==GT)) for o in old_comps):#if new_comp in old_comps:
-            return False
-            
-        if sign == 0:  # We do not know the sign of a_j
-            if len(old_comps) == 1:  # Only one element in old_comps, so new_comp has new info
-                old_comps.append(new_comp)
-                return True
-                
-            # Otherwise, there are two comps in old_comps.
-            # See if new_comp is stronger or weaker than both.
-            
-            lt_all, gt_all = all(new_comp.le(c) for c in old_comps), all(new_comp.ge(c) for c in old_comps)
-            if lt_all:
-                for i in range(2):
-                    if old_comps[i].le(old_comps[1 - i]):
-                        old_comps.pop(i)
-                        old_comps.append(new_comp)
-                        return True
-                        
-            elif gt_all:
-                for i in range(2):
-                    if old_comps[i].ge(old_comps[1 - i]):
-                        old_comps.pop(i)
-                        old_comps.append(new_comp)
-                        return True
-                        
-            return False
-        
-        # Otherwise, we do know the sign of a_j. There will only be one element in old_comps now.
-        # new_comp should be that element if it is stronger than the alternatives in the proper direction.
-        p1 = (new_comp.comp in [LE, LT] and ((sign == 1 and all(new_comp.le(c) for c in old_comps)) or (sign == -1 and all(new_comp.ge(c) for c in old_comps))))
-        p2 = (new_comp.comp in [GE, GT] and ((sign == 1 and all(new_comp.ge(c) for c in old_comps)) or (sign == -1 and all(new_comp.le(c) for c in old_comps))))
-        if p1 or p2:
-            # print 'only one comp. sign = ',sign,'new comp = ',new_comp, 'old_comps = ',old_comps
-            while len(old_comps) > 0:
-                old_comps.pop()
-            old_comps.append(new_comp)
-            return True
-            
-        return False
-
+#     def make_new_comps(self, new_comp, old_comps, sign):
+#         # print 'make new comps fed:',new_comp,old_comps,sign
+#         if not old_comps:  # no comparisons in this direction.
+#             old_comps.append(new_comp)
+#             return True
+#         
+#         # If new_comp is already in there, no changes needed.    
+#         if any(new_comp.coeff==o.coeff and (new_comp.comp==o.comp or (new_comp.comp==LE and o.comp==LT) or (new_comp.comp==GE and o.comp==GT)) for o in old_comps):#if new_comp in old_comps:
+#             return False
+#             
+#         if sign == 0:  # We do not know the sign of a_j
+#             if len(old_comps) == 1:  # Only one element in old_comps, so new_comp has new info
+#                 old_comps.append(new_comp)
+#                 return True
+#                 
+#             # Otherwise, there are two comps in old_comps.
+#             # See if new_comp is stronger or weaker than both.
+#             
+#             lt_all, gt_all = all(new_comp.le(c) for c in old_comps), all(new_comp.ge(c) for c in old_comps)
+#             if lt_all:
+#                 for i in range(2):
+#                     if old_comps[i].le(old_comps[1 - i]):
+#                         old_comps.pop(i)
+#                         old_comps.append(new_comp)
+#                         return True
+#                         
+#             elif gt_all:
+#                 for i in range(2):
+#                     if old_comps[i].ge(old_comps[1 - i]):
+#                         old_comps.pop(i)
+#                         old_comps.append(new_comp)
+#                         return True
+#                         
+#             return False
+#         
+#         # Otherwise, we do know the sign of a_j. There will only be one element in old_comps now.
+#         # new_comp should be that element if it is stronger than the alternatives in the proper direction.
+#         p1 = (new_comp.comp in [LE, LT] and ((sign == 1 and all(new_comp.le(c) for c in old_comps)) or (sign == -1 and all(new_comp.ge(c) for c in old_comps))))
+#         p2 = (new_comp.comp in [GE, GT] and ((sign == 1 and all(new_comp.ge(c) for c in old_comps)) or (sign == -1 and all(new_comp.le(c) for c in old_comps))))
+#         if p1 or p2:
+#             # print 'only one comp. sign = ',sign,'new comp = ',new_comp, 'old_comps = ',old_comps
+#             while len(old_comps) > 0:
+#                 old_comps.pop()
+#             old_comps.append(new_comp)
+#             return True
+#             
+#         return False
+    
     def learn_term_comparison(self,i,j,comp,coeff,provenance):
-        
-        ##################
-        #
-        # Helper functions
-        #
-        ##################
-      
-        
-        #Comp is a comparison data xRcoeff*y
-        #Assumes x,y is not on the line comp
-        def point_satisfies_comparison(comp,x,y):
-            if comp.comp in [LE,LT]:
-                return x < comp.coeff * y
-            else:
-                return x > comp.coeff * y
-        
-        #Given comparisons c1 = xR1coeff1*y, c2 = xR2coeff2*y,
-        #Finds a point on the line x = coeff2 * y that satisfies c1
-        #Assumes the lines are not collinear
-        def get_point_from_comparisons(c1,c2):
-            x,y = c2.coeff,1
-            if point_satisfies_comparison(c1,x,y):
-                return (x,y)
-            else:
-                return (-x,-y)
-        
-        #Because of problems with infinite slope, zero comparisons are not taken into account in the routine.
-        #Once something new has been learned, this subroutine makes sure the resulting state does not
-        #contradict the known sign info.
-        #It also could check to see if there is new sign info to be found, but this is not implemented yet.
-        #Since we do not have coefficients of 0 in term_comparisons, no line will lie along an axis.   
-        def check_against_zero_comparisons():
-            comps = self.term_comparisons.get((i,j),[])
-            if len(comps)==0: #Nothing we can do with no comparisons. This shouldn't happen.
-                pass
-            elif len(comps)==1: #Possible contradiction if signs of i and j are both known.
-                strong = comps[0].comp in [LT,GT]
-                si, sj = self.weak_sign(i),self.weak_sign(j)
-                
-                if not (si==0 or sj==0): #both signs are known. Look for contradiction
-                    pi,pj = (si,0),(0,sj)
-                    if not point_satisfies_comparison(comps[0],*pi) and not point_satisfies_comparison(comps[0],*pj):
-                        if not (self.sign(i)==self.sign(j)==0 and not strong): #If this is false, we have x_i=x_j=0. Can we do something here?
-                            print 'from 1'
-                            self.raise_contradiction(provenance)
-                
-                elif si!=0: #sign of xi is known. learn sign of xj
-                    #Make sure the known sign of xi is strong if the new comparison is strong.
-                    if strong and self.sign(i)==0:
-                        self.learn_zero_comparison(i, (GT if si>0 else LT), provenance)
-                    
-                    # 0 r1 x
-                    # x r2 m * y
-                    # if r1 and r2 point in the same direction,
-                    # learn comparison between y and 0
-                    r1 = ((GE if si<0 else LE) if self.sign(i)==0 else (GT if si<0 else LT))
-                    r2 = comps[0].comp
-                    
-                    if (r1 in [LE,LT] and r2 in [LE,LT]) or (r1 in [GE,GT] and r2 in [GE,GT]):
-                        if comps[0].coeff > 0:
-                            #learn 0 r1 y
-                            self.learn_zero_comparison(j, (comp_reverse(r1) if r1==r2 else (LT if r1 in [GE,GT] else GT)), provenance)
-                        else:
-                            self.learn_zero_comparison(j, (r1 if r1==r2 else (GT if r1 in [GE,GT] else LT)), provenance)
-                    
-                elif sj!=0: #sign of xj is known. learn sign of xi
-                    if strong and self.sign(j)==0:
-                        self.learn_zero_comparison(j, (GT if sj>0 else LT), provenance)        
-                    
-                    # 0 r1 y
-                    # x r2 m * y
-                    r1 = ((GE if sj<0 else LE) if self.sign(j)==0 else (GT if sj<0 else LT))
-                    r2 = comps[0].comp
-                    
-                    if comps[0].coeff > 0 and ((r1 in [LE,LT] and r2 in [GE,GT]) or (r1 in [GE,GT] and r2 in [LE,LT])):
-                        #learn 0 r1 x
-                        self.learn_zero_comparison(i,(comp_reverse(r1) if comp_reverse(r1)==r2 else (LT if r1 in [GE,GT] else GT)),provenance)
-                    elif comps[0].coeff < 0 and ((r1 in [LE,LT] and r2 in [LE,LT]) or (r1 in [GE,GT] and r2 in [GE,GT])):
-                        #learn 0 r2 x == x r1 0
-                        self.learn_zero_comparison(i,(comp_reverse(r1) if r1==r2 else (LT if r1 in [GE,GT] else LT)),provenance)
-                        
-
-                #Otherwise, no sign info is known. No contradiction and nothing to learn.
-                    
-            else: #two comparisons.
-                si,sj = self.weak_sign(i),self.weak_sign(j)
-                p1,p2 = get_point_from_comparisons(comps[0],comps[1]),get_point_from_comparisons(comps[1],comps[0])
-                
-                #Learning sign information could bring about a contradiction, if it exists
-                if p1[0]*p2[0]>0:
-                    self.learn_zero_comparison(i, (GT if p1[0]>0 else LT), provenance)
-                if p1[1]*p2[1]>0:
-                    self.learn_zero_comparison(j, (GT if p1[1]>0 else LT), provenance)
-                
-                #Check for cases like x>-2y,x>-1/2y, x<0,y<0. Can only happen if we know both sign info
-                #These cases occur only if the vertices are in opposite quadrants,
-                #where the non-contained quadrant is the one determined by the sign info    
-                if (si!=0 and sj!=0): 
-                    p = (-si,-sj)
-                    if (point_satisfies_comparison(comps[0],*p) and point_satisfies_comparison(comps[1],*p)
-                        and
-                        (p1[0]*si<0 or p1[1]*sj<0) and (p2[0]*si<0 or p2[1]*sj<0)):
-                        self.raise_contradiction(provenance)
-                    
-                # Otherwise, no contradiction, and no more sign info to learn.
-                    
-        ###################################### 
-        
-
-        if coeff == 0:
-            self.learn_zero_comparison(i, comp, provenance)
-            return
         # swap i and j if necessary, so i < j
         if i >= j:
             i, j, coeff = j, i, Fraction(1, Fraction(coeff))
             if coeff > 0:
                 comp = comp_reverse(comp)
                 
-
-        # See if we can get any zero_comparisons from 1 comp c*a_j.
-        if i == 0:
-            if coeff > 0 and comp in [LE, LT]:  # a_j >= 1/c > 0
-                self.learn_zero_comparison(j, GT, provenance)
-            elif coeff < 0 and comp in [LE, LT]:  # a_j <= 1/c < 0
-                self.learn_zero_comparison(j, LT, provenance)
-            
-        
-        comp_list = self.term_comparisons.get((i,j),[])
-        
-        new_comp = Comparison_data(comp,coeff,provenance)
-        
-        #If there are no old comparisons, learn the new one. No sign info to find.
-        if len(comp_list)==0:
-            self.term_comparisons[i,j]=[new_comp]
-            self.changed = True
-            if self.verbose:
-                print 'Learned:', new_comp.to_string(IVar(i), IVar(j))
-                print '  In other words:', \
-                       new_comp.to_string(self.terms[i], self.terms[j])   
-            check_against_zero_comparisons()            
-            return
-        
-        for c in (c for c in comp_list if c.coeff == coeff):
-            if c.comp==comp: #new comparison is already there
-                return
-            elif (c.comp==LT and comp==LE) or (c.comp==GT and comp==GE): #new comparison is weaker
-                return
-            elif (c.comp==LE and comp==LT) or (c.comp==GE and comp==GT): #new comparison is stronger
-                comp_list.remove(c)
-            elif (c.comp in [LE,GE] and comp in [LE,GE]): #We have equality.
-                self.term_comparisons[i,j]=[c,new_comp]
-                self.learn_term_equality(i,j,coeff,provenance)
-                self.changed = True
-                check_against_zero_comparisons()
-                return
-            else: #Contradiction
-                if self.verbose:
-                    print 'Learned:', new_comp.to_string(IVar(i), IVar(j))
-                    print '  In other words:', \
-                           new_comp.to_string(self.terms[i], self.terms[j])
-                self.raise_contradiction(provenance)
                 
-        #Now there are no comparisons in comp_list with the same coefficient as new_comp.
-        
-        if len(comp_list)<2:
-            comp_list.append(new_comp)
-            self.term_comparisons[i,j]=comp_list
-            self.changed = True
-            if self.verbose:
-                print 'Learned:', new_comp.to_string(IVar(i), IVar(j))
-                print '  In other words:', \
-                       new_comp.to_string(self.terms[i], self.terms[j])
-            
-            check_against_zero_comparisons()
+        if self.implies(i,j,comp,coeff):
             return
         
-        #Otherwise, we have two old comparisons and one potentially new one.
-        c1,c2 = comp_list[0],comp_list[1]
-        
-        #First, make sure there's no equality.
-        if c1.coeff == c2.coeff:
+        elif self.implies(i,j,comp_negate(comp),coeff):
             if self.verbose:
                 print 'Learned:', new_comp.to_string(IVar(i), IVar(j))
                 print '  In other words:', \
                        new_comp.to_string(self.terms[i], self.terms[j])
             self.raise_contradiction(provenance)
-        
-        p1,p2 = get_point_from_comparisons(c2,c1),get_point_from_comparisons(c1,c2) #p1 lies on line c1. p2 lies on c2
-        
-        satp1,satp2 = point_satisfies_comparison(new_comp,*p1),point_satisfies_comparison(new_comp,*p2)
-        
-        if satp1 and satp2:
-            #new_comp has no new information
             return
         
-        elif not (satp1 or satp2):
-            #Contradiction
-            if self.verbose:
-                print 'Learned:', new_comp.to_string(IVar(i), IVar(j))
-                print '  In other words:', \
-                       new_comp.to_string(self.terms[i], self.terms[j])
-            self.raise_contradiction(provenance) 
+        #Otherwise, we know we have new information.
+        
+        if coeff == 0:
+            self.learn_zero_comparison(i, comp, provenance)
+            return
+        
+#         # See if we can get any zero_comparisons from 1 comp c*a_j.
+#         if i == 0:
+#             if coeff > 0 and comp in [LE, LT]:  # a_j >= 1/c > 0
+#                 self.learn_zero_comparison(j, GT, provenance)
+#             elif coeff < 0 and comp in [LE, LT]:  # a_j <= 1/c < 0
+#                 self.learn_zero_comparison(j, LT, provenance)
+        new_comp=Comparison_data(comp,coeff,provenance)
+        comps = self.term_comparisons.get((i,j),[])+[new_comp]
+        try:
+            i_zc = [self.zero_comparisons[i]]
+        except KeyError:
+            i_zc = []
             
-        elif satp1: #new_comp is stronger than c2
-            comp_list[1]=new_comp
+        try:
+            j_zc = [self.zero_comparisons[j]]
+        except KeyError:
+            j_zc = []
             
-        elif satp2: #new_comp is stronger than c1
-            comp_list[0]=new_comp
-           
-        self.changed = True
-        self.term_comparisons[i,j]=comp_list
+        points = self.match_points(comps,i_zc,j_zc)
+        if len(points)!=2:
+            print 'Not enough points in learn_term_comparison'
+            
+        if points[0][0]*points[0][1]==points[1][0]*points[1][1]:
+            points = [points[0]]
+            
+        self.term_comparisons[i,j] = [Comparison_data(p[2],p[0]*p[1],p[3]) for p in points if (p[0]!=0 and p[1]!=0)]
+        
         if self.verbose:
             print 'Learned:', new_comp.to_string(IVar(i), IVar(j))
             print '  In other words:', \
                    new_comp.to_string(self.terms[i], self.terms[j])
-    
-        check_against_zero_comparisons()
             
+
+#     def learn_term_comparison2(self,i,j,comp,coeff,provenance):
+#         
+#         if self.implies(i,j,comp,coeff):
+#             imp = True
+#             print 'nothing happens'
+#         elif self.implies(i,j,comp_reverse(comp),coeff):
+#             imp = False
+#             print 'contradiction'
+#         else:
+#             imp = False
+#             print 'new info'
+#         
+#         ##################
+#         #
+#         # Helper functions
+#         #
+#         ##################
+#       
+#         
+#         #Comp is a comparison data xRcoeff*y
+#         #Assumes x,y is not on the line comp
+#         def point_satisfies_comparison(comp,x,y):
+#             if comp.comp in [LE,LT]:
+#                 return x < comp.coeff * y
+#             else:
+#                 return x > comp.coeff * y
+#         
+#         #Given comparisons c1 = xR1coeff1*y, c2 = xR2coeff2*y,
+#         #Finds a point on the line x = coeff2 * y that satisfies c1
+#         #Assumes the lines are not collinear
+#         def get_point_from_comparisons(c1,c2):
+#             x,y = c2.coeff,1
+#             if point_satisfies_comparison(c1,x,y):
+#                 return (x,y)
+#             else:
+#                 return (-x,-y)
+#         
+#         #Because of problems with infinite slope, zero comparisons are not taken into account in the routine.
+#         #Once something new has been learned, this subroutine makes sure the resulting state does not
+#         #contradict the known sign info.
+#         #It also could check to see if there is new sign info to be found, but this is not implemented yet.
+#         #Since we do not have coefficients of 0 in term_comparisons, no line will lie along an axis.   
+#         def check_against_zero_comparisons():
+#             comps = self.term_comparisons.get((i,j),[])
+#             if len(comps)==0: #Nothing we can do with no comparisons. This shouldn't happen.
+#                 pass
+#             elif len(comps)==1: #Possible contradiction if signs of i and j are both known.
+#                 strong = comps[0].comp in [LT,GT]
+#                 si, sj = self.weak_sign(i),self.weak_sign(j)
+#                 
+#                 if not (si==0 or sj==0): #both signs are known. Look for contradiction
+#                     pi,pj = (si,0),(0,sj)
+#                     if not point_satisfies_comparison(comps[0],*pi) and not point_satisfies_comparison(comps[0],*pj):
+#                         if not (self.sign(i)==self.sign(j)==0 and not strong): #If this is false, we have x_i=x_j=0. Can we do something here?
+#                             print 'from 1'
+#                             self.raise_contradiction(provenance)
+#                 
+#                 elif si!=0: #sign of xi is known. learn sign of xj
+#                     #Make sure the known sign of xi is strong if the new comparison is strong.
+#                     if strong and self.sign(i)==0:
+#                         self.learn_zero_comparison(i, (GT if si>0 else LT), provenance)
+#                     
+#                     # 0 r1 x
+#                     # x r2 m * y
+#                     # if r1 and r2 point in the same direction,
+#                     # learn comparison between y and 0
+#                     r1 = ((GE if si<0 else LE) if self.sign(i)==0 else (GT if si<0 else LT))
+#                     r2 = comps[0].comp
+#                     
+#                     if (r1 in [LE,LT] and r2 in [LE,LT]) or (r1 in [GE,GT] and r2 in [GE,GT]):
+#                         if comps[0].coeff > 0:
+#                             #learn 0 r1 y
+#                             self.learn_zero_comparison(j, (comp_reverse(r1) if r1==r2 else (LT if r1 in [GE,GT] else GT)), provenance)
+#                         else:
+#                             self.learn_zero_comparison(j, (r1 if r1==r2 else (GT if r1 in [GE,GT] else LT)), provenance)
+#                     
+#                 elif sj!=0: #sign of xj is known. learn sign of xi
+#                     if strong and self.sign(j)==0:
+#                         self.learn_zero_comparison(j, (GT if sj>0 else LT), provenance)        
+#                     
+#                     # 0 r1 y
+#                     # x r2 m * y
+#                     r1 = ((GE if sj<0 else LE) if self.sign(j)==0 else (GT if sj<0 else LT))
+#                     r2 = comps[0].comp
+#                     
+#                     if comps[0].coeff > 0 and ((r1 in [LE,LT] and r2 in [GE,GT]) or (r1 in [GE,GT] and r2 in [LE,LT])):
+#                         #learn 0 r1 x
+#                         self.learn_zero_comparison(i,(comp_reverse(r1) if comp_reverse(r1)==r2 else (LT if r1 in [GE,GT] else GT)),provenance)
+#                     elif comps[0].coeff < 0 and ((r1 in [LE,LT] and r2 in [LE,LT]) or (r1 in [GE,GT] and r2 in [GE,GT])):
+#                         #learn 0 r2 x == x r1 0
+#                         self.learn_zero_comparison(i,(comp_reverse(r1) if r1==r2 else (LT if r1 in [GE,GT] else LT)),provenance)
+#                         
+# 
+#                 #Otherwise, no sign info is known. No contradiction and nothing to learn.
+#                     
+#             else: #two comparisons.
+#                 si,sj = self.weak_sign(i),self.weak_sign(j)
+#                 p1,p2 = get_point_from_comparisons(comps[0],comps[1]),get_point_from_comparisons(comps[1],comps[0])
+#                 
+#                 #Learning sign information could bring about a contradiction, if it exists
+#                 if p1[0]*p2[0]>0:
+#                     self.learn_zero_comparison(i, (GT if p1[0]>0 else LT), provenance)
+#                 if p1[1]*p2[1]>0:
+#                     self.learn_zero_comparison(j, (GT if p1[1]>0 else LT), provenance)
+#                 
+#                 #Check for cases like x>-2y,x>-1/2y, x<0,y<0. Can only happen if we know both sign info
+#                 #These cases occur only if the vertices are in opposite quadrants,
+#                 #where the non-contained quadrant is the one determined by the sign info    
+#                 if (si!=0 and sj!=0): 
+#                     p = (-si,-sj)
+#                     if (point_satisfies_comparison(comps[0],*p) and point_satisfies_comparison(comps[1],*p)
+#                         and
+#                         (p1[0]*si<0 or p1[1]*sj<0) and (p2[0]*si<0 or p2[1]*sj<0)):
+#                         self.raise_contradiction(provenance)
+#                     
+#                 # Otherwise, no contradiction, and no more sign info to learn.
+#                     
+#         ###################################### 
+#         
+# 
+#         if coeff == 0:
+#             self.learn_zero_comparison(i, comp, provenance)
+#             return
+#         # swap i and j if necessary, so i < j
+#         if i >= j:
+#             i, j, coeff = j, i, Fraction(1, Fraction(coeff))
+#             if coeff > 0:
+#                 comp = comp_reverse(comp)
+#                 
+# 
+#         # See if we can get any zero_comparisons from 1 comp c*a_j.
+#         if i == 0:
+#             if coeff > 0 and comp in [LE, LT]:  # a_j >= 1/c > 0
+#                 self.learn_zero_comparison(j, GT, provenance)
+#             elif coeff < 0 and comp in [LE, LT]:  # a_j <= 1/c < 0
+#                 self.learn_zero_comparison(j, LT, provenance)
+#             
+#         
+#         comp_list = self.term_comparisons.get((i,j),[])
+#         
+#         new_comp = Comparison_data(comp,coeff,provenance)
+#         
+#         #If there are no old comparisons, learn the new one. No sign info to find.
+#         if len(comp_list)==0:
+#             self.term_comparisons[i,j]=[new_comp]
+#             self.changed = True
+#             if self.verbose:
+#                 print 'Learned:', new_comp.to_string(IVar(i), IVar(j))
+#                 print '  In other words:', \
+#                        new_comp.to_string(self.terms[i], self.terms[j])   
+#             if imp: print 'shouldnt be new *',i,j,new_comp 
+#             check_against_zero_comparisons()
+#             return
+#         
+#         for c in (c for c in comp_list if c.coeff == coeff):
+#             if c.comp==comp: #new comparison is already there
+#                 return
+#             elif (c.comp==LT and comp==LE) or (c.comp==GT and comp==GE): #new comparison is weaker
+#                 return
+#             elif (c.comp==LE and comp==LT) or (c.comp==GE and comp==GT): #new comparison is stronger
+#                 comp_list.remove(c)
+#             elif (c.comp in [LE,GE] and comp in [LE,GE]): #We have equality.
+#                 self.term_comparisons[i,j]=[c,new_comp]
+#                 self.learn_term_equality(i,j,coeff,provenance)
+#                 self.changed = True
+#                 check_against_zero_comparisons()
+#                 return
+#             else: #Contradiction
+#                 if self.verbose:
+#                     print 'Learned:', new_comp.to_string(IVar(i), IVar(j))
+#                     print '  In other words:', \
+#                            new_comp.to_string(self.terms[i], self.terms[j])
+#                 self.raise_contradiction(provenance)
+#                 
+#         #Now there are no comparisons in comp_list with the same coefficient as new_comp.
+#         
+#         if len(comp_list)<2:
+#             comp_list.append(new_comp)
+#             self.term_comparisons[i,j]=comp_list
+#             self.changed = True
+#             if self.verbose:
+#                 print 'Learned:', new_comp.to_string(IVar(i), IVar(j))
+#                 print '  In other words:', \
+#                        new_comp.to_string(self.terms[i], self.terms[j])
+#             if imp: print 'shouldnt be new **',i,j,new_comp 
+#             check_against_zero_comparisons()
+#             return
+#         
+#         #Otherwise, we have two old comparisons and one potentially new one.
+#         c1,c2 = comp_list[0],comp_list[1]
+#         
+#         #First, make sure there's no equality.
+#         if c1.coeff == c2.coeff:
+#             if self.verbose:
+#                 print 'Learned:', new_comp.to_string(IVar(i), IVar(j))
+#                 print '  In other words:', \
+#                        new_comp.to_string(self.terms[i], self.terms[j])
+#             self.raise_contradiction(provenance)
+#         
+#         p1,p2 = get_point_from_comparisons(c2,c1),get_point_from_comparisons(c1,c2) #p1 lies on line c1. p2 lies on c2
+#         
+#         satp1,satp2 = point_satisfies_comparison(new_comp,*p1),point_satisfies_comparison(new_comp,*p2)
+#         
+#         if satp1 and satp2:
+#             #new_comp has no new information
+#             return
+#         
+#         elif not (satp1 or satp2):
+#             #Contradiction
+#             if self.verbose:
+#                 print 'Learned:', new_comp.to_string(IVar(i), IVar(j))
+#                 print '  In other words:', \
+#                        new_comp.to_string(self.terms[i], self.terms[j])
+#             self.raise_contradiction(provenance) 
+#             
+#         elif satp1: #new_comp is stronger than c2
+#             comp_list[1]=new_comp
+#             
+#         elif satp2: #new_comp is stronger than c1
+#             comp_list[0]=new_comp
+#            
+#         self.changed = True
+#         self.term_comparisons[i,j]=comp_list
+#         if self.verbose:
+#             print 'Learned:', new_comp.to_string(IVar(i), IVar(j))
+#             print '  In other words:', \
+#                    new_comp.to_string(self.terms[i], self.terms[j])
+#             if imp: print 'shouldnt be new ***',i,j,new_comp 
+#         check_against_zero_comparisons()

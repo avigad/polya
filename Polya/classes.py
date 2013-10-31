@@ -20,8 +20,15 @@ comp_str = {GT: '>', GE: '>=', LT: '<', LE: '<='}
 def comp_reverse(i):
     return 3 - i
 
+# swaps GT and LE, GE and LT
+def comp_negate(i):
+    return (i+2) % 4
+
 # to record where each fact came from
 ADD, MUL, HYP, FUN = range(4)
+
+#Used in heuristic and polyhedron_util
+cdict = {LE:(lambda x,y: x<=y),LT:(lambda x,y:x<y),GE:(lambda x,y:x>=y),GT:(lambda x,y: x>y)}
 
 ###############################################################################
 #
@@ -543,9 +550,12 @@ class Func_term(Term):
         self.args = []
         for a in args:
             if isinstance(a, Term):
+                self.args.append(Add_pair(1,a))
+            elif isinstance(a, Add_pair):
                 self.args.append(a)
             else:
                 print 'a is not a term, but a... ?', type(a)
+                print a
                 self.args.append(eval(a))
         self.const = const
         
@@ -595,6 +605,12 @@ class Func_term(Term):
         s = s[:-1] + ')'
         return s
         
+# For function module
+class Arg_assn:
+    def __init__(self,map,identity):
+        self.map = map
+        self.identity = identity        
+
 ###############################################################################
 #
 # COMPARISON CLASSES
@@ -677,6 +693,12 @@ class Func_term(Term):
 
 # Comparison between one term a_i and 0
 # a_i comp 0
+class Equality_data:
+    
+    def __init__(self,coeff,provenance):
+        self.coeff = coeff
+        self.provenance = provenance
+
 class Zero_comparison_data:
 
     def __init__(self, comp, provenance=None):
@@ -685,6 +707,7 @@ class Zero_comparison_data:
 
     def to_string(self, term):
         return str(term) + ' ' + comp_str[self.comp] + ' 0'
+    
 
 
 # comparison between two terms, a_i and a_j
@@ -708,6 +731,9 @@ class Comparison_data:
         
     def __repr__(self):
         return self.__str__()
+    
+    def __hash__(self):
+        return hash(self.__str__())
     
     # used to figure out strength of inequalities
         
@@ -823,11 +849,8 @@ def canonize(t):
         args = t.args
         nargs = []
         for p in args:
-            cp = canonize(p)
-            if cp.coeff == 1:
-                nargs.append(cp.term)
-            else:
-                nargs.append(cp.coeff * cp.term)
+            cp = canonize(p.term)
+            nargs.append(Add_pair(p.coeff*cp.coeff,cp.term))
         term = Func_term(t.name, nargs, 1)
         return Add_pair(t.const, term)
 
@@ -874,6 +897,28 @@ def canonize_zero_comparison(h):
 # "IVars" for the name, e.g. a0, a1, a2, ...
 #
 ###############################################################################
+
+class UVar(Term, Var):
+
+    def __init__(self, index):
+        Var.__init__(self, "v" + str(index))
+        self.index = index
+
+    def __str__(self):
+        return self.name
+
+    def __cmp__(self, other):
+        if isinstance(other, Const):
+            return 1
+        elif isinstance(other, Var):
+            return cmp(self.index, other.index)
+        else:
+            return -1
+        
+    def __eq__(self, other):
+        if isinstance(other, UVar):
+            return self.index == other.index
+        return False
 
 # internal variables -- just an index
 class IVar(Term, Var):
@@ -1110,7 +1155,7 @@ def make_term_names(terms):
             elif isinstance(t, Func_term):
                 args = []
                 for m in t.args:
-                    args.append(process_subterm(m))
+                    args.append(Add_pair(m.coeff,process_subterm(m.term)))
                 new_def = Func_term(t.name, args, t.const)
             l = len(subterm_list)  # index of new term
             subterm_list.append(t)
