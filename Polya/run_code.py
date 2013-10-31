@@ -275,10 +275,11 @@ def test_heuristic_on_functions2():
     
     x = Var("x")
     y = Var("y")
+    exp = Func('exp')
     
     u,v = UVar(0), UVar(1)
-    hypotheses = [x<y,Func_term('exp',[x])>Func_term('exp',[y])]
-    axioms = [Axiom([Axiom_clause(u,GE,1,v),Axiom_clause(Func_term('exp',[u]),LT,1,Func_term('exp',[v]))])]
+    hypotheses = [x<y,exp(x)>exp(y)]
+    axioms = [Axiom([Axiom_clause(u,GE,1,v),Axiom_clause(exp(u),LT,1,exp(v))])]
         
     run_heuristic_on_hypotheses(hypotheses, axioms)
 
@@ -531,7 +532,7 @@ def run_heuristic_on_list():
 #test_heuristic_3()
 #test_heuristic_4()
 #test_heuristic_on_functions()
-test_heuristic_on_functions3()
+test_heuristic_on_functions2()
 
 def multirun():
     for k in range(10):

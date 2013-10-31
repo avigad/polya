@@ -4,6 +4,10 @@ import pipes
 import tempfile
 #import timecount
 
+#Depending on how you have installed lrs,
+#you may have to change lines 48 and 71 to
+# "./lrs" and "./redund"
+
 def make_frac(str):
     i = str.find('/')
     if i<0:
@@ -34,32 +38,14 @@ def output_to_matrix(str_output):
 def get_generators(matrix):
     return get_inequalities(matrix)
 
-    s = str(matrix)
-    p = pipes.Template()
-    p.append("lrs", "--")
-    p.debug(False)
-    t = tempfile.NamedTemporaryFile(mode='r')
-    f = p.open(t.name, 'w')
-    try:
-        f.write(s)
-    finally:
-        f.close()
-    t.seek(0)
-    out = t.read()
-    t.close()
-    
-    try:
-        return output_to_matrix(out)
-    except StopIteration:
-        print matrix
-        exit()
+
 
 #Given a matrix in v-rep, gets the h-rep
 def get_inequalities(matrix):
     s = str(matrix)
     #timecount.start()
     p = pipes.Template()
-    p.append("./lrs", "--")
+    p.append("lrs", "--")
     p.debug(False)
     t = tempfile.NamedTemporaryFile(mode='r')
     f = p.open(t.name, 'w')
@@ -82,7 +68,7 @@ def get_inequalities(matrix):
 def redund_and_generate(matrix):
     s = str(matrix)
     p = pipes.Template()
-    p.append("./redund", "--")
+    p.append("redund", "--")
     p.debug(False)
     t = tempfile.NamedTemporaryFile(mode='r')
     f = p.open(t.name, 'w')

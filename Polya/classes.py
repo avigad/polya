@@ -549,6 +549,12 @@ class Mul_term(Term):
         s = s[:-1] + ")"
         return s
 
+class Func():
+    def __init__(self, name):
+        self.name = name
+        
+    def __call__(self, *args):
+        return Func_term(self.name, args)
 
 class Func_term(Term):
     
@@ -597,6 +603,7 @@ class Func_term(Term):
                 return cmp(self.name, other.name)
             return cmp(self.args, other.args)
         return 1
+    
         
     def __str__(self):
         s = ('' if self.const == 1 else str(self.const) + '*') + self.name + '('
