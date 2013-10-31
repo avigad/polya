@@ -555,6 +555,7 @@ class Func_term(Term):
                 self.args.append(a)
             else:
                 print 'a is not a term, but a... ?', type(a)
+                print a
                 self.args.append(eval(a))
         self.const = const
         
@@ -730,6 +731,9 @@ class Comparison_data:
         
     def __repr__(self):
         return self.__str__()
+    
+    def __hash__(self):
+        return hash(self.__str__())
     
     # used to figure out strength of inequalities
         
@@ -1151,7 +1155,7 @@ def make_term_names(terms):
             elif isinstance(t, Func_term):
                 args = []
                 for m in t.args:
-                    args.append(process_subterm(m))
+                    args.append(Add_pair(m.coeff,process_subterm(m.term)))
                 new_def = Func_term(t.name, args, t.const)
             l = len(subterm_list)  # index of new term
             subterm_list.append(t)

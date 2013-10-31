@@ -11,20 +11,25 @@ instantiated_axioms = []
 # Returns a new Term, and a flag True/False representing whether all
 # UVars have been replaced.
 def substitute(preterm, uvar, coeff, iind):
-    return reduce(preterm, Environment({uvar:(coeff,iind)}))
+    return reduce(preterm, Environment({uvar.index:(coeff,iind)}))
     
 # Replaces all UVars in preterm that are assigned by env with their designated values.
 # Returns a new Term, and a flag True/False representing whether all
 # UVars have been replaced.
 def reduce(preterm,env):
+    #print '   REDUCING'
+    #print '   preterm:',preterm
+    #print '   env:',env
     if isinstance(preterm, IVar):
         return (preterm, True)
         
     elif isinstance(preterm, UVar):
-        if preterm.index in env:
-            (c,j) = env[preterm.index]
+        if preterm.index in env.keys():
+            (c,j) = env.val(preterm.index)
+            #print '   returning',(c * IVar(j), True)
             return (c * IVar(j), True)
         else:
+            #print '   returning', (preterm,False)
             return (preterm, False)
     
     elif isinstance(preterm, Add_term):
@@ -50,9 +55,35 @@ def reduce(preterm,env):
         nargs = []
         for a in preterm.args:
             s, flag2 = reduce(a.term,env)
-            nargs.append((a.coeff, s))
+            nargs.append(Add_pair(a.coeff, s))
             flag = flag and flag2
         return (Func_term(preterm.name, nargs, preterm.const), flag)
+    
+# Maps UVar indices to (c, j) where c is a constant and j is an IVar index
+class Environment:
+    def __init__(self,map={}):
+        self.map = map
+        
+    def assign(self,x,y):
+        self.map[x]=y
+        
+    def val(self,x):
+        return self.map[x]
+    
+    def keys(self):
+        return self.map.keys()
+    
+    def __str__(self):
+        return str(self.map)
+    
+    def __repr__(self):
+        return self.__str__()    
+    
+    def __hash__(self):
+        return hash(str(self))
+    
+    def __cmp__(self,other):
+        return cmp(str(self),str(other))
     
 
 # Takes preterms u1...un involving uvars v1...vm
@@ -60,7 +91,12 @@ def reduce(preterm,env):
 # to a Func_term in preterms.
 # Returns a list of assignments {vi <- ci*t_{ji}} such that
 # each ui becomes equal to a problem term.
-def unify(H, preterms, uvars, arg_uvars):
+def unify(H, preterms, uvars, arg_uvars,envs=[Environment()]):
+    
+    print 'UNIFYING:'
+    print '  preterms:',preterms
+    print '  uvars:',uvars
+    print '  arg_uvars:',arg_uvars
     
     def occurs_as_arg(term,var):
         if not isinstance(term,Func_term):
@@ -73,35 +109,44 @@ def unify(H, preterms, uvars, arg_uvars):
     ####
     
     if len(uvars) == 0:
-        return [Environment()]
+        return envs
     
     if len(arg_uvars) == 0:
         #We are in the unfortunate position where no variables occur alone in function terms.
         #Pass for now.
-        return [Environment()]
+        return envs
     
     v = arg_uvars[0]
+    print ''
+    print '  searching for a value for',v
     t = next(term for term in preterms if occurs_as_arg(term,v))
-    ind = next(j for j in len(term.args) if term.args[j].term==v)
+    ind = next(j for j in range(len(t.args)) if t.args[j].term==v)
     c = t.args[ind].coeff
+    print '  v occurs in',t
     
     prob_f_terms = [i for i in range(H.num_terms) if 
                   (isinstance(H.name_defs[i],Func_term) 
                    and len(H.name_defs[i].args)==len(t.args))]
     
-    S = [(Fraction(H.name_defs[i].args[ind].coeff,c),i) for i in prob_f_terms]
+    print '  the relevant problem terms are:',prob_f_terms
+    
+    S = [(Fraction(H.name_defs[i].args[ind].coeff,c),H.name_defs[i].args[ind].term.index) for i in prob_f_terms]
     # S is a list of pairs (coeff, j) such that c*coeff*a_j occurs as an argument
     # in a problem term.
     
-    envs = []
+    print '  S is:',S
     
+    nenvs = []
     for (coeff, j) in S:
+        print '  envs is:',envs
+        print '  assign',v,'to be',coeff,'*',IVar(j)
         new_preterms = [substitute(p, v, coeff, j) for p in preterms]
+        print '  new_preterms:', new_preterms
         closed_terms, open_terms = [a for (a,b) in new_preterms if b], [a for (a,b) in new_preterms if not b]
         prob_terms, imp = [], False
         for ct in closed_terms:
             try:
-                prob_terms.append(find_problem_term(ct))
+                prob_terms.append(find_problem_term(H,ct))
             except No_Term_Exception:
                 imp = True
                 break
@@ -109,13 +154,20 @@ def unify(H, preterms, uvars, arg_uvars):
             continue
         
         #Right now, we do nothing with prob_terms
-        
-        maps = unify(H, open_terms, [v0 for v0 in uvars if v0!=v], arg_uvars[1:])
-        for map in maps:
-            map.assign(v,(coeff,j))
-        envs.extend(maps)
+        cenvs = deepcopy(envs)
+        print '  cenvs:',cenvs,'envs:',envs
+        for c in cenvs:
+            c.assign(v.index,(coeff,j))
+        maps = unify(H, open_terms, [v0 for v0 in uvars if v0!=v], arg_uvars[1:],cenvs)
+        print '  maps:',maps
+        print '  nenvs was:',nenvs
+        nenvs.extend(maps)
+        print '  nenvs is now:',nenvs
+        #print '  now, envs:',envs
         # add v <- coeff*a_j to map and return that
-    return envs
+    #print '  we have found environments:',envs
+    print '  ___'
+    return nenvs
         
 class No_Term_Exception(Exception):
     pass
@@ -137,7 +189,7 @@ def find_problem_term(H, u):
             for k in range(len(t.args)):
                 targ, uarg = (t.args[k].coeff, t.args[k].term.index), nargs[k]
                 if not (targ[0]==uarg[0] and targ[1]==uarg[1]):
-                    eqs = H.get_equivalences(targ.term)
+                    eqs = H.get_equivalences(targ[1])
                     if not any(uarg[0]==targ[0]*e[0] and uarg[1]==e[1] for e in eqs):
                         good = False
                         break
@@ -165,19 +217,11 @@ def find_problem_term(H, u):
         #temporary- copy above
         raise No_Term_Exception
     
-
-
+    else:
+        print 'something weird in fpt:', u
+        raise No_Term_Exception
     
-class Environment:
-    def __init__(self,map={}):
-        self.map = map
-        
-    def assign(self,x,y):
-        self.map[x]=y
-        
-    def val(self,x):
-        return self.map[x]
-    
+
 # Takes a list of maps from variable names to lists of IVar indices.
 # Generates the intersection of all the maps:
 #  a list of Environments such that each environment maps each variable name
@@ -197,6 +241,12 @@ def generate_environments(map):
 class Axiom_clause:
     def __init__(self,lterm,comp,coeff, rterm):
         self.lterm,self.comp,self.coeff,self.rterm = lterm,comp,coeff,rterm
+        
+    def __str__(self):
+        return str(self.lterm)+' '+comp_str[self.comp]+' '+str(self.coeff) + '*'+str(self.rterm)
+    
+    def __repr__(self):
+        return self.__str__()
         
 
         
@@ -223,7 +273,7 @@ class Axiom:
                     pairs = term.mulpairs
                 elif isinstance(term, Func_term):
                     pairs = term.args
-                    arg_vars = Set([p.term for p in pairs if isinstance(p.term, UVar)])
+                    arg_vars = set([p.term for p in pairs if isinstance(p.term, UVar)])
                 for p in pairs:
                     nvars, narg_vars = find_uvars(p.term)
                     vars.update(nvars)
@@ -248,29 +298,43 @@ class Axiom:
     # TODO: handle equalities correctly
     # TODO: learn if len=1
     def instantiate(self,H):
-        preterms = Set(c.lterm for c in self.clauses).union(Set(c.rterm for c in self.clauses))
-        envs = unify(H, preterms, self.uvars, self.arg_vars)
+        print 'instantiate running.'
+        print 'clauses:', self.clauses
+        preterms = set(c.lterm for c in self.clauses).union(set(c.rterm for c in self.clauses))
+        print 'preterms:',preterms
+        envs = unify(H, preterms, list(self.vars), list(self.arg_vars))
+        print 'envs:',envs
         axiom_insts = []
         for env in envs:
             nclauses = {}
             for c in self.clauses:
                 comp,coeff = c.comp,c.coeff
-                lterm = find_problem_term(H,reduce(c.lterm,env)[0])
-                rterm = find_problem_term(H,reduce(c.rterm,env)[0])
-                rterm[0]*=coeff
+                try:
+                    lterm = find_problem_term(H,reduce(c.lterm,env)[0])
+                    rterm = find_problem_term(H,reduce(c.rterm,env)[0])
+                except No_Term_Exception: #this shouldn't happen
+                    print 'problem!'
+                    continue
+                
+                print rterm,coeff
+                rterm=(coeff*rterm[0],rterm[1])
                 if lterm[1]==rterm[1]: 
                     #handle this correctly. Not done yet.
-                    pass
+                    continue
                 if lterm[1]>rterm[1]:
                     comp,lterm,rterm = comp_reverse(comp), rterm,lterm
-                nclauses[lterm[1],rterm[1]] = nclauses.get((lterm[1],rterm[1]),set()).add(Comparison_data(comp,Fraction(rterm[0],lterm[0])))
+                cd = Comparison_data(comp,Fraction(rterm[0],lterm[0]))
+                print 'cd=',cd
+                nclauses[lterm[1],rterm[1]] = nclauses.get((lterm[1],rterm[1]),set()).union(set([cd]))
             if len(nclauses)==1 and len(nclauses[nclauses.keys()[0]])==1:
                 #learn the info here. Not done yet
+                print '!!!'
                 pass
             
             elif len(nclauses)>0:
                 axiom_insts.append(Axiom_inst(nclauses))
         
+        print 'instantiate returning:',axiom_insts
         return axiom_insts
                 
         
@@ -284,13 +348,28 @@ class Axiom_inst:
         self.clauses = clauses
         self.satisfied = False
         
+    def __str__(self):
+        s = ''
+        for (i,j) in self.clauses:
+            for comp in self.clauses[i,j]:
+                s+= '{'+comp.to_string(IVar(i),IVar(j))+'} or '
+        s = s[:-4]
+        return s 
+    
+    def __repr__(self):
+        return str(self)
+        
     # Checks to see if any clauses can be eliminated based on info in Heuristic_data H.
     # If there is only one disjunction left in the list, sends it to be learned by H.
     def update_on_info(self,H):
+        print 'updating:',str(self)
         for (i,j) in self.clauses.keys():
+            print ' looking at',[c.to_string(IVar(i),IVar(j)) for c in self.clauses[i,j]]
             comps = [c for c in self.clauses[i,j] if not H.implies(i,j,comp_negate(c.comp),c.coeff)]
+            print ' comps:',comps
             if len(comps)==0:
-                del self.clauses[(i,j)] #self.clauses.pop(i,j)?
+                #del self.clauses[(i,j)] #self.clauses.pop(i,j)?
+                H.raise_contradiction(FUN)
                 
             for comp in comps:
                 if H.implies(i,j,comp.comp,comp.coeff):
@@ -320,13 +399,18 @@ def learn_func_comparisons(H):
             
             
     if init:
-        instantiated_axioms = set_up_axioms(H)
+        set_up_axioms(H)
         
     if H.verbose:   
         print 'Learning functional facts...'
+        print 'Instantiated axioms:',instantiated_axioms
+        
+    H.info_dump()
         
     for inst in instantiated_axioms:
         inst.update_on_info(H)
         
     if H.verbose:
         print
+        
+    exit()

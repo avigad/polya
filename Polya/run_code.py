@@ -3,7 +3,7 @@ from classes import *
 from heuristic import *
 #from addition_module import *
 #from multiplication_module import *
-#from function_module import *
+from function_module import *
 import poly_add_module as add #change this to polyhedron_module_cdd, polyhedron_module_lrs or polyhedron_module (which doesn't handle > vs >=)
 import poly_mult_module as mul
 #import multiplication_module as mul
@@ -24,7 +24,7 @@ def run_heuristic_on_heuristic_data(H, split_cases):
             #H.info_dump()
             add.learn_add_comparisons_poly(H)
             mul.learn_mul_comparisons(H)
-            #learn_func_comparisons(H)
+            learn_func_comparisons(H)
         except Contradiction:
             print "Contradiction found!"
             return True
@@ -274,17 +274,12 @@ def test_heuristic_on_functions2():
     
     x = Var("x")
     y = Var("y")
-    hypotheses = [Zero_comparison(Add_term([Add_pair(1, x), Add_pair(-1, y)]), LT), Zero_comparison(Add_term([Add_pair(1, Func_term('exp', [y])), Add_pair(-1, Func_term('exp', [x]))]), LE),
-                  Zero_comparison(Add_term([Add_pair(1, Func_term('exp', [y])), Add_pair(-1, Func_term('exp', [x]))]), GE)]
-    co = Function_conclusion((lambda H, a, b:Func_term("exp", [a])), (lambda H, a, b:Func_term("exp", [b])), GT)
-    fr = Function_restriction('exp', lambda H, a, b:a.neq_rel(b, H), co)
     
-
-    co2 = Function_conclusion(lambda H, a:Func_term("exp", [a]), lambda H, a:0, GT)
-    fr2 = Function_restriction('exp2', lambda H, a:True, co2)
-    # fr2 = Function_restriction('exp',free_vars2,[h2],co2)
-    
-    run_heuristic_on_hypotheses(hypotheses, [fr])
+    u,v = UVar(0), UVar(1)
+    hypotheses = [x<y,Func_term('exp',[x])>Func_term('exp',[y])]
+    axioms = [Axiom([Axiom_clause(u,GE,1,v),Axiom_clause(Func_term('exp',[u]),LT,1,Func_term('exp',[v]))])]
+        
+    run_heuristic_on_hypotheses(hypotheses, axioms)
 
 ###################################################
 #
@@ -516,7 +511,7 @@ def run_heuristic_on_list():
 #test_heuristic_3()
 #test_heuristic_4()
 #test_heuristic_on_functions()
-#test_heuristic_on_functions2()
+test_heuristic_on_functions2()
 
 def multirun():
     for k in range(10):

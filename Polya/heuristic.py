@@ -63,10 +63,10 @@ class Heuristic_data:
     # takes a list of terms, stores a list of all subterms and 
     # creats names for them
     # TODO: don't have the init function do all the work.
-    def __init__(self, hypotheses, function_information=[], verbose=True):
+    def __init__(self, hypotheses, axioms=[], verbose=True):
         self.verbose = False
         
-        self.function_information = function_information
+        self.axioms = axioms
         
         # initialize term comparisons
         self.term_comparisons = {}
@@ -79,6 +79,7 @@ class Heuristic_data:
 
         # make the names
         hterms = [h.term for h in hypotheses]
+        print 'hterms:',hterms
         self.terms, self.name_defs = make_term_names(hterms)
         self.num_terms = len(self.terms)
 
