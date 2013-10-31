@@ -97,6 +97,9 @@ class Term:
             return Zero_comparison(self-one*Fraction(other),LT)
         else:
             raise Exception("Bad term comparison.")
+        
+    def __rlt__(self,other):
+        raise Exception()
 
     def __le__(self,other):
         if other==0:
@@ -109,6 +112,9 @@ class Term:
             return Zero_comparison(self-one*Fraction(other),LE)
         else:
             raise Exception("Bad term comparison.")
+        
+    def __rgt__(self,other):
+        raise Exception()
         
     def __gt__(self,other):
         if other==0:
@@ -159,8 +165,9 @@ class Const(Term):
             elif other == 1:
                 return self
             else:
-                num = Fraction(self.name)
-                return Const(str(num * other))
+                return Add_term(Add_pair(other,self))
+#                num = Fraction(self.name)
+#                return Const(str(num * other))
         return other * self
 
     def __add__(self, other):
@@ -488,7 +495,7 @@ class Mul_term(Term):
         return "(" + " * ".join(factorlist) + ")"
 
     def __cmp__(self, other):
-        if isinstance(other, (Const, Var, Add_term)):
+        if isinstance(other, (Const, Var, Add_term, Func_term)):
             return 1
         else:
             return cmp(self.mulpairs, other.mulpairs)
@@ -1136,6 +1143,7 @@ def make_term_names(terms):
     # notes that subterm_list and name_defs are global to this procedure,
     # which augments them as it recurses through t
     def process_subterm(t):
+        #print 'processing',t,'. structure:',t.structure()
         if t in subterm_list:
             return IVar(subterm_list.index(t))
         else:
@@ -1155,9 +1163,11 @@ def make_term_names(terms):
             elif isinstance(t, Func_term):
                 args = []
                 for m in t.args:
+                    print m, isinstance(m, Add_pair)
                     args.append(Add_pair(m.coeff,process_subterm(m.term)))
                 new_def = Func_term(t.name, args, t.const)
             l = len(subterm_list)  # index of new term
+            if l==2: print t.structure()
             subterm_list.append(t)
             name_defs[l] = new_def
             return IVar(l)

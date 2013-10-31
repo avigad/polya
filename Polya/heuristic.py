@@ -597,7 +597,7 @@ class Heuristic_data:
             points = [points[0]]
             
         self.term_comparisons[i,j] = [Comparison_data(p[2],p[0]*p[1],p[3]) for p in points if (p[0]!=0 and p[1]!=0)]
-        
+        self.changed = True
         if self.verbose:
             print 'Learned:', new_comp.to_string(IVar(i), IVar(j))
             print '  In other words:', \

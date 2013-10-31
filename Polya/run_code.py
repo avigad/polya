@@ -4,8 +4,9 @@ from heuristic import *
 #from addition_module import *
 #from multiplication_module import *
 from function_module import *
-import poly_add_module as add #change this to polyhedron_module_cdd, polyhedron_module_lrs or polyhedron_module (which doesn't handle > vs >=)
+#import poly_add_module as add #change this to polyhedron_module_cdd, polyhedron_module_lrs or polyhedron_module (which doesn't handle > vs >=)
 import poly_mult_module as mul
+import addition_module as add
 #import multiplication_module as mul
 #from random import randint
 #from math import floor, ceil
@@ -22,7 +23,7 @@ def run_heuristic_on_heuristic_data(H, split_cases):
         try:
             H.changed = False
             #H.info_dump()
-            add.learn_add_comparisons_poly(H)
+            add.learn_add_comparisons(H)
             mul.learn_mul_comparisons(H)
             learn_func_comparisons(H)
         except Contradiction:
@@ -281,6 +282,25 @@ def test_heuristic_on_functions2():
         
     run_heuristic_on_hypotheses(hypotheses, axioms)
 
+def test_heuristic_on_functions3():
+    # we know x < y => exp(x) < exp(y)
+    # Assume x < y, exp(x) > exp(y).
+    
+    x = Var("x")
+    y = Var("y")
+    z = Var("z")
+    w = Var("w")
+    r = Var("r")
+    s = Var("s")
+    
+    print (s < 1).term.structure()
+    
+    u,v = UVar(0), UVar(1)
+    hypotheses = [0 < r, s>1 ,0<x, x<y,w > z, z + Func_term('exp',[Add_pair(1,x)])> w + Func_term('exp',[Add_pair(1,s * (y + r))])]
+    axioms = [Axiom([Axiom_clause(u,GE,1,v),Axiom_clause(Func_term('exp',[Add_pair(1,u)]),LT,1,Func_term('exp',[Add_pair(1,v)]))])]
+        
+    run_heuristic_on_hypotheses(hypotheses, axioms, verbose=True, split_cases = False)
+
 ###################################################
 #
 #  INPUT CODE
@@ -511,7 +531,7 @@ def run_heuristic_on_list():
 #test_heuristic_3()
 #test_heuristic_4()
 #test_heuristic_on_functions()
-test_heuristic_on_functions2()
+test_heuristic_on_functions3()
 
 def multirun():
     for k in range(10):

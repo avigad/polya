@@ -93,10 +93,10 @@ class Environment:
 # each ui becomes equal to a problem term.
 def unify(H, preterms, uvars, arg_uvars,envs=[Environment()]):
     
-    print 'UNIFYING:'
-    print '  preterms:',preterms
-    print '  uvars:',uvars
-    print '  arg_uvars:',arg_uvars
+    #print 'UNIFYING:'
+    #print '  preterms:',preterms
+    #print '  uvars:',uvars
+    #print '  arg_uvars:',arg_uvars
     
     def occurs_as_arg(term,var):
         if not isinstance(term,Func_term):
@@ -117,31 +117,31 @@ def unify(H, preterms, uvars, arg_uvars,envs=[Environment()]):
         return envs
     
     v = arg_uvars[0]
-    print ''
-    print '  searching for a value for',v
+    #print ''
+    #print '  searching for a value for',v
     t = next(term for term in preterms if occurs_as_arg(term,v))
     ind = next(j for j in range(len(t.args)) if t.args[j].term==v)
     c = t.args[ind].coeff
-    print '  v occurs in',t
+    #print '  v occurs in',t
     
     prob_f_terms = [i for i in range(H.num_terms) if 
                   (isinstance(H.name_defs[i],Func_term) 
                    and len(H.name_defs[i].args)==len(t.args))]
     
-    print '  the relevant problem terms are:',prob_f_terms
+    #print '  the relevant problem terms are:',prob_f_terms
     
     S = [(Fraction(H.name_defs[i].args[ind].coeff,c),H.name_defs[i].args[ind].term.index) for i in prob_f_terms]
     # S is a list of pairs (coeff, j) such that c*coeff*a_j occurs as an argument
     # in a problem term.
     
-    print '  S is:',S
+    #print '  S is:',S
     
     nenvs = []
     for (coeff, j) in S:
-        print '  envs is:',envs
-        print '  assign',v,'to be',coeff,'*',IVar(j)
+        #print '  envs is:',envs
+        #print '  assign',v,'to be',coeff,'*',IVar(j)
         new_preterms = [substitute(p, v, coeff, j) for p in preterms]
-        print '  new_preterms:', new_preterms
+        #print '  new_preterms:', new_preterms
         closed_terms, open_terms = [a for (a,b) in new_preterms if b], [a for (a,b) in new_preterms if not b]
         prob_terms, imp = [], False
         for ct in closed_terms:
@@ -155,18 +155,18 @@ def unify(H, preterms, uvars, arg_uvars,envs=[Environment()]):
         
         #Right now, we do nothing with prob_terms
         cenvs = deepcopy(envs)
-        print '  cenvs:',cenvs,'envs:',envs
+        #print '  cenvs:',cenvs,'envs:',envs
         for c in cenvs:
             c.assign(v.index,(coeff,j))
         maps = unify(H, open_terms, [v0 for v0 in uvars if v0!=v], arg_uvars[1:],cenvs)
-        print '  maps:',maps
-        print '  nenvs was:',nenvs
+        #print '  maps:',maps
+        #print '  nenvs was:',nenvs
         nenvs.extend(maps)
-        print '  nenvs is now:',nenvs
+        #print '  nenvs is now:',nenvs
         #print '  now, envs:',envs
         # add v <- coeff*a_j to map and return that
     #print '  we have found environments:',envs
-    print '  ___'
+    #print '  ___'
     return nenvs
         
 class No_Term_Exception(Exception):
@@ -298,12 +298,12 @@ class Axiom:
     # TODO: handle equalities correctly
     # TODO: learn if len=1
     def instantiate(self,H):
-        print 'instantiate running.'
-        print 'clauses:', self.clauses
+        #print 'instantiate running.'
+        #print 'clauses:', self.clauses
         preterms = set(c.lterm for c in self.clauses).union(set(c.rterm for c in self.clauses))
-        print 'preterms:',preterms
+        #print 'preterms:',preterms
         envs = unify(H, preterms, list(self.vars), list(self.arg_vars))
-        print 'envs:',envs
+        #print 'envs:',envs
         axiom_insts = []
         for env in envs:
             nclauses = {}
@@ -313,7 +313,7 @@ class Axiom:
                     lterm = find_problem_term(H,reduce(c.lterm,env)[0])
                     rterm = find_problem_term(H,reduce(c.rterm,env)[0])
                 except No_Term_Exception: #this shouldn't happen
-                    print 'problem!'
+                    #print 'problem!'
                     continue
                 
                 print rterm,coeff
@@ -324,7 +324,7 @@ class Axiom:
                 if lterm[1]>rterm[1]:
                     comp,lterm,rterm = comp_reverse(comp), rterm,lterm
                 cd = Comparison_data(comp,Fraction(rterm[0],lterm[0]))
-                print 'cd=',cd
+                #print 'cd=',cd
                 nclauses[lterm[1],rterm[1]] = nclauses.get((lterm[1],rterm[1]),set()).union(set([cd]))
             if len(nclauses)==1 and len(nclauses[nclauses.keys()[0]])==1:
                 #learn the info here. Not done yet
@@ -362,14 +362,14 @@ class Axiom_inst:
     # Checks to see if any clauses can be eliminated based on info in Heuristic_data H.
     # If there is only one disjunction left in the list, sends it to be learned by H.
     def update_on_info(self,H):
-        print 'updating:',str(self)
+        #print 'updating:',str(self)
         for (i,j) in self.clauses.keys():
-            print ' looking at',[c.to_string(IVar(i),IVar(j)) for c in self.clauses[i,j]]
+            #print ' looking at',[c.to_string(IVar(i),IVar(j)) for c in self.clauses[i,j]]
             comps = [c for c in self.clauses[i,j] if not H.implies(i,j,comp_negate(c.comp),c.coeff)]
-            print ' comps:',comps
+            #print ' comps:',comps
             if len(comps)==0:
-                #del self.clauses[(i,j)] #self.clauses.pop(i,j)?
-                H.raise_contradiction(FUN)
+                del self.clauses[(i,j)] #self.clauses.pop(i,j)?
+                #H.raise_contradiction(FUN)
                 
             for comp in comps:
                 if H.implies(i,j,comp.comp,comp.coeff):
@@ -379,9 +379,12 @@ class Axiom_inst:
         if len(self.clauses.keys())==1 and len(self.clauses[self.clauses.keys()[0]])==1:
             #There is one statement left in the disjunction. It must be true.
             i,j = self.clauses.keys()[0]
-            comp = self.clauses[i,j]
+            comp = list(self.clauses[i,j])[0]
             H.learn_term_comparison(i,j,comp.comp,comp.coeff,FUN)
             self.satisfied = True
+        elif len(self.clauses.keys())==0:
+            print 'Contradiction found from axiom:',self
+            H.raise_contradiction(FUN)
 
 # Called the first time learn_func_comparisons is run.
 # Takes a list of Axioms from H, and generates a list of all possible instantiations.                    
@@ -407,10 +410,9 @@ def learn_func_comparisons(H):
         
     H.info_dump()
         
-    for inst in instantiated_axioms:
+    for inst in [ax for ax in instantiated_axioms if not ax.satisfied]:
         inst.update_on_info(H)
         
     if H.verbose:
         print
         
-    exit()
