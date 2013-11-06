@@ -4,9 +4,9 @@ from heuristic import *
 #from addition_module import *
 #from multiplication_module import *
 from function_module import *
-#import poly_add_module as add #change this to polyhedron_module_cdd, polyhedron_module_lrs or polyhedron_module (which doesn't handle > vs >=)
+import poly_add_module as add #change this to polyhedron_module_cdd, polyhedron_module_lrs or polyhedron_module (which doesn't handle > vs >=)
 import poly_mult_module as mul
-import addition_module as add
+#import addition_module as add
 #import multiplication_module as mul
 #from random import randint
 #from math import floor, ceil
@@ -251,23 +251,20 @@ def test_heuristic_4():
                    + [Zero_comparison(Add_term([Add_pair(1, x), Add_pair(1, y), Add_pair(-5, one)]), GE)])
 
     run_heuristic_on_hypotheses(hypotheses)
-    
-def test_heuristic_on_functions():
+
+def test_heuristic_on_functions_zero():
     # we know x < y => exp(x) < exp(y)
     # Assume x < y, exp(x) > exp(y).
     
     x = Var("x")
     y = Var("y")
-    hypotheses = [Zero_comparison(Add_term([Add_pair(1, x), Add_pair(-1, y)]), LT), Zero_comparison(Add_term([Add_pair(1, Func_term('exp', [y])), Add_pair(-1, Func_term('exp', [x]))]), LT)]
-    co = Function_conclusion((lambda H, a, b:Func_term("exp", [a])), (lambda H, a, b:Func_term("exp", [b])), GT)
-    fr = Function_restriction('exp', lambda H, a, b:a.gt_rel(b, H), co)
+    exp = Func('exp')
     
-
-    co2 = Function_conclusion(lambda H, a:Func_term("exp", [a]), lambda H, a:0, GT)
-    fr2 = Function_restriction('exp2', lambda H, a:True, co2)
-    # fr2 = Function_restriction('exp',free_vars2,[h2],co2)
-    
-    run_heuristic_on_hypotheses(hypotheses, [fr2])
+    u,v = UVar(0), UVar(1)
+    hypotheses = [x>0,exp(x)<0]
+    axioms = [Axiom([Axiom_clause(exp(u),GT,1,zero)])]
+        
+    run_heuristic_on_hypotheses(hypotheses, axioms)    
 
 def test_heuristic_on_functions2():
     # we know x < y => exp(x) < exp(y)
@@ -294,13 +291,28 @@ def test_heuristic_on_functions3():
     r = Var("r")
     s = Var("s")
     
-    print (s < 1).term.structure()
+    #print (s < 1).term.structure()
     
     u,v = UVar(0), UVar(1)
     hypotheses = [0 < r, s>1 ,0<x, x<y,w > z, z + Func_term('exp',[Add_pair(1,x)])> w + Func_term('exp',[Add_pair(1,s * (y + r))])]
     axioms = [Axiom([Axiom_clause(u,GE,1,v),Axiom_clause(Func_term('exp',[Add_pair(1,u)]),LT,1,Func_term('exp',[Add_pair(1,v)]))])]
         
     run_heuristic_on_hypotheses(hypotheses, axioms, verbose=True, split_cases = False)
+    
+def test_heuristic_on_functions4():
+    # we know x < y => exp(x) < exp(y)
+    # Assume x < y, exp(x) > exp(y).
+    
+    a = Var("a")
+    b = Var("b")
+    c = Var("c")
+    f = Func('f')
+    
+    x,y = UVar(0), UVar(1)
+    hypotheses = [f(a)+f(b)<c, f((a+b)/2)>4*c]
+    axioms = [Axiom([Axiom_clause((f(x)+f(y))/2,LT,1,f((x+y)/2))])]
+        
+    run_heuristic_on_hypotheses(hypotheses, axioms)
 
 ###################################################
 #
@@ -474,7 +486,7 @@ def run_heuristic_on_list():
         
         # If the last inequality is >=, this one has a model. Blowup in FM
         # if the last inequality is changed to <, it does not have a model. Contradiction is found.
-        "x<1<y", "x*y>1", "u+x>=y+1", "x^2*y<2-u*x*y"
+        #"x<1<y", "x*y>1", "u+x>=y+1", "x^2*y>=2-u*x*y"
         
         # This example has a model if the last inequality is <. FM blows up here, poly doesn't
         # It does not have a model if the last inequality is >=. Contradiction is found.
@@ -494,7 +506,7 @@ def run_heuristic_on_list():
         #When using the polyhedron add, it blows up in the mult routine, which is a good sign
         #When using polyhedron add and mul, it does not blow up.
         #There is a model.
-        #"x^(1/2)+y^(1/2) < 30", "x^(7/2)-1<y", "y^(1/5)>4"
+        "x^(1/2)+y^(1/2) < 30", "x^(7/2)-1<y", "y^(1/5)>4"
         
         # The contradiction here is found relatively quickly.
         # "x+1/y<2", "y<0", "y/x>1", "-2<=x<=2", "-2<=y<=2", "x^2*y^(-1)>1-x"
@@ -531,8 +543,9 @@ def run_heuristic_on_list():
 #test_heuristic_2()
 #test_heuristic_3()
 #test_heuristic_4()
-#test_heuristic_on_functions()
+#test_heuristic_on_functions_zero()
 test_heuristic_on_functions2()
+#test_heuristic_on_functions4() #this one doesn't work yet!
 
 def multirun():
     for k in range(10):

@@ -1,5 +1,6 @@
 from fractions import Fraction, gcd
 from string import find, count, split
+from copy import deepcopy
 
 
 # use this for errors in this module
@@ -608,7 +609,7 @@ class Func_term(Term):
     def __str__(self):
         s = ('' if self.const == 1 else str(self.const) + '*') + self.name + '('
         for a in self.args:
-            s += str(a) + ',  '
+            s += str(a) + ', '
         s = s[:-2] + ')'
         return s
     
@@ -619,11 +620,160 @@ class Func_term(Term):
         s = s[:-1] + ')'
         return s
         
-# For function module
-class Arg_assn:
-    def __init__(self,map,identity):
+###############################################################################
+#
+# AXIOM CLASSES
+#
+###############################################################################
+
+# Maps UVar indices to (c, j) where c is a constant and j is an IVar index
+class Environment:
+    def __init__(self,map={}):
         self.map = map
-        self.identity = identity        
+        
+    def assign(self,x,y):
+        self.map[x]=y
+        
+    def val(self,x):
+        return self.map[x]
+    
+    def keys(self):
+        return self.map.keys()
+    
+    def __str__(self):
+        return str(self.map)
+    
+    def __repr__(self):
+        return self.__str__()    
+    
+    def __hash__(self):
+        return hash(str(self))
+    
+    def __cmp__(self,other):
+        return cmp(str(self),str(other))
+    
+        
+class No_Term_Exception(Exception):
+    pass
+        
+        
+# Represents one clause of an axiom: S(v_1...v_n) comp T(v_1...v_n),
+# where S and T are Terms.
+class Axiom_clause:
+    def __init__(self,lterm,comp,coeff, rterm):
+        self.lterm,self.comp,self.coeff,self.rterm = lterm,comp,coeff,rterm
+        
+    def __str__(self):
+        return str(self.lterm)+' '+comp_str[self.comp]+' '+str(self.coeff) + '*'+str(self.rterm)
+    
+    def __repr__(self):
+        return self.__str__()
+        
+
+        
+# Represents an uninstantiated axiom.
+# Clauses is a list of Axiom_clauses.
+# The content of the axiom is that at least one element of clauses is true.
+class Axiom:
+    def __init__(self, clauses):
+        
+        #takes a term
+        #returns two Sets. The first is all uvars that occur in the term.
+        #The second is all uvars that occur alone as function arguments in the term.
+        def find_uvars(term):
+            if isinstance(term, UVar):
+                return set([term]),set()
+            elif isinstance(term, (Var,Const)):
+                return set(),set()
+            else:
+                vars = set()
+                arg_vars = set()
+                if isinstance(term, Add_term):
+                    pairs = term.addpairs
+                elif isinstance(term, Mul_term):
+                    pairs = term.mulpairs
+                elif isinstance(term, Func_term):
+                    pairs = term.args
+                    arg_vars = set([p.term for p in pairs if isinstance(p.term, UVar)])
+                for p in pairs:
+                    nvars, narg_vars = find_uvars(p.term)
+                    vars.update(nvars)
+                    arg_vars.update(narg_vars)
+                    
+                return vars, arg_vars
+
+        self.clauses = clauses
+        uvars = set()
+        arg_uvars = set()
+        for c in clauses:
+            nvars, narg_vars = find_uvars(c.lterm)
+            uvars.update(nvars)
+            arg_uvars.update(narg_vars)
+            nvars, narg_vars = find_uvars(c.rterm)
+            uvars.update(nvars)
+            arg_uvars.update(narg_vars)
+        
+        self.vars, self.arg_vars = uvars, arg_uvars
+        
+    def __str__(self):
+        s = '{For all '
+        for u in self.vars:
+            s+=str(u)+', '
+        s = s[:-2]+': '+str(self.clauses)+'}'
+        return s
+                
+        
+
+# This class represents an instantiated axiom.
+# Satisfied Axiom_insts cannot produce any new information and can be deleted.
+# clauses is a dictionary, mapping (i,j) to a list of Comparison_datas.
+# clauses represents a disjunction: at least one Comparison_data must be true.
+class Axiom_inst:
+    def __init__(self,clauses, origin=''):
+        self.clauses = clauses
+        self.satisfied = False
+        self.origin = origin
+        
+    def __str__(self):
+        s = ''
+        for (i,j) in self.clauses:
+            for comp in self.clauses[i,j]:
+                s+= '{'+comp.to_string(IVar(i),IVar(j))+'} or '
+        s = s[:-4]
+        return s 
+    
+    def __repr__(self):
+        return str(self)
+        
+    # Checks to see if any clauses can be eliminated based on info.
+    # Info is a set of pairs (i,j) representing new comparison info about (i,j) in H
+    # If there is only one disjunction left in the list, sends it to be learned by H.
+    def update_on_info(self,H,info):
+        #print 'updating:',str(self)
+        for (i,j) in info.intersection(self.clauses.keys()):
+            #print ' looking at',[c.to_string(IVar(i),IVar(j)) for c in self.clauses[i,j]]
+            comps = [c for c in self.clauses[i,j] if not H.implies(i,j,comp_negate(c.comp),c.coeff)]
+            #print ' comps:',comps
+            if len(comps)==0:
+                del self.clauses[(i,j)] #self.clauses.pop(i,j)?
+                #H.raise_contradiction(FUN)
+            else:
+                self.clauses[i,j] = comps
+                
+            for comp in comps:
+                if H.implies(i,j,comp.comp,comp.coeff):
+                    #This disjunction is satisfied. Nothing new to be learned.
+                    self.satisfied = True
+                    return
+        if len(self.clauses.keys())==1 and len(self.clauses[self.clauses.keys()[0]])==1:
+            #There is one statement left in the disjunction. It must be true.
+            i,j = self.clauses.keys()[0]
+            comp = list(self.clauses[i,j])[0]
+            H.learn_term_comparison(i,j,comp.comp,comp.coeff,FUN)
+            self.satisfied = True
+        elif len(self.clauses.keys())==0:
+            print 'Contradiction found from axiom:',self.origin
+            H.raise_contradiction(FUN)
 
 ###############################################################################
 #
@@ -847,7 +997,7 @@ def canonize(t):
         addpairs.sort()
         coeff = addpairs[0].coeff
         if coeff == 0:
-            print t, addpairs
+            print 'problem in canonize:', t, addpairs
         term = Add_term([p / coeff for p in addpairs])
         if len(term.addpairs) == 1:
             coeff = coeff * term.addpairs[0].coeff
@@ -1170,11 +1320,9 @@ def make_term_names(terms):
             elif isinstance(t, Func_term):
                 args = []
                 for m in t.args:
-                    print m, isinstance(m, Add_pair)
                     args.append(Add_pair(m.coeff,process_subterm(m.term)))
                 new_def = Func_term(t.name, args, t.const)
             l = len(subterm_list)  # index of new term
-            if l==2: print t.structure()
             subterm_list.append(t)
             name_defs[l] = new_def
             return IVar(l)

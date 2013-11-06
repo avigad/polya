@@ -44,6 +44,36 @@ class Equiv_class:
                 pass
         self.coeffs[i] = coeff
         
+# Allows modules to query the heuristic for incremental changes.
+# Stores a dict mapping module identifier to set of pairs {(i,j)},
+# representing that new info has been learned about a_i and a_j since the last time n asked.
+# If (i, -1) is in the list, there was information learned about the sign of a_i.
+class Change_tracker:
+    
+    def __init__(self, H):
+        self.database = {}
+        self.heuristic = H
+    
+    # Called when the heuristic learns a new comparison.
+    # Adds the pair (i,j) to each list.
+    def set_changed(self,i,j):
+        if (j<i):
+            self.set_changed(j, i)
+            return
+        
+        for key in self.database:
+            self.database[key].add((i,j))
+    
+    # Returns the set of pairs that have changed since the last time module called get_changes.
+    # If this is the first time, returns the current state of the heuristic.
+    def get_changes(self,module):
+        try:
+            changes = self.database[module]
+            self.database[module]=set()
+            return changes
+        except KeyError:
+            self.database[module]=set()
+            return set(self.heuristic.term_comparisons.keys()+[(c,-1) for c in self.heuristic.zero_comparisons.keys()])
 
 class Heuristic_data:
 
@@ -76,6 +106,8 @@ class Heuristic_data:
         
         self.equiv_classes = {}
         self.get_class = {}
+        
+        self.change_tracker = Change_tracker(self)
 
         # make the names
         hterms = [h.term for h in hypotheses]
@@ -142,33 +174,10 @@ class Heuristic_data:
             return [(pair[1],pair[0]) for pair in eqc.items()]
         else:
             return [(pair[1],pair[0]) for pair in eqc.items() if pair[0]!=i]
+        
+    def get_changes(self,module):
+        return self.change_tracker.get_changes(module)
     
-    
-    # Given a Term, returns indices of all IVars that represent a term with that top-level structure.
-    # If term is an add_term, will return indices of add_terms with matching add_pair coeffs.
-    # If term is a mul_term, will return indices of mul_terms with matching exponents.
-    # This version does not do well matching up to constants.
-#     def get_terms_of_struct(self,term):
-#         if isinstance(term,Add_term):
-#             l = len(term.addpairs)
-#             inds = [i for i in range(self.num_terms) if isinstance(self.name_defs[i],Add_term)
-#                      and len(self.name_defs[i].addpairs)==l
-#                      and all(self.name_defs[i].addpairs[j].coeff==term.addpairs[j].coeff for j in range(len(term.addpairs)))]
-#             return inds
-#         
-#         elif isinstance(term,Mul_term):
-#             l = len(term.mulpairs)
-#             inds = [i for i in range(self.num_terms) if isinstance(self.name_defs[i],Mul_term)
-#                      and len(self.name_defs[i].mulpairs)==l
-#                      and all(self.name_defs[i].mulpairs[j].exp==term.mulpairs[j].exp for j in range(len(term.mulpairs)))]
-#             return inds
-#         
-#         elif isinstance(term,Var):
-#             return range(self.num_terms)
-#         
-#         elif isinstance(term,Func_term):
-#             #Not sure yet
-#             return
 
     # Assumes that each item of term is a Var.
     # ie, if term is an Add_term, it is a sum of constants times vars.
@@ -342,7 +351,6 @@ class Heuristic_data:
                 return False
         return True
                  
-        #FINISH WRITING THIS
     
     # Learn a_i = 0.
     # Eliminates a_i from all stored data
@@ -418,6 +426,7 @@ class Heuristic_data:
         # add new comparison
         self.zero_comparisons[i] = Zero_comparison_data(comp, provenance)
         self.changed = True
+        self.change_tracker.set_changed(i, -1)
         if self.verbose:
             print 'Learned:', self.zero_comparisons[i].to_string(IVar(i))
             print '  In other words:', \
@@ -471,13 +480,18 @@ class Heuristic_data:
         
     
     def learn_term_comparison(self,i,j,comp,coeff,provenance):
+        if coeff == 0:
+            self.learn_zero_comparison(i, comp, provenance)
+            return
+                
         # swap i and j if necessary, so i < j
         if i >= j:
             i, j, coeff = j, i, Fraction(1, Fraction(coeff))
             if coeff > 0:
                 comp = comp_reverse(comp)
                 
-                
+        new_comp=Comparison_data(comp,coeff,provenance)
+        
         if self.implies(i,j,comp,coeff):
             return
         
@@ -490,18 +504,13 @@ class Heuristic_data:
             return
         
         #Otherwise, we know we have new information.
-        
-        if coeff == 0:
-            self.learn_zero_comparison(i, comp, provenance)
-            return
-        
+
 #         # See if we can get any zero_comparisons from 1 comp c*a_j.
 #         if i == 0:
 #             if coeff > 0 and comp in [LE, LT]:  # a_j >= 1/c > 0
 #                 self.learn_zero_comparison(j, GT, provenance)
 #             elif coeff < 0 and comp in [LE, LT]:  # a_j <= 1/c < 0
 #                 self.learn_zero_comparison(j, LT, provenance)
-        new_comp=Comparison_data(comp,coeff,provenance)
         comps = self.term_comparisons.get((i,j),[])+[new_comp]
         try:
             i_zc = [self.zero_comparisons[i]]
@@ -522,6 +531,7 @@ class Heuristic_data:
             
         self.term_comparisons[i,j] = [Comparison_data(p[2],p[0]*p[1],p[3]) for p in points if (p[0]!=0 and p[1]!=0)]
         self.changed = True
+        self.change_tracker.set_changed(i, j)
         if self.verbose:
             print 'Learned:', new_comp.to_string(IVar(i), IVar(j))
             print '  In other words:', \

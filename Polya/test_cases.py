@@ -90,30 +90,30 @@ def run_all_tests():
             
     time = timeit.default_timer()-start
     print round(time,3)
-    print
-    print 'z3 results:'
-    start = timeit.default_timer()
-    
-    v,x,y,z,a,b,w,u,n,k,c,p = z3.Reals('v x y z a b w u n k c p')
-    z3tests = [
-             [1<x,1<y,1<z,1>=x*(1+z*y)],
-             [a>0,a<1,b>0,b<1,a+b<a*b],
-             [x+y>=2,z+w>=2,u*(x**2)<u*x,u*(y**2)<u*y,u*(w**2)>u*w,u*(z**2)>u*z],
-             [n<=.5*k*x,0<c,0<p<1,(1+p/(3*(c+3)))*n>=k*x],
-             [x<1,1<y,x*y>1,u+x>=y+1,(x**2)*y>=2-u*x*y],
-             [x<1,1<y,x*y>1,u+x>=y+1,(x**2)*y<2-u*x*y],
-             [0<x,x<(3*y),u<v,v<0,1<(v**2),(v**2)<x,(u*((3*y)**2)+1)>=((x**2)*v+x)],
-             [0<x,x<3*y,u<v,v<0,1<(v**2),(v**2)<x,u*((3*y)**2)+1<(x**2)*v+x],
-             [x*(y+z)<=0,y+z>0,x>=0,x*w>0],
-             [x+1/y<2,y<0,y/x>1,-2<=x<=2,-2<=y<=2,(x**2)*(y**(-1))>1-x],
-             [(x**.5)+(y**.5)<30,(x**3.5)-1<y,(y**.2)>4],
-             [a**21>0,a**2<1,b**55>0,b<1,a+b<a*b],
- #            [0<x,0<y,x<1,y<1,(x**150)*(y**150)>(x**150)+(y**150)]
-             ]
-    for i in range(len(z3tests)):
-        print (i+1),': running z3 on',z3tests[i]
-    time = timeit.default_timer()-start
-    print round(time,3)
+#     print
+#     print 'z3 results:'
+#     start = timeit.default_timer()
+#     
+#     v,x,y,z,a,b,w,u,n,k,c,p = z3.Reals('v x y z a b w u n k c p')
+#     z3tests = [
+#              [1<x,1<y,1<z,1>=x*(1+z*y)],
+#              [a>0,a<1,b>0,b<1,a+b<a*b],
+#              [x+y>=2,z+w>=2,u*(x**2)<u*x,u*(y**2)<u*y,u*(w**2)>u*w,u*(z**2)>u*z],
+#              [n<=.5*k*x,0<c,0<p<1,(1+p/(3*(c+3)))*n>=k*x],
+#              [x<1,1<y,x*y>1,u+x>=y+1,(x**2)*y>=2-u*x*y],
+#              [x<1,1<y,x*y>1,u+x>=y+1,(x**2)*y<2-u*x*y],
+#              [0<x,x<(3*y),u<v,v<0,1<(v**2),(v**2)<x,(u*((3*y)**2)+1)>=((x**2)*v+x)],
+#              [0<x,x<3*y,u<v,v<0,1<(v**2),(v**2)<x,u*((3*y)**2)+1<(x**2)*v+x],
+#              [x*(y+z)<=0,y+z>0,x>=0,x*w>0],
+#              [x+1/y<2,y<0,y/x>1,-2<=x<=2,-2<=y<=2,(x**2)*(y**(-1))>1-x],
+#              [(x**.5)+(y**.5)<30,(x**3.5)-1<y,(y**.2)>4],
+#              [a**21>0,a**2<1,b**55>0,b<1,a+b<a*b],
+#  #            [0<x,0<y,x<1,y<1,(x**150)*(y**150)>(x**150)+(y**150)]
+#              ]
+#     for i in range(len(z3tests)):
+#         print (i+1),': running z3 on',z3tests[i]
+#     time = timeit.default_timer()-start
+#     print round(time,3)
 
 run_all_tests()
 #timecount.write()

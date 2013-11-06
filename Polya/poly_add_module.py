@@ -34,7 +34,7 @@ def learn_additive_sign_info(H):
 # - get vertices of polyhedron
 # - for each xy-pair, find the extreme bounds in the xy-plane if they exist.
 # - learn these inequalities
-def learn_add_comparisons_poly(H):
+def learn_add_comparisons(H):
     
     #Sends a potentially new term comparison to the heuristic
     def learn_term_comparison(i,j,comp,coeff):
