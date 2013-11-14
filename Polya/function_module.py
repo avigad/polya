@@ -104,7 +104,7 @@ def instantiate(axiom,H):
             for p in npairs[1:]:
                 t+=p[0]*IVar(p[1])
                 
-            for i in range(len(H.num_terms)):
+            for i in range(H.num_terms):
                 if str(u)==str(H.name_defs[i]) or str(p)==str(H.name_defs[i]):
                     return (1, i) 
             raise No_Term_Exception
@@ -122,7 +122,7 @@ def instantiate(axiom,H):
             raise No_Term_Exception
         
         else:
-            print 'something weird in fpt:', u
+            print 'something weird in fpt:', u, 'should not have uvars'
             raise No_Term_Exception
             
     # Takes preterms u1...un involving uvars v1...vm
@@ -132,10 +132,10 @@ def instantiate(axiom,H):
     # each ui becomes equal to a problem term.
     def unify(preterms, uvars, arg_uvars,envs=[Environment()]):
         
-        #print 'UNIFYING:'
-        #print '  preterms:',preterms
-        #print '  uvars:',uvars
-        #print '  arg_uvars:',arg_uvars
+        print 'UNIFYING:'
+        print '  preterms:',preterms
+        print '  uvars:',uvars
+        print '  arg_uvars:',arg_uvars
         
         def occurs_as_arg(term,var):
             if not isinstance(term,Func_term):
@@ -165,13 +165,13 @@ def instantiate(axiom,H):
             raise Exception
         ind = next(j for j in range(len(t.args)) if t.args[j].term==v)
         c = t.args[ind].coeff
-        #print '  v occurs in',t
+        print '  v occurs in',t
         
         prob_f_terms = [i for i in range(H.num_terms) if 
                       (isinstance(H.name_defs[i],Func_term) 
                        and len(H.name_defs[i].args)==len(t.args))]
         
-        #print '  the relevant problem terms are:',prob_f_terms
+        print '  the relevant problem terms are:',prob_f_terms
         
         S = [(Fraction(H.name_defs[i].args[ind].coeff,c),H.name_defs[i].args[ind].term.index) for i in prob_f_terms]
         # S is a list of pairs (coeff, j) such that c*coeff*a_j occurs as an argument
@@ -181,10 +181,11 @@ def instantiate(axiom,H):
         
         nenvs = []
         for (coeff, j) in S:
-            #print '  envs is:',envs
-            #print '  assign',v,'to be',coeff,'*',IVar(j)
+            print '  envs is:',envs
+            print '  assign',v,'to be',coeff,'*',IVar(j)
+            print '  preterms is:',preterms
             new_preterms = [substitute(p, v, coeff, j) for p in preterms]
-            #print '  new_preterms:', new_preterms
+            print '  new_preterms:', new_preterms
             closed_terms, open_terms = [a for (a,b) in new_preterms if b], [a for (a,b) in new_preterms if not b]
             prob_terms, imp = [], False
             for ct in closed_terms:
@@ -197,6 +198,7 @@ def instantiate(axiom,H):
                 continue
             
             #Right now, we do nothing with prob_terms
+            print '  okay, everything has matches!'
             cenvs = deepcopy(envs)
             #print '  cenvs:',cenvs,'envs:',envs
             for c in cenvs:
@@ -212,16 +214,40 @@ def instantiate(axiom,H):
         #print '  ___'
         return nenvs
         
+    #takes a preterm
+    #returns set of function terms that occur as subterms
+    def find_func_subterms(preterm):
+        f_subterms = set()
+        if isinstance(preterm,(Var,Const)):
+            return f_subterms
+        elif isinstance(preterm,Add_term):
+            for pair in preterm.addpairs:
+                f_subterms.update(find_func_subterms(pair.term))
+            return f_subterms
+        elif isinstance(preterm,Mul_term):
+            for pair in preterm.mulpairs:
+                f_subterms.update(find_func_subterms(pair.term))
+            return f_subterms
+        elif isinstance(preterm,Func_term):
+            f_subterms.add(preterm)
+            for pair in preterm.args:
+                f_subterms.update(find_func_subterms(pair.term))
+            return f_subterms
     ###################################################        
     
-    #print 'instantiate running.'
-    #print 'clauses:', axiom.clauses
+    print 'instantiate running.'
+    print 'clauses:', axiom.clauses
     preterms = set(c.lterm for c in axiom.clauses if c.lterm!=zero).union(set(c.rterm for c in axiom.clauses if c.rterm!=zero))
     #print 'preterms:',preterms
+    func_subterms = set()
+    for pt in preterms:
+        func_subterms.update(find_func_subterms(pt))
+    preterms.update(func_subterms)
     envs = unify(preterms, list(axiom.vars), list(axiom.arg_vars))
     #print 'envs:',envs
     axiom_insts = []
     for env in envs:
+        print 'env:',env
         nclauses = {}
         for c in axiom.clauses:
             comp,coeff = c.comp,c.coeff
@@ -273,13 +299,13 @@ def set_up_axioms(H):
     
     
 def learn_func_comparisons(H):
-            
+    if H.verbose:   
+        print 'Learning functional facts...'            
             
     if init:
         set_up_axioms(H)
         
     if H.verbose:   
-        print 'Learning functional facts...'
         print 'Instantiated axioms:',instantiated_axioms
         
     #H.info_dump()

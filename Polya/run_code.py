@@ -262,7 +262,9 @@ def test_heuristic_on_functions_zero():
     
     u,v = UVar(0), UVar(1)
     hypotheses = [x>0,exp(x)<0]
-    axioms = [Axiom([Axiom_clause(exp(u),GT,1,zero)])]
+    #axioms = [Axiom([Axiom_clause(exp(u),GT,1,zero)])]
+    axioms = [Axiom([Axiom_clause(zero,LT,1,exp(u))])]
+      
         
     run_heuristic_on_hypotheses(hypotheses, axioms)    
 
@@ -309,10 +311,11 @@ def test_heuristic_on_functions4():
     f = Func('f')
     
     x,y = UVar(0), UVar(1)
-    hypotheses = [f(a)+f(b)<c, f((a+b)/2)>4*c]
-    axioms = [Axiom([Axiom_clause((f(x)+f(y))/2,LT,1,f((x+y)/2))])]
+    hypotheses = [f(a)+f(b)<c, f((a+b)/2)>4*c,c>0]
+    axioms = [Axiom([Axiom_clause((f(x)+f(y))/2,GT,1,f((x+y)/2))])]
+    #axioms = [Axiom([Axiom_clause(zero,GT,1,f((x+y)/2))])] #this one doesn't work since no variable occurs alone as function arg.
         
-    run_heuristic_on_hypotheses(hypotheses, axioms)
+    run_heuristic_on_hypotheses(hypotheses, axioms, split_cases = False)
 
 ###################################################
 #
@@ -544,8 +547,8 @@ def run_heuristic_on_list():
 #test_heuristic_3()
 #test_heuristic_4()
 #test_heuristic_on_functions_zero()
-test_heuristic_on_functions2()
-#test_heuristic_on_functions4() #this one doesn't work yet!
+#test_heuristic_on_functions2()
+test_heuristic_on_functions4() #this one doesn't work yet!
 
 def multirun():
     for k in range(10):

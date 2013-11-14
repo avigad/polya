@@ -662,6 +662,10 @@ class No_Term_Exception(Exception):
 class Axiom_clause:
     def __init__(self,lterm,comp,coeff, rterm):
         self.lterm,self.comp,self.coeff,self.rterm = lterm,comp,coeff,rterm
+        if isinstance(lterm,(int,float,Fraction)):
+            self.lterm = (zero if lterm==0 else lterm*one)
+        if isinstance(rterm,(int,float,Fraction)):
+            self.rterm = (zero if rterm==0 else rterm*one)
         
     def __str__(self):
         return str(self.lterm)+' '+comp_str[self.comp]+' '+str(self.coeff) + '*'+str(self.rterm)
@@ -683,7 +687,7 @@ class Axiom:
         def find_uvars(term):
             if isinstance(term, UVar):
                 return set([term]),set()
-            elif isinstance(term, (Var,Const)):
+            elif isinstance(term, (Var,Const,int,float,Fraction)):
                 return set(),set()
             else:
                 vars = set()
@@ -1114,174 +1118,175 @@ class IVar(Term, Var):
         return True
     
     # Looks in Heuristic_data H to see if self < other is known.
-    def lt_rel(self, other, H):
-        i, j = self.index, other.index
-        if i > j:
-            return other.gt_rel(self, H)
-        if i == j:
-            return False
-        
-        if i == 0 and j in H.zero_comparisons.keys():
-            if H.zero_comparisons[j].comp == GT:
-                return True
-            return False
-        
-        signi, signj = H.sign(i), H.sign(j)
-        wsigni, wsignj = H.weak_sign(i), H.weak_sign(j)
-        if wsignj != 0: 
-            if signi == -1 and signj == 1:
-                return True
-            if signi == 1 and signj == -1:
-                return False
-            # both signs are the same.
-            if (i, j) in H.term_comparisons.keys():
-                comps = H.term_comparisons[i, j]
-                for c in comps:
-                    if ((wsignj == 1 and ((c.comp == LT and c.coeff <= 1)\
-                                          or (c.comp == LE and c.coeff < 1))) or
-                        (wsignj == -1 and ((c.comp == LT and (c.coeff < 0 or c.coeff >= 1))
-                            or (c.comp == LE and (c.coeff < 0 or c.coeff > 1))))):
-                        return True
-            return False
-        
-        # sign info on right is unknown
-        if (i, j) in H.term_comparisons.keys():
-            comps = H.term_comparisons[i, j]
-            if (any((c.comp == LT and c.coeff <= 1) or (c.comp == LE and c.coeff < 1)\
-                    for c in comps) and \
-                any(((c.comp == LT and (c.coeff < 0 or c.coeff >= 1))\
-                     or (c.comp == LE and (c.coeff < 0 or c.coeff > 1)))\
-                    for c in comps)):
-                return True
-        return False
-    
-    def gt_rel(self, other, H):
-        i, j = self.index, other.index
-        if i > j:
-            return other.lt_rel(self, H)
-        if i == j:
-            return False
-        
-        if i == 0 and j in H.zero_comparisons.keys():
-            if H.zero_comparisons[j].comp == LT:
-                return True
-            return False
-        
-        signi, signj = H.sign(i), H.sign(j)
-        wsigni, wsignj = H.weak_sign(i), H.weak_sign(j)
-        if wsignj != 0: 
-            if signi == -1 and signj == 1:
-                return False
-            if signi == 1 and signj == -1:
-                return True
-            # both signs are the same.
-            if (i, j) in H.term_comparisons.keys():
-                comps = H.term_comparisons[i, j]
-                for c in comps:
-                    if ((wsignj == 1 and ((c.comp == GT and c.coeff >= 1)\
-                                          or (c.comp == GE and c.coeff > 1))) or
-                        (wsignj == -1 and ((c.comp == GT and c.coeff <= 1)\
-                                           or (c.comp == GE and c.coeff < 1)))):
-                        return True
-            return False
-        
-        # sign info on right is unknown
-        if (i, j) in H.term_comparisons.keys():
-            comps = H.term_comparisons[i, j]
-            if (any((c.comp == GT and c.coeff >= 1)\
-                    or (c.comp == GE and c.coeff > 1) for c in comps) and
-                any((c.comp == GT and c.coeff <= 1)\
-                    or (c.comp == GE and c.coeff < 1) for c in comps)):
-                return True
-        return False
-    
-    def le_rel(self, other, H):
-        i, j = self.index, other.index
-        if i > j:
-            return other.ge_rel(self, H)
-        if i == j:
-            return True
-        
-        if i == 0 and j in H.zero_comparisons.keys():
-            if H.zero_comparisons[j].comp in [GT, GE]:
-                return True
-            return False
-        
-        # signi, signj = H.sign(i), H.sign(j)
-        wsigni, wsignj = H.weak_sign(i), H.weak_sign(j)
-        if wsignj != 0:
-            if wsigni == -1 and wsignj == 1:
-                return True
-            if wsigni == 1 and wsignj == -1:
-                return False
-            # both signs are the same.
-            if (i, j) in H.term_comparisons.keys():
-                comps = H.term_comparisons[i, j]
-                for c in comps:
-                    if (c.comp in [LE, LT] and ((wsignj == 1 and c.coeff <= 1)  or
-                        (wsignj == -1 and ((c.coeff < 0 or c.coeff >= 1))))):
-                        return True
-            return False
-        
-        # sign info on right is unknown
-        if (i, j) in H.term_comparisons.keys():
-            comps = H.term_comparisons[i, j]
-            if (any((c.comp in [LT, LE] and c.coeff <= 1) for c in comps) and
-                any((c.comp in [LT, LE] and (c.coeff < 0 or c.coeff >= 1)) for c in comps)):
-                return True
-        return False
-    
-    def ge_rel(self, other, H):
-        i, j = self.index, other.index
-        if i > j:
-            return other.le_rel(self, H)
-        if i == j:
-            return True
-        
-        if i == 0 and j in H.zero_comparisons.keys():
-            if H.zero_comparisons[j].comp in [LT, LE]:
-                return True
-            return False
-        
-        # signi, signj = H.sign(i), H.sign(j)
-        wsigni, wsignj = H.weak_sign(i), H.weak_sign(j)
-        if wsignj != 0:
-            if wsigni == -1 and wsignj == 1:
-                return False
-            if wsigni == 1 and wsignj == -1:
-                return True
-            # both signs are the same.
-            if (i, j) in H.term_comparisons.keys():
-                comps = H.term_comparisons[i, j]
-                for c in comps:
-                    if c.comp in [GT, GE] and ((wsignj == 1 and c.coeff >= 1) or
-                        (wsignj == -1 and  c.coeff <= 1)):
-                        return True
-            return False
-        
-        # sign info on right is unknown
-        if (i, j) in H.term_comparisons.keys():
-            comps = H.term_comparisons[i, j]
-            if (any((c.comp in [GT, GE] and c.coeff >= 1)  for c in comps) and
-                any((c.comp in [GT, GE] and c.coeff <= 1)  for c in comps)):
-                return True
-        return False
-    
-    def eq_rel(self, other, H):
-        i, j = self.index, other.index
-        if i == j:
-            return True
-        if self -other in H.zero_equations or other - self in H.zero_equations:
-            return True
-        return False
-    
-    def neq_rel(self, other, H):
-        i, j = self.index, other.index
-        if i > j:
-            return other.neq_rel(self, H)
-        if i == j:
-            return False
-        return self.gt_rel(other, H) or self.lt_rel(other, H)
+    # Not used in the new function module.
+#     def lt_rel(self, other, H):
+#         i, j = self.index, other.index
+#         if i > j:
+#             return other.gt_rel(self, H)
+#         if i == j:
+#             return False
+#         
+#         if i == 0 and j in H.zero_comparisons.keys():
+#             if H.zero_comparisons[j].comp == GT:
+#                 return True
+#             return False
+#         
+#         signi, signj = H.sign(i), H.sign(j)
+#         wsigni, wsignj = H.weak_sign(i), H.weak_sign(j)
+#         if wsignj != 0: 
+#             if signi == -1 and signj == 1:
+#                 return True
+#             if signi == 1 and signj == -1:
+#                 return False
+#             # both signs are the same.
+#             if (i, j) in H.term_comparisons.keys():
+#                 comps = H.term_comparisons[i, j]
+#                 for c in comps:
+#                     if ((wsignj == 1 and ((c.comp == LT and c.coeff <= 1)\
+#                                           or (c.comp == LE and c.coeff < 1))) or
+#                         (wsignj == -1 and ((c.comp == LT and (c.coeff < 0 or c.coeff >= 1))
+#                             or (c.comp == LE and (c.coeff < 0 or c.coeff > 1))))):
+#                         return True
+#             return False
+#         
+#         # sign info on right is unknown
+#         if (i, j) in H.term_comparisons.keys():
+#             comps = H.term_comparisons[i, j]
+#             if (any((c.comp == LT and c.coeff <= 1) or (c.comp == LE and c.coeff < 1)\
+#                     for c in comps) and \
+#                 any(((c.comp == LT and (c.coeff < 0 or c.coeff >= 1))\
+#                      or (c.comp == LE and (c.coeff < 0 or c.coeff > 1)))\
+#                     for c in comps)):
+#                 return True
+#         return False
+#     
+#     def gt_rel(self, other, H):
+#         i, j = self.index, other.index
+#         if i > j:
+#             return other.lt_rel(self, H)
+#         if i == j:
+#             return False
+#         
+#         if i == 0 and j in H.zero_comparisons.keys():
+#             if H.zero_comparisons[j].comp == LT:
+#                 return True
+#             return False
+#         
+#         signi, signj = H.sign(i), H.sign(j)
+#         wsigni, wsignj = H.weak_sign(i), H.weak_sign(j)
+#         if wsignj != 0: 
+#             if signi == -1 and signj == 1:
+#                 return False
+#             if signi == 1 and signj == -1:
+#                 return True
+#             # both signs are the same.
+#             if (i, j) in H.term_comparisons.keys():
+#                 comps = H.term_comparisons[i, j]
+#                 for c in comps:
+#                     if ((wsignj == 1 and ((c.comp == GT and c.coeff >= 1)\
+#                                           or (c.comp == GE and c.coeff > 1))) or
+#                         (wsignj == -1 and ((c.comp == GT and c.coeff <= 1)\
+#                                            or (c.comp == GE and c.coeff < 1)))):
+#                         return True
+#             return False
+#         
+#         # sign info on right is unknown
+#         if (i, j) in H.term_comparisons.keys():
+#             comps = H.term_comparisons[i, j]
+#             if (any((c.comp == GT and c.coeff >= 1)\
+#                     or (c.comp == GE and c.coeff > 1) for c in comps) and
+#                 any((c.comp == GT and c.coeff <= 1)\
+#                     or (c.comp == GE and c.coeff < 1) for c in comps)):
+#                 return True
+#         return False
+#     
+#     def le_rel(self, other, H):
+#         i, j = self.index, other.index
+#         if i > j:
+#             return other.ge_rel(self, H)
+#         if i == j:
+#             return True
+#         
+#         if i == 0 and j in H.zero_comparisons.keys():
+#             if H.zero_comparisons[j].comp in [GT, GE]:
+#                 return True
+#             return False
+#         
+#         # signi, signj = H.sign(i), H.sign(j)
+#         wsigni, wsignj = H.weak_sign(i), H.weak_sign(j)
+#         if wsignj != 0:
+#             if wsigni == -1 and wsignj == 1:
+#                 return True
+#             if wsigni == 1 and wsignj == -1:
+#                 return False
+#             # both signs are the same.
+#             if (i, j) in H.term_comparisons.keys():
+#                 comps = H.term_comparisons[i, j]
+#                 for c in comps:
+#                     if (c.comp in [LE, LT] and ((wsignj == 1 and c.coeff <= 1)  or
+#                         (wsignj == -1 and ((c.coeff < 0 or c.coeff >= 1))))):
+#                         return True
+#             return False
+#         
+#         # sign info on right is unknown
+#         if (i, j) in H.term_comparisons.keys():
+#             comps = H.term_comparisons[i, j]
+#             if (any((c.comp in [LT, LE] and c.coeff <= 1) for c in comps) and
+#                 any((c.comp in [LT, LE] and (c.coeff < 0 or c.coeff >= 1)) for c in comps)):
+#                 return True
+#         return False
+#     
+#     def ge_rel(self, other, H):
+#         i, j = self.index, other.index
+#         if i > j:
+#             return other.le_rel(self, H)
+#         if i == j:
+#             return True
+#         
+#         if i == 0 and j in H.zero_comparisons.keys():
+#             if H.zero_comparisons[j].comp in [LT, LE]:
+#                 return True
+#             return False
+#         
+#         # signi, signj = H.sign(i), H.sign(j)
+#         wsigni, wsignj = H.weak_sign(i), H.weak_sign(j)
+#         if wsignj != 0:
+#             if wsigni == -1 and wsignj == 1:
+#                 return False
+#             if wsigni == 1 and wsignj == -1:
+#                 return True
+#             # both signs are the same.
+#             if (i, j) in H.term_comparisons.keys():
+#                 comps = H.term_comparisons[i, j]
+#                 for c in comps:
+#                     if c.comp in [GT, GE] and ((wsignj == 1 and c.coeff >= 1) or
+#                         (wsignj == -1 and  c.coeff <= 1)):
+#                         return True
+#             return False
+#         
+#         # sign info on right is unknown
+#         if (i, j) in H.term_comparisons.keys():
+#             comps = H.term_comparisons[i, j]
+#             if (any((c.comp in [GT, GE] and c.coeff >= 1)  for c in comps) and
+#                 any((c.comp in [GT, GE] and c.coeff <= 1)  for c in comps)):
+#                 return True
+#         return False
+#     
+#     def eq_rel(self, other, H):
+#         i, j = self.index, other.index
+#         if i == j:
+#             return True
+#         if self -other in H.zero_equations or other - self in H.zero_equations:
+#             return True
+#         return False
+#     
+#     def neq_rel(self, other, H):
+#         i, j = self.index, other.index
+#         if i > j:
+#             return other.neq_rel(self, H)
+#         if i == j:
+#             return False
+#         return self.gt_rel(other, H) or self.lt_rel(other, H)
             
 
 # creates a name for every subterm in the list of terms args
