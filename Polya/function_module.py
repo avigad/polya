@@ -3,6 +3,8 @@ from heuristic import *
 from itertools import product, ifilter
 from inspect import getargspec
 from copy import copy
+from scipy.linalg import lu
+from numpy import array
 
 
 init = True
@@ -97,17 +99,61 @@ def instantiate(axiom,H):
             raise No_Term_Exception
         
         elif isinstance(u, Add_term):
-            #temporary
-                
+            if len(u.addpairs)==1:
+                return (u.addpairs[0].coeff,u.addpairs[0].term.index)
+            
             npairs = [(lambda x,y:(x[0]*y,x[1]))(find_problem_term(p.term),p.coeff) for p in u.addpairs]
-            t = npairs[0][0]*IVar(npairs[0][1])
-            for p in npairs[1:]:
-                t+=p[0]*IVar(p[1])
+            
+            #print '*** we have an add_term. u:',u
+            # make a matrix out of u and all additive equalities/definitions and try to diagonalize it.
+            urow = [0]*(H.num_terms)+[-1]
+            for (c,i) in npairs:
+                urow[i]=c
                 
-            for i in range(H.num_terms):
-                if str(u)==str(H.name_defs[i]) or str(p)==str(H.name_defs[i]):
-                    return (1, i) 
-            raise No_Term_Exception
+            mat = []
+            for (i,j,c) in H.get_all_equivalences():
+                row = [0]*(H.num_terms+1)
+                row[i]=-1
+                row[j]=c
+                mat.append(row[:])
+            
+            for i in (i for i in range(H.num_terms) if isinstance(H.name_defs[i],Add_term)):
+                row = [0]*(H.num_terms+1)
+                row[i]=-1
+                for p in H.name_defs[i].addpairs:
+                    row[p.term.index]=p.coeff
+                mat.append(row[:])
+                
+            mat.append(urow)
+            #print mat
+            pl, solved = lu(array(mat),permute_l=True)
+            #print 'solved:'
+            #print solved
+            nurow = solved[-1]
+            if nurow[-1]==0 or len([i for i in nurow if i!=0])!=2:
+                #print 'didnt solve the mat!'
+                raise No_Term_Exception
+            else:
+                #print 'solved the mat!'
+                k = next(i for i in range(len(nurow)) if nurow[i]!=0)
+                c = nurow[k]
+                #we have u = c*a_k
+                return (c,k)
+            
+                
+            
+            #temporary
+            
+                
+#             npairs = [(lambda x,y:(x[0]*y,x[1]))(find_problem_term(p.term),p.coeff) for p in u.addpairs]
+#             t = npairs[0][0]*IVar(npairs[0][1])
+#             for p in npairs[1:]:
+#                 t+=p[0]*IVar(p[1])
+#                 
+#             for i in range(H.num_terms):
+#                 if str(u)==str(H.name_defs[i]) or str(t)==str(H.name_defs[i]):
+#                     return (1, i) 
+#             raise No_Term_Exception
         
         elif isinstance(u, Mul_term):
             #temporary- copy above

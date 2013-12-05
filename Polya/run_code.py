@@ -25,7 +25,7 @@ def run_heuristic_on_heuristic_data(H, split_cases):
             #H.info_dump()
             add.learn_add_comparisons(H)
             mul.learn_mul_comparisons(H)
-            learn_func_comparisons(H)
+            #learn_func_comparisons(H)
         except Contradiction:
             print "Contradiction found!"
             return True
@@ -80,6 +80,9 @@ def run_heuristic_on_heuristic_data(H, split_cases):
             # otherwise, v could be pos or neg. try splitting on the next case.
     
     return False
+
+def solve(*hyps):
+    return run_heuristic_on_hypotheses(hyps,split_cases = False)
 
 # Takes a list of (uncanonized) Zero_comparisons and runs the heuristic.
 # If split_cases is true, it will try assuming variables of unknown sign are pos or neg
@@ -493,12 +496,12 @@ def run_heuristic_on_list():
         
         # This example has a model if the last inequality is <. FM blows up here, poly doesn't
         # It does not have a model if the last inequality is >=. Contradiction is found.
-        # "0<x<3*y", "u<v<0", "1<v^2<x", "u*(3*y)^2+1 < x^2*v+x" 
+         "0<x<3*y", "u<v<0", "1<v^2<x", "u*(3*y)^2+1 >= x^2*v+x"
         
         # This is a simple example with extraneous info,
         # where the contradiction is found very quickly.
         # "x*(y+z)<=0", "y+z>0", "x>=0", "x*w>0"
-        
+         
         # This example performs splitting, fails
         # "x+y+z<=0", "x+y>=-z"
         
@@ -509,7 +512,7 @@ def run_heuristic_on_list():
         #When using the polyhedron add, it blows up in the mult routine, which is a good sign
         #When using polyhedron add and mul, it does not blow up.
         #There is a model.
-        "x^(1/2)+y^(1/2) < 30", "x^(7/2)-1<y", "y^(1/5)>4"
+        #"x^(1/2)+y^(1/2) < 30", "x^(7/2)-1<y", "y^(1/5)>4"
         
         # The contradiction here is found relatively quickly.
         # "x+1/y<2", "y<0", "y/x>1", "-2<=x<=2", "-2<=y<=2", "x^2*y^(-1)>1-x"
@@ -529,6 +532,8 @@ def run_heuristic_on_list():
         #"x>0","y>0","(x+y)/2<(x*y)^(1/2)"
         
         #"x^2+1>=2*x"
+
+        #"x^2+y^2 < 2*x*y"
       ]
     args = []
     try:
@@ -547,8 +552,8 @@ def run_heuristic_on_list():
 #test_heuristic_3()
 #test_heuristic_4()
 #test_heuristic_on_functions_zero()
-#test_heuristic_on_functions2()
-test_heuristic_on_functions4() #this one doesn't work yet!
+test_heuristic_on_functions3()
+#test_heuristic_on_functions4() #this one doesn't work yet!
 
 def multirun():
     for k in range(10):

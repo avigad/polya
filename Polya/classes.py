@@ -118,6 +118,7 @@ class Term:
         raise Exception()
         
     def __gt__(self,other):
+        print type(other)
         if other==0:
             return Zero_comparison(self,GT)
         elif isinstance(other,Term):
@@ -498,8 +499,10 @@ class Mul_term(Term):
     def __cmp__(self, other):
         if isinstance(other, (Const, Var, Add_term, Func_term)):
             return 1
-        else:
+        elif isinstance(other,Mul_term):
             return cmp(self.mulpairs, other.mulpairs)
+        else:
+            return -1
 
     def __mul__(self, other):
         if isinstance(other, (int, float, Fraction)):

@@ -175,6 +175,15 @@ class Heuristic_data:
         else:
             return [(pair[1],pair[0]) for pair in eqc.items() if pair[0]!=i]
         
+    #returns a list of triples (i,j,c) representing a_i = c * a_j 
+    #does not return every equation, but every equation can be deduced from what is returned.
+    def get_all_equivalences(self):
+        l = []
+        for k in self.equiv_classes:
+            for i in self.equiv_classes[k].coeffs:
+                l.append((k,i,self.equiv_classes[k].coeffs[i]))
+        return l
+        
     def get_changes(self,module):
         return self.change_tracker.get_changes(module)
     
