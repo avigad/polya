@@ -47,7 +47,6 @@
 #
 ####################################################################################################
 
-
 import fractions
 import numbers
 
@@ -55,6 +54,19 @@ import numbers
 class Error(Exception):
     pass
 
+####################################################################################################
+#
+# For pretty printing -- indicates whether parentheses are needed
+#
+####################################################################################################
+
+ATOM, SUM, PRODUCT = range(3)
+
+def pretty_print_fraction(f):
+    if f.denominator == 1:
+        return ATOM, str(f)
+    else:
+        return PRODUCT, str(f)
 
 ####################################################################################################
 #
@@ -68,11 +80,19 @@ class Term:
     def __init__(self):
         pass
 
+    def __str__(self):
+        return self.pretty_print()[1]
+
     def __repr__(self):
         return self.__str__()
 
-    def __str__(self):
-        raise NotImplementedError()
+    def pretty_print(self):
+        """
+        Returns a pair, (level, string). The string is a representation of the term. The level is
+        one of ATOM, SUM, or PRODUCT, describing the form of the term. This is used, recursively,
+        to decide when to add parentheses.
+        """
+        pass
 
     def __add__(self, other):
         # case where self is an AddTerm is handled in that class
@@ -136,6 +156,7 @@ class Term:
         return other * self ** (-1)
 
     def __pow__(self, n):
+        # case where self is a MulTerm is handled in that class
         return MulTerm([MulPair(self, n)])
 
     def __abs__(self):
@@ -149,27 +170,17 @@ class Atom(Term):
         self.name = name
         self.sort_key = sort_key
 
-    def __str__(self):
-        return self.name
-
-        # def __cmp__(self, other):
-        #     if isinstance(other, Atom):
-        #         return cmp(self.sort_key, other.sort_key)
-        #     else:
-        #         return -1
+    def pretty_print(self):
+        return ATOM, self.name
 
 
 class AppTerm(Term):
 
-    def __init__(self, func, args, sort_key):
+    def __init__(self, func_name, args, sort_key):
         Term.__init__(self)
-        self.func = func
+        self.func_name = func_name
         self.args = args
         self.sort_key = (sort_key, (a.sort_key for a in args))
-
-    def __str__(self):
-        args = [str(a) for a in self.args]
-        return str(self.func) + '(' + ', '.join(args) + ')'
 
 
 ####################################################################################################
@@ -273,10 +284,25 @@ class AddTerm(AppTerm):
                 args.append(b)
         return AddTerm(args) if args else STerm(0, One())
 
+    def pretty_print(self):
+        arg_strings = [a.pretty_print()[1] for a in self.args]
+        return SUM, ' + '.join(arg_strings)
+
 
 class MulTerm(AppTerm):
+
     def __init__(self, args):
         AppTerm.__init__(self, 'prod', args, sort_key=(60, 'prod'))
+
+    def pretty_print(self):
+        arg_strings = []
+        for a in self.args:
+            level, s = a.pretty_print()
+            if level == SUM:
+                arg_strings.append('(' + s + ')')
+            else:
+                arg_strings.append(s)
+        return PRODUCT, ' * '.join(arg_strings)
 
     def __mul__(self, other):
         args = list(self.args)
@@ -315,20 +341,32 @@ class MulTerm(AppTerm):
             result = MulTerm(args) if args else One()
             return result if scalar == 1 else STerm(scalar, result)
 
+    def __pow__(self, n):
+        return MulTerm([a ** n for a in self.args])
 
+
+# TODO: not implemented yet
 class AbsTerm(AppTerm):
+
     def __init__(self, args):
         AppTerm.__init__(self, 'abs', args, sort_key=(70, 'abs'))
 
 
+# TODO: not implemented yet
 class MinTerm(AppTerm):
+
     def __init__(self, args):
         AppTerm.__init__(self, 'min', args, sort_key=(80, 'min'))
 
 
 class FuncTerm(AppTerm):
-    def __init__(self, name, args):
-        AppTerm.__init__(self, name, args, sort_key=(90, name))
+
+    def __init__(self, func_name, args):
+        AppTerm.__init__(self, func_name, args, sort_key=(90, func_name))
+
+    def pretty_print(self):
+        return ATOM, '{0}({1})'.format(self.func_name,
+                                       ', '.join([a.pretty_print()[1] for a in self.args]))
 
 
 class Func():
@@ -360,6 +398,7 @@ class Func():
 
 
 class STerm:
+
     def __init__(self, coeff, term):
         self.coeff = fractions.Fraction(coeff)
         if coeff != 0:
@@ -369,15 +408,26 @@ class STerm:
             self.sort_key = (term.sort_key, coeff)
 
     def __str__(self):
-        if self.coeff == 1:
-            return str(self.term)
-        elif isinstance(self.term, One):
-            return str(self.coeff)
-        else:
-            return str(self.coeff) + "*" + str(self.term)
+        return self.pretty_print()[1]
 
     def __repr__(self):
         return self.__str__()
+
+    def pretty_print(self):
+        if self.coeff == 0:
+            return ATOM, '0'
+        elif self.coeff == 1:
+            return self.term.pretty_print()
+        elif isinstance(self.term, One):
+            return pretty_print_fraction(self.coeff)
+        else:
+            lf, sf = pretty_print_fraction(self.coeff)
+            if lf == SUM:
+                sf = '({0})'.format(sf)
+            lt, st = self.term.pretty_print()
+            if lt == SUM:
+                st = '({0})'.format(st)
+            return PRODUCT, '{0}*{1}'.format(sf, st)
 
     def __add__(self, other):
         if isinstance(self.term, AddTerm):
@@ -414,7 +464,7 @@ class STerm:
         elif isinstance(other, Term):
             return STerm(self.coeff, self.term * other)
         elif isinstance(other, STerm):
-            return STerm(self.coeff * other.coeff, self.term / other.term)
+            return STerm(self.coeff * other.coeff, self.term * other.term)
 
     def __div__(self, other):
         if isinstance(other, numbers.Rational):
@@ -434,7 +484,7 @@ class STerm:
         if isinstance(n, (int, long)):
             Error('Non integer power')    # TODO: for now, we only handle integer powers
         else:
-            return STerm(pow(self.coeff, n), MulPair(self.term, n))
+            return STerm(pow(self.coeff, n), pow(self.term, n))
 
 
 ####################################################################################################
@@ -445,13 +495,30 @@ class STerm:
 
 
 class MulPair:
+
     def __init__(self, term, exponent):
         self.term = term
         self.exponent = exponent
         self.sort_key = (term.sort_key, exponent)
 
     def __str__(self):
-        return '({0!s} ^ {1!s})'.format(self.term, self.exponent)
+        return self.pretty_print()[1]
+
+    def __repr__(self):
+        return self.__str__()
+
+    def pretty_print(self):
+        if self.exponent == 1:
+            return self.term.pretty_print()
+        else:
+            l, s = self.term.pretty_print()
+            if l == ATOM:
+                return ATOM, '{0}**{1!s}'.format(s, self.exponent)
+            else:
+                return ATOM, '({0})**{1!s}'.format(s, self.exponent)
+
+    def __pow__(self, n):
+        return MulPair(self.term, self.exponent * n)
 
 
 ####################################################################################################
@@ -475,3 +542,4 @@ if __name__ == '__main__':
     print 2 * x * y
     print 2 * (x + y) * w
     print 2 * ((x + y) ** 5) * g(x) * (3 * (x * y + f(x) + 2 + w) ** 2)
+    print (x + (y * z)**5 + (3 * u + 2 * v)**2)**4 * (u + 3 * v + u + v + x)**2
