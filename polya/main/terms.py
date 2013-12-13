@@ -44,6 +44,7 @@
 #   term1 comp c * term2
 #
 # TODO: would it be better to have one AppTerm, and put all the information into the Function?
+# TODO: could have a generic canonization for AC operations
 #
 ####################################################################################################
 
@@ -56,17 +57,20 @@ class Error(Exception):
 
 ####################################################################################################
 #
-# For pretty printing -- indicates whether parentheses are needed
+# For pretty printing
 #
 ####################################################################################################
 
+
 ATOM, SUM, PRODUCT = range(3)
+
 
 def pretty_print_fraction(f):
     if f.denominator == 1:
         return ATOM, str(f)
     else:
         return PRODUCT, str(f)
+
 
 ####################################################################################################
 #
@@ -80,12 +84,6 @@ class Term:
     def __init__(self):
         pass
 
-    def __str__(self):
-        return self.pretty_print()[1]
-
-    def __repr__(self):
-        return self.__str__()
-
     def pretty_print(self):
         """
         Returns a pair, (level, string). The string is a representation of the term. The level is
@@ -93,6 +91,16 @@ class Term:
         to decide when to add parentheses.
         """
         pass
+
+    def canonize(self):
+        """Puts the term in a canonical normal form. Always returns an STerm."""
+        pass
+
+    def __str__(self):
+        return self.pretty_print()[1]
+
+    def __repr__(self):
+        return self.__str__()
 
     def __add__(self, other):
         # case where self is an AddTerm is handled in that class
@@ -131,6 +139,9 @@ class Term:
         else:
             raise Error('Cannot multiply Term {0!s} by {1!s}'.format(self, other))
 
+    def __rmul__(self, other):
+        return self * other
+
     def __neg__(self):
         return self * -1
 
@@ -139,9 +150,6 @@ class Term:
 
     def __rsub__(self, other):
         return (-1) * self + other
-
-    def __rmul__(self, other):
-        return self * other
 
     def __div__(self, other):
         return self * (other ** -1)
@@ -173,6 +181,9 @@ class Atom(Term):
     def pretty_print(self):
         return ATOM, self.name
 
+    def canonize(self):
+        return STerm(1, self)
+
 
 class AppTerm(Term):
 
@@ -180,7 +191,7 @@ class AppTerm(Term):
         Term.__init__(self)
         self.func_name = func_name
         self.args = args
-        self.sort_key = (sort_key, (a.sort_key for a in args))
+        self.sort_key = sort_key + ((a.sort_key for a in args),)
 
 
 ####################################################################################################
@@ -251,8 +262,21 @@ def Vars(name_str):
 
 
 class AddTerm(AppTerm):
+
     def __init__(self, args):
         AppTerm.__init__(self, 'sum', args, sort_key=(50, 'sum'))
+
+    def pretty_print(self):
+        arg_strings = [a.pretty_print()[1] for a in self.args]
+        return SUM, ' + '.join(arg_strings)
+
+    def canonize(self):
+        cargs = [a.canonize() for a in self.args]
+        new_addterm = reduce(lambda x, y: x + y, cargs, 0)    # remove duplicates
+        new_args = sorted(new_addterm.args, key=lambda a: a.sort_key)
+        first_coeff = new_args[0].coeff
+        new_args2 = [a / first_coeff for a in new_args]
+        return STerm(first_coeff, AddTerm(new_args2))
 
     def __add__(self, other):
         args = list(self.args)
@@ -284,10 +308,6 @@ class AddTerm(AppTerm):
                 args.append(b)
         return AddTerm(args) if args else STerm(0, One())
 
-    def pretty_print(self):
-        arg_strings = [a.pretty_print()[1] for a in self.args]
-        return SUM, ' + '.join(arg_strings)
-
 
 class MulTerm(AppTerm):
 
@@ -303,6 +323,13 @@ class MulTerm(AppTerm):
             else:
                 arg_strings.append(s)
         return PRODUCT, ' * '.join(arg_strings)
+
+    def canonize(self):
+        cargs = [a.canonize() for a in self.args]
+        scalar = reduce(lambda x, y: x * y, [a.coeff for a in cargs], 1)
+        new_multerm = reduce(lambda x, y: x * y, [a.term for a in cargs], One())
+        new_args = sorted(new_multerm.args, key=lambda a: a.sort_key)
+        return STerm(scalar, MulTerm(new_args))
 
     def __mul__(self, other):
         args = list(self.args)
@@ -368,6 +395,9 @@ class FuncTerm(AppTerm):
         return ATOM, '{0}({1})'.format(self.func_name,
                                        ', '.join([a.pretty_print()[1] for a in self.args]))
 
+    def canonize(self):
+        return STerm(1, FuncTerm(self.func_name, [a.canonize() for a in self.args]))
+
 
 class Func():
     """
@@ -405,13 +435,7 @@ class STerm:
             self.term = term
         else:
             self.term = One()
-            self.sort_key = (term.sort_key, coeff)
-
-    def __str__(self):
-        return self.pretty_print()[1]
-
-    def __repr__(self):
-        return self.__str__()
+        self.sort_key = (term.sort_key, coeff)
 
     def pretty_print(self):
         if self.coeff == 0:
@@ -422,15 +446,30 @@ class STerm:
             return pretty_print_fraction(self.coeff)
         else:
             lf, sf = pretty_print_fraction(self.coeff)
-            if lf == SUM:
+            if lf != ATOM:
                 sf = '({0})'.format(sf)
             lt, st = self.term.pretty_print()
-            if lt == SUM:
-                st = '({0})'.format(st)
-            return PRODUCT, '{0}*{1}'.format(sf, st)
+            if lt == ATOM:
+                return PRODUCT, '{0}*{1}'.format(sf, st)
+            elif lt == SUM:
+                return PRODUCT, '{0}*({1})'.format(sf, st)
+            else:    # lt == PRODUCT
+                return PRODUCT, '{0} * {1}'.format(sf, st)
+
+    def canonize(self):
+        t = self.term.canonize()
+        return t * self.coeff
+
+    def __str__(self):
+        return self.pretty_print()[1]
+
+    def __repr__(self):
+        return self.__str__()
 
     def __add__(self, other):
-        if isinstance(self.term, AddTerm):
+        if self.coeff == 0:
+            return other
+        elif isinstance(self.term, AddTerm):
             return self.coeff * self.term + other    # make first term an AddTerm
         elif isinstance(other, numbers.Rational):
             return self + STerm(other, One())
@@ -442,7 +481,9 @@ class STerm:
             else:
                 return AddTerm([self, STerm(1, other)])
         elif isinstance(other, STerm):
-            if isinstance(other.term, AddTerm):
+            if other.coeff == 0:
+                return self
+            elif isinstance(other.term, AddTerm):
                 return other.coeff * other.term + self
             else:
                 if self.term.sort_key == other.term.sort_key:
@@ -456,7 +497,7 @@ class STerm:
             raise Error('Cannot add STerm')
 
     def __radd__(self, other):
-        return other + self
+        return self + other
 
     def __mul__(self, other):
         if isinstance(other, numbers.Rational):
@@ -465,6 +506,9 @@ class STerm:
             return STerm(self.coeff, self.term * other)
         elif isinstance(other, STerm):
             return STerm(self.coeff * other.coeff, self.term * other.term)
+
+    def __rmul__(self, other):
+        return self * other
 
     def __div__(self, other):
         if isinstance(other, numbers.Rational):
@@ -481,7 +525,7 @@ class STerm:
                 return STerm(self.coeff / other.coeff, self.term / other.term)
 
     def __pow__(self, n):
-        if isinstance(n, (int, long)):
+        if not isinstance(n, (int, long)):
             Error('Non integer power')    # TODO: for now, we only handle integer powers
         else:
             return STerm(pow(self.coeff, n), pow(self.term, n))
@@ -501,12 +545,6 @@ class MulPair:
         self.exponent = exponent
         self.sort_key = (term.sort_key, exponent)
 
-    def __str__(self):
-        return self.pretty_print()[1]
-
-    def __repr__(self):
-        return self.__str__()
-
     def pretty_print(self):
         if self.exponent == 1:
             return self.term.pretty_print()
@@ -516,6 +554,15 @@ class MulPair:
                 return ATOM, '{0}**{1!s}'.format(s, self.exponent)
             else:
                 return ATOM, '({0})**{1!s}'.format(s, self.exponent)
+
+    def canonize(self):
+        return self.term.canonize() ** self.exponent
+
+    def __str__(self):
+        return self.pretty_print()[1]
+
+    def __repr__(self):
+        return self.__str__()
 
     def __pow__(self, n):
         return MulPair(self.term, self.exponent * n)
@@ -527,19 +574,27 @@ class MulPair:
 #
 ####################################################################################################
 
+
 if __name__ == '__main__':
     u, v, w, x, y, z = Vars('w, v, w, x, y, z')
     f = Func('f')
     g = Func('g')
 
-    print f(x, y, z)
-    print x + y
-    print x + x
-    print x + (x + y)
-    print x
-    print (x + y) + (z + x)
-    print x * y
-    print 2 * x * y
-    print 2 * (x + y) * w
-    print 2 * ((x + y) ** 5) * g(x) * (3 * (x * y + f(x) + 2 + w) ** 2)
-    print (x + (y * z)**5 + (3 * u + 2 * v)**2)**4 * (u + 3 * v + u + v + x)**2
+    def test(t):
+        print 'term:', t
+        print 'canonized:', t.canonize()
+        print
+
+    test(x + 0)
+    test(f(x, y, z))
+    test(x + y)
+    test(x + x)
+    test(x + (x + y))
+    test(x)
+    test((x + y) + (z + x))
+    test(x * y)
+    test(2 * x * y)
+    test(2 * (x + y) * w)
+    test(2 * ((x + y) ** 5) * g(x) * (3 * (x * y + f(x) + 2 + w) ** 2))
+    test((x + (y * z)**5 + (3 * u + 2 * v)**2)**4 * (u + 3 * v + u + v + x)**2)
+
