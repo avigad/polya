@@ -3,14 +3,31 @@ from heuristic import *
 from itertools import product, ifilter
 from inspect import getargspec
 from copy import copy
-from scipy.linalg import lu
-from numpy import array
+#from scipy.linalg import lu
+#from numpy import array
+import sympy
+
 
 
 init = True
 instantiated_axioms = []
 
-    
+from fractions import Fraction
+def add_list(l1,l2):
+    return [l1[i]+l2[i] for i in range(len(l1))]
+
+def scale_list(c,l):
+    return [c*li for li in l]
+
+
+def elim_var(i,pivot,rows):
+    if pivot[i]==0:
+        raise Exception
+    new_rows = [add_list(r, scale_list(-Fraction(r[i],pivot[i]),pivot)) for r in rows]
+    return new_rows
+
+
+
 # Returns all possible Axiom_insts from this axiom scheme and heuristic H.
 # TODO: handle equalities correctly
 # TODO: learn if len=1
@@ -103,43 +120,98 @@ def instantiate(axiom,H):
                 return (u.addpairs[0].coeff,u.addpairs[0].term.index)
             
             npairs = [(lambda x,y:(x[0]*y,x[1]))(find_problem_term(p.term),p.coeff) for p in u.addpairs]
-            
+
             #print '*** we have an add_term. u:',u
             # make a matrix out of u and all additive equalities/definitions and try to diagonalize it.
             urow = [0]*(H.num_terms)+[-1]
             for (c,i) in npairs:
                 urow[i]=c
-                
+
             mat = []
             for (i,j,c) in H.get_all_equivalences():
                 row = [0]*(H.num_terms+1)
                 row[i]=-1
                 row[j]=c
                 mat.append(row[:])
-            
+
             for i in (i for i in range(H.num_terms) if isinstance(H.name_defs[i],Add_term)):
                 row = [0]*(H.num_terms+1)
                 row[i]=-1
                 for p in H.name_defs[i].addpairs:
                     row[p.term.index]=p.coeff
                 mat.append(row[:])
-                
+
             mat.append(urow)
-            #print mat
-            pl, solved = lu(array(mat),permute_l=True)
-            #print 'solved:'
-            #print solved
-            nurow = solved[-1]
-            if nurow[-1]==0 or len([i for i in nurow if i!=0])!=2:
-                #print 'didnt solve the mat!'
-                raise No_Term_Exception
-            else:
-                #print 'solved the mat!'
-                k = next(i for i in range(len(nurow)) if nurow[i]!=0)
-                c = nurow[k]
-                #we have u = c*a_k
-                return (c,k)
-            
+
+            #begin FM elimination
+            rows_i = copy(mat)
+            for i in range(H.num_terms): #check if u = c*i
+                rows_j = copy(rows_i)
+                for j in range(i+1,H.num_terms):
+                    try:
+                        r = next(r for r in rows_j if r[j]!=0 and r[-1]==0)
+                    except StopIteration:
+                        continue
+                    rows = elim_var(j,r,[row for row in rows_j if row is not r])
+
+                row = next(r for r in rows_j if r[-1]!=0)
+                l = len([k for k in row if k!=0])
+                if l==1:
+                    #we have u = 0. What to do?
+                    return (1,zero)
+                elif l==2:
+                    #we've found a match for u
+                    ind = next(k for k in row if k!=0)
+                    coeff = -Fraction(row[ind],row[-1])
+                    return (coeff, ind)
+                else:
+                    try:
+                        r = next(r for r in rows_i if r[i]!=0 and r[-1]==0)
+                        rows_i = elim_var(i,r,[row for row in rows_i if row is not r])
+                    except StopIteration:
+                        if rows_i[-1][i]!=0: #there is a t_i in u, and nowhere else. Can't elim.
+                            raise No_Term_Exception
+
+            raise No_Term_Exception
+
+
+            #try:
+            #    p,l,d,ut = m.LUdecompositionFF()
+            #    print 'matrix was:'
+            #    print ut
+            #    r = next(i for i in range(ut.shape[0]) if ut.row(i)[-1]!=0) #find the row in ut with nonzero u coeff
+            #    nzs = [k for k in range(len(ut.row(r))) if ut.row(r)[k]!=0]
+            #    if len(nzs)!=2:
+            #        print 'no matrix match found'
+            #        #print ut
+            #        raise No_Term_Exception
+            #
+            #    else:
+            #        #u is equal to something times a_nzs[0]
+            #        cfa, cfu = ut.row(r)[nzs[0]], ut.row(r)[nzs[1]]
+            #        cf = -Fraction(cfa,cfu)
+            #        print 'found solution to matrix: u = ',cf,'* a',nzs[0]
+            #        return (cf,nzs[0])
+            #
+            #except Exception as e:
+            #    print 'Got an exception in matrix search:',e
+            #    raise No_Term_Exception
+
+
+            #pl, solved = lu(array(mat),permute_l=True)
+            ##print 'solved:'
+            ##print solved
+            #nurow = solved[-1]
+            #if nurow[-1]==0 or len([i for i in nurow if i!=0])!=2:
+            #    #print 'didnt solve the mat!'
+            #    raise No_Term_Exception
+            #else:
+            #    #print 'solved the mat!'
+            #    k = next(i for i in range(len(nurow)) if nurow[i]!=0)
+            #    c = nurow[k]
+            #    #we have u = c*a_k
+            #    return (c,k)
+            #
                 
             
             #temporary

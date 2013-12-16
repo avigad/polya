@@ -25,7 +25,7 @@ def run_heuristic_on_heuristic_data(H, split_cases):
             #H.info_dump()
             add.learn_add_comparisons(H)
             mul.learn_mul_comparisons(H)
-            #learn_func_comparisons(H)
+            learn_func_comparisons(H)
         except Contradiction:
             print "Contradiction found!"
             return True
