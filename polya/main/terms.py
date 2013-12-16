@@ -38,15 +38,21 @@
 # This module defines Python syntax for entering Terms and STerms, and the methods for canonizing
 # and printing them.
 #
-# This module also defines comparisons between STerms, which are always normalized
-# to be of the form
+# This module also defines comparisons between Terms and / or STerms, of the form
 #
-#   term1 comp c * term2
+#   term1 comp term2
+#
+# Note: to test two terms for syntactic equality, use
+#
+#   term1.sort_key == term2.sort_key
+#
+# and similarly for STerms.
 #
 # TODO: would it be better to have one AppTerm, and put all the information into the Function?
 # TODO: could have a generic canonization for AC operations
 #
 ####################################################################################################
+
 
 import fractions
 import numbers
@@ -54,6 +60,7 @@ import numbers
 
 class Error(Exception):
     pass
+
 
 ####################################################################################################
 #
@@ -65,11 +72,11 @@ class Error(Exception):
 ATOM, SUM, PRODUCT = range(3)
 
 
-def pretty_print_fraction(f):
-    if f.denominator == 1:
-        return ATOM, str(f)
+def pretty_print_fraction(frac):
+    if frac.denominator == 1:
+        return ATOM, str(frac)
     else:
-        return PRODUCT, str(f)
+        return PRODUCT, str(frac)
 
 
 ####################################################################################################
@@ -82,7 +89,7 @@ def pretty_print_fraction(f):
 class Term:
 
     def __init__(self):
-        pass
+        self.sort_key = None
 
     def pretty_print(self):
         """
@@ -111,7 +118,7 @@ class Term:
         elif isinstance(other, Term):
             if isinstance(other, AddTerm):
                 return other + self
-            elif self == other:
+            elif self.sort_key == other.sort_key:
                 return STerm(2, self)
             else:
                 return AddTerm([STerm(1, self), STerm(1, other)])
@@ -132,7 +139,7 @@ class Term:
                 return self
             if isinstance(other, MulTerm):
                 return other * self
-            elif self == other:
+            elif self.sort_key == other.sort_key:
                 return MulPair(self, 2)
             else:
                 return MulTerm([MulPair(self, 1), MulPair(other, 1)])
@@ -169,6 +176,24 @@ class Term:
 
     def __abs__(self):
         return AbsTerm(self)
+
+    def __lt__(self, other):
+        return TermComparison(self, LT, other)
+
+    def __le__(self, other):
+        return TermComparison(self, LE, other)
+
+    def __gt__(self, other):
+        return TermComparison(self, GT, other)
+
+    def __ge__(self, other):
+        return TermComparison(self, GE, other)
+
+    def __eq__(self, other):
+        return TermComparison(self, EQ, other)
+
+    def __ne__(self, other):
+        return TermComparison(self, NE, other)
 
 
 class Atom(Term):
@@ -271,11 +296,11 @@ class AddTerm(AppTerm):
         return SUM, ' + '.join(arg_strings)
 
     def canonize(self):
-        cargs = [a.canonize() for a in self.args]
+        cargs = [arg.canonize() for arg in self.args]
         new_addterm = reduce(lambda x, y: x + y, cargs, 0)    # remove duplicates
         new_args = sorted(new_addterm.args, key=lambda a: a.sort_key)
         first_coeff = new_args[0].coeff
-        new_args2 = [a / first_coeff for a in new_args]
+        new_args2 = [arg / first_coeff for arg in new_args]
         return STerm(first_coeff, AddTerm(new_args2))
 
     def __add__(self, other):
@@ -291,12 +316,12 @@ class AddTerm(AppTerm):
             if other.coeff == 0:
                 args2 = []
             elif isinstance(other.term, AddTerm):
-                args2 = [a * other.coeff for a in other.term.args]
+                args2 = [arg * other.coeff for arg in other.term.args]
             else:
                 args2 = [other]
         else:
             raise Error('Cannot add AddTerm {0!s} and {1!s}'.format(self, other))
-            # add each argument in args2 to args
+        # add each argument in args2 to args
         for b in args2:
             for a in args:
                 if b.term.sort_key == a.term.sort_key:
@@ -315,14 +340,17 @@ class MulTerm(AppTerm):
         AppTerm.__init__(self, 'prod', args, sort_key=(60, 'prod'))
 
     def pretty_print(self):
-        arg_strings = []
-        for a in self.args:
-            level, s = a.pretty_print()
-            if level == SUM:
-                arg_strings.append('(' + s + ')')
-            else:
-                arg_strings.append(s)
-        return PRODUCT, ' * '.join(arg_strings)
+        if len(self.args) == 1:
+            return self.args[0].pretty_print()
+        else:
+            arg_strings = []
+            for a in self.args:
+                level, s = a.pretty_print()
+                if level == SUM:
+                    arg_strings.append('(' + s + ')')
+                else:
+                    arg_strings.append(s)
+            return PRODUCT, ' * '.join(arg_strings)
 
     def canonize(self):
         cargs = [a.canonize() for a in self.args]
@@ -352,7 +380,7 @@ class MulTerm(AppTerm):
                 args2 = [MulPair(other.term, 1)]
         else:
             raise Error('Cannot multiply MulTerm {0!s} by {1!s}'.format(self, other))
-            # multiply args by each argument in args2
+        # multiply args by each argument in args2
         for b in args2:
             for a in args:
                 if b.term.sort_key == a.term.sort_key:
@@ -372,14 +400,24 @@ class MulTerm(AppTerm):
         return MulTerm([a ** n for a in self.args])
 
 
-# TODO: not implemented yet
 class AbsTerm(AppTerm):
 
-    def __init__(self, args):
-        AppTerm.__init__(self, 'abs', args, sort_key=(70, 'abs'))
+    def __init__(self, arg):
+        AppTerm.__init__(self, 'abs', [arg], sort_key=(70, 'abs'))
+
+    def pretty_print(self):
+        return ATOM, 'abs({0})'.format(self.args[0].pretty_print()[1])
+
+    def canonize(self):
+        return abs(self.args[0].canonize())
+
+    def __abs__(self):
+        return self
 
 
 # TODO: not implemented yet
+# add binary min and max methods to Term, STerm, and MinTerm
+# handling should be similar to AddTerm
 class MinTerm(AppTerm):
 
     def __init__(self, args):
@@ -445,16 +483,16 @@ class STerm:
         elif isinstance(self.term, One):
             return pretty_print_fraction(self.coeff)
         else:
-            lf, sf = pretty_print_fraction(self.coeff)
-            if lf != ATOM:
-                sf = '({0})'.format(sf)
+            lc, sc = pretty_print_fraction(self.coeff)
+            if lc != ATOM:
+                sc = '({0})'.format(sc)
             lt, st = self.term.pretty_print()
             if lt == ATOM:
-                return PRODUCT, '{0}*{1}'.format(sf, st)
+                return PRODUCT, '{0}*{1}'.format(sc, st)
             elif lt == SUM:
-                return PRODUCT, '{0}*({1})'.format(sf, st)
+                return PRODUCT, '{0}*({1})'.format(sc, st)
             else:    # lt == PRODUCT
-                return PRODUCT, '{0} * {1}'.format(sf, st)
+                return PRODUCT, '{0} * {1}'.format(sc, st)
 
     def canonize(self):
         t = self.term.canonize()
@@ -476,7 +514,7 @@ class STerm:
         elif isinstance(other, AddTerm):
             return other + self
         elif isinstance(other, Term):
-            if self.term == other:
+            if self.term.sort_key == other.sort_key:
                 return STerm(self.coeff + 1, self.term)
             else:
                 return AddTerm([self, STerm(1, other)])
@@ -528,7 +566,28 @@ class STerm:
         if not isinstance(n, (int, long)):
             Error('Non integer power')    # TODO: for now, we only handle integer powers
         else:
-            return STerm(pow(self.coeff, n), pow(self.term, n))
+            return STerm(self.coeff ** n, self.term ** n)
+
+    def __abs__(self):
+        return STerm(abs(self.coeff), abs(self.term))
+
+    def __lt__(self, other):
+        return TermComparison(self, LT, other)
+
+    def __le__(self, other):
+        return TermComparison(self, LE, other)
+
+    def __gt__(self, other):
+        return TermComparison(self, GT, other)
+
+    def __ge__(self, other):
+        return TermComparison(self, GE, other)
+
+    def __eq__(self, other):
+        return TermComparison(self, EQ, other)
+
+    def __ne__(self, other):
+        return TermComparison(self, NE, other)
 
 
 ####################################################################################################
@@ -570,13 +629,66 @@ class MulPair:
 
 ####################################################################################################
 #
+# Comparisons
+#
+####################################################################################################
+
+
+# relations between terms
+GT, GE, EQ, LE, LT, NE = range(6)
+
+# strings for printing them out
+comp_str = {GT: '>', GE: '>=',EQ: '==', LE: '<=', LT: '<', NE: '!='}
+
+# swaps GT and LT, GE and LE, fixes EQ and NE
+def comp_reverse(i):
+    if i == NE:
+        return NE
+    else:
+        return 4 - i
+
+# swaps GT and LE, GE and LT, EQ and NE
+def comp_negate(i):
+    return (i+3) % 6
+
+# evaluations
+comp_eval = {GT: lambda x, y: x > y, GE: lambda x, y :x >= y, EQ: lambda x, y: x == y,
+             LE: lambda x, y: x <= y, LT: lambda x, y: x < y, NE: lambda x, y: x != y}
+
+
+class TermComparison():
+
+    def __init__(self, term1, comp, term2):
+        self.term1 = term1
+        self.term2 = term2
+        self.comp = comp
+
+    def __str__(self):
+        return '{0!s} {1} {2!s}'.format(self.term1, comp_str[self.comp], self.term2)
+
+    def __repr__(self):
+        return self.__str__()
+
+    def canonize(self):
+        t1 = self.term1.canonize()
+        t2 = self.term2.canonize()
+        comp = self.comp
+        if t1.sort_key < t2.sort_key:
+            t1, t2, comp = t2, t1, comp_reverse(comp)
+        if t1.coeff < 0:
+            comp = comp_reverse(comp)
+        return TermComparison(t1.term, comp, t2 / t1.coeff)
+
+
+####################################################################################################
+#
 # Tests
 #
 ####################################################################################################
 
 
 if __name__ == '__main__':
-    u, v, w, x, y, z = Vars('w, v, w, x, y, z')
+    u, v, w, x, y, z = Vars('u, v, w, x, y, z')
     f = Func('f')
     g = Func('g')
 
@@ -596,5 +708,10 @@ if __name__ == '__main__':
     test(2 * x * y)
     test(2 * (x + y) * w)
     test(2 * ((x + y) ** 5) * g(x) * (3 * (x * y + f(x) + 2 + w) ** 2))
+    test((u + 3 * v + u + v + x)**2)
+    test(u + 3 * v)
     test((x + (y * z)**5 + (3 * u + 2 * v)**2)**4 * (u + 3 * v + u + v + x)**2)
-
+    test(g(f(x,2*y),z+(4*w+u**2)**3))
+    test(x < y)
+    test(2 * f(x, y + z)**2 == 3 * u * v)
+    test(-2 * (x + y) * w >= (x + (y * z)**5 + (3 * u + 2 * v)**2)**4 * (u + 3 * v + u + v + x)**2)
