@@ -66,6 +66,7 @@ def learn_add_comparisons(H):
     
     #Check for new sign info    
     learn_additive_sign_info(H)
+
     
     #Create the polytope in H-representation
     
@@ -80,8 +81,11 @@ def learn_add_comparisons(H):
     for i in H.zero_comparisons.keys():
         if H.zero_comparisons[i].provenance!=ADD:
             zero_comparisons.append(Zero_comparison(IVar(i),H.zero_comparisons[i].comp))
+
+    #H.info_dump()
             
     term_comps,zero_comps = lrs_util.get_comparison_list(add_eqs,zero_comparisons,H.num_terms,H.verbose)
+
     
     for (i,j,comp,coeff) in term_comps:
         learn_term_comparison(i,j,comp,coeff)

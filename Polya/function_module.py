@@ -244,6 +244,7 @@ def find_problem_term(H, u):
 # to a Func_term in preterms.
 # Returns a list of assignments {vi <- ci*t_{ji}} such that
 # each ui becomes equal to a problem term.
+# TODO: what happens when there are remaining uvars that do not occur alone in functions?
 def unify(H, preterms, uvars, arg_uvars,envs=[Environment()]):
 
     print 'UNIFYING:'
@@ -334,7 +335,19 @@ def unify(H, preterms, uvars, arg_uvars,envs=[Environment()]):
 # TODO: handle equalities correctly
 # TODO: learn if len=1
 def instantiate(axiom,H):
-    
+
+    # replaces all IVars in t with their definitions.
+    def replace_name_defs(t):
+        if isinstance(t, IVar):
+            return H.terms[t.index]
+        elif isinstance(t, Add_term):
+            return Add_term([Add_pair(p.coeff,replace_name_defs(p.term)) for p in t.addpairs])
+        elif isinstance(t, Mul_term):
+            return Mul_term([Mul_pair(replace_name_defs(p.term),p.exp) for p in t.mulpairs])
+        elif isinstance(t, Func_term):
+            return Func_term(t.name, [Add_pair(p.coeff,replace_name_defs(p.term)) for p in t.args], t.const)
+        else:
+            return t
 
     
     print 'instantiate running.'
@@ -360,7 +373,12 @@ def instantiate(axiom,H):
                     lterm = find_problem_term(H,red)
             except No_Term_Exception: #need to add a term to the heuristic. Pass for now.
                 print '****Couldnt find a match for', red
-                continue
+                cred = canonize(replace_name_defs(red))
+                print cred,'add_pair?',isinstance(cred,Add_pair)
+                terms, name_defs = make_term_names([cred.term],H.terms,H.name_defs)
+                H.terms, H.name_defs = terms, name_defs
+                H.num_terms = len(H.terms)
+                lterm = (cred.coeff, H.num_terms-1) #H.num_terms-1 is the index of the last added term
 
             try:
                 if c.rterm == zero:
@@ -369,8 +387,13 @@ def instantiate(axiom,H):
                     red = reduce_term(c.rterm,env)[0]
                     rterm = find_problem_term(H,red)
             except No_Term_Exception: #need to add a term to the heuristic. Pass for now.
-                print 'Couldnt find a match for', red
-                continue
+                print '****Couldnt find a match for', red
+                cred = canonize(replace_name_defs(red))
+                print cred,'add_pair?',isinstance(cred,Add_pair)
+                terms, name_defs = make_term_names([cred.term],H.terms,H.name_defs)
+                H.terms, H.name_defs = terms, name_defs
+                H.num_terms = len(H.terms)
+                rterm = (cred.coeff, H.num_terms-1) #H.num_terms-1 is the index of the last added term
             
             if lterm[0]==rterm[0]==0:
                 pass

@@ -25,7 +25,7 @@ def run_heuristic_on_heuristic_data(H, split_cases):
             #H.info_dump()
             add.learn_add_comparisons(H)
             mul.learn_mul_comparisons(H)
-            learn_func_comparisons(H)
+            #learn_func_comparisons(H)
         except Contradiction:
             print "Contradiction found!"
             return True
@@ -255,7 +255,7 @@ def test_heuristic_4():
 
     run_heuristic_on_hypotheses(hypotheses)
 
-def test_heuristic_on_functions_zero():
+def test_heuristic_on_functions_zero(): #should be no contradiction
     # we know x < y => exp(x) < exp(y)
     # Assume x < y, exp(x) > exp(y).
     
@@ -264,7 +264,7 @@ def test_heuristic_on_functions_zero():
     exp = Func('exp')
     
     u,v = UVar(0), UVar(1)
-    hypotheses = [x>0,exp(x)<0]
+    hypotheses = [x>0,exp(x)>0]
     #axioms = [Axiom([Axiom_clause(exp(u),GT,1,zero)])]
     axioms = [Axiom([Axiom_clause(zero,LT,1,exp(u))])]
       
@@ -496,7 +496,7 @@ def run_heuristic_on_list():
         
         # This example has a model if the last inequality is <. FM blows up here, poly doesn't
         # It does not have a model if the last inequality is >=. Contradiction is found.
-         "0<x<3*y", "u<v<0", "1<v^2<x", "u*(3*y)^2+1 >= x^2*v+x"
+         "0<x<3*y", "u<v<0", "1<v^2<x", "u*(3*y)^2+1 < x^2*v+x"
         
         # This is a simple example with extraneous info,
         # where the contradiction is found very quickly.
@@ -543,7 +543,7 @@ def run_heuristic_on_list():
         print "Invalid input: ", inst
         return
     
-    return run_heuristic_on_hypotheses(args,split_cases = False)
+    return run_heuristic_on_hypotheses(args,split_cases = False, verbose = False)
 
 #run_heuristic_on_input()
 #run_heuristic_on_list()
@@ -553,7 +553,7 @@ def run_heuristic_on_list():
 #test_heuristic_4()
 #test_heuristic_on_functions_zero()
 #test_heuristic_on_functions3()
-test_heuristic_on_functions4() #this one doesn't work yet!
+#test_heuristic_on_functions4() #this one doesn't work yet!
 
 def multirun():
     for k in range(10):

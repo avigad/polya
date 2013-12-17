@@ -321,10 +321,12 @@ class Add_pair:
         return self.__str__()
 
     def __cmp__(self, other):
-        j = cmp(self.term,other.term)
-        if j==0:
-            return cmp(self.coeff,other.coeff)
-        return j
+        if isinstance(other,Add_pair):
+            j = cmp(self.term,other.term)
+            if j==0:
+                return cmp(self.coeff,other.coeff)
+            return j
+        return -1
         #return cmp((self.term, self.coeff), (other.term, other.coeff))
 
     # used only to scale an addpair by a constant
@@ -619,7 +621,7 @@ class Func_term(Term):
     def structure(self):
         s = ('' if self.const == 1 else str(self.const)) + 'Func_term('
         for a in self.args:
-            s += a.structure() + ','
+            s += a.term.structure() + ','
         s = s[:-1] + ')'
         return s
         
@@ -1152,7 +1154,7 @@ class IVar(Term, Var):
     def __cmp__(self, other):
         if isinstance(other, Const):
             return 1
-        elif isinstance(other, Var):
+        elif isinstance(other, IVar):
             return cmp(self.index, other.index)
         else:
             return -1
@@ -1343,12 +1345,14 @@ class IVar(Term, Var):
 # creates a name for every subterm in the list of terms args
 # returns a list of all subterms (the ith name names the ith subterms)
 #   and dictionaries with all the name definitions
-def make_term_names(terms):
+def make_term_names(terms, subterm_list, name_defs):
 
-    name_defs = {}
+    if subterm_list is None:
+        subterm_list = [one]
+    if name_defs is None:
+        name_defs = {}
+        name_defs[0] = one
 
-    subterm_list = [one]
-    name_defs[0] = one
 
     # makes this term and all subterms have names, defining new names
     # if necessary; and returns the name
@@ -1356,9 +1360,17 @@ def make_term_names(terms):
     # notes that subterm_list and name_defs are global to this procedure,
     # which augments them as it recurses through t
     def process_subterm(t):
-        #print 'processing',t,'. structure:',t.structure()
+        #print 'processing',t, 'structure:',t.structure()
+        #print 'subterm_list:',subterm_list
+        #print 't in subterm_list?', t in subterm_list, 't in name_defs?', t in name_defs.values()
         if t in subterm_list:
             return IVar(subterm_list.index(t))
+        elif t in name_defs.values():
+            for k in name_defs:
+                if name_defs[k]==t:
+                    return IVar(k)
+        elif isinstance(t,IVar):
+            return t
         else:
             new_def = None
             if isinstance(t, Var):

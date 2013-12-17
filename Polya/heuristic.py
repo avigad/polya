@@ -111,7 +111,7 @@ class Heuristic_data:
 
         # make the names
         hterms = [h.term for h in hypotheses]
-        self.terms, self.name_defs = make_term_names(hterms)
+        self.terms, self.name_defs = make_term_names(hterms, None, None)
         self.num_terms = len(self.terms)
 
         # store hypotheses as zero comparisons
@@ -155,6 +155,10 @@ class Heuristic_data:
         
     def info_dump(self):
         print '**********'
+        for i in self.name_defs:
+            print IVar(i),'=', self.name_defs[i]
+        print
+
         for i in self.zero_comparisons.keys():
             print IVar(i),comp_str[self.zero_comparisons[i].comp],'0'
         print
@@ -199,8 +203,8 @@ class Heuristic_data:
             iter = product(*[map[k] for k in map])
             inds = [k for k in map]
             for item in iter:
-                new_maps.append(Arg_assn({inds[i]:item[i] for i in range(len(inds))},identity))
-                
+               # new_maps.append(Arg_assn({inds[i]:item[i] for i in range(len(inds))},identity))
+               raise Exception("is this used?")
             return new_maps
         
         arg_assns = []

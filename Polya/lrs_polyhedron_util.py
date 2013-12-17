@@ -280,6 +280,8 @@ def get_comparison_list(zero_equations,zero_comparisons,num_terms,verbose):
     
         
     if all(v[1]==0 for v in vertices): #We have a degenerate system where all terms = 0. Since 1!=0, contradiction
+        print 'Contradiction: all vertices are 0?'
         raise Contradiction
+        #pass
         
     return get_2d_comparisons(vertices,lin_set)
