@@ -682,7 +682,7 @@ class Axiom_clause:
 # Clauses is a list of Axiom_clauses.
 # The content of the axiom is that at least one element of clauses is true.
 class Axiom:
-    def __init__(self, clauses):
+    def __init__(self, clauses, triggers = []):
         
         #takes a term
         #returns two Sets. The first is all uvars that occur in the term.
@@ -710,6 +710,18 @@ class Axiom:
                 return vars, arg_vars
 
         self.clauses = clauses
+
+        if triggers != []:
+            self.triggers = set(triggers)
+        else:
+            preterms = set(c.lterm for c in self.clauses if c.lterm!=zero).union(set(c.rterm for c in self.clauses if c.rterm!=zero))
+            print 'preterms:',preterms
+            triggers = set()
+            for pt in preterms:
+                triggers.update(self.find_func_subterms(pt))
+            self.triggers = triggers
+
+
         uvars = set()
         arg_uvars = set()
         for c in clauses:
@@ -721,6 +733,42 @@ class Axiom:
             arg_uvars.update(narg_vars)
         
         self.vars, self.arg_vars = uvars, arg_uvars
+
+        trig_uvars = set()
+        trig_arg_uvars = set()
+        for c in self.triggers:
+            trig_nvars, trig_narg_vars = find_uvars(c)
+            trig_uvars.update(trig_nvars)
+            trig_arg_uvars.update(trig_narg_vars)
+
+        if trig_uvars != self.vars:
+            print 'triggers:',triggers
+            print 'trig_uvars:',trig_uvars
+            print 'vars:', self.vars
+            raise Exception('All UVars must be in the trigger set.')
+
+        self.trig_arg_vars = trig_arg_uvars
+
+
+        #takes a preterm
+    #returns set of function terms that occur as subterms
+    def find_func_subterms(self,preterm):
+        f_subterms = set()
+        if isinstance(preterm,(Var,Const)):
+            return f_subterms
+        elif isinstance(preterm,Add_term):
+            for pair in preterm.addpairs:
+                f_subterms.update(self.find_func_subterms(pair.term))
+            return f_subterms
+        elif isinstance(preterm,Mul_term):
+            for pair in preterm.mulpairs:
+                f_subterms.update(self.find_func_subterms(pair.term))
+            return f_subterms
+        elif isinstance(preterm,Func_term):
+            f_subterms.add(preterm)
+            for pair in preterm.args:
+                f_subterms.update(self.find_func_subterms(pair.term))
+            return f_subterms
         
     def __str__(self):
         s = '{For all '

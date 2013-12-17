@@ -552,8 +552,8 @@ def run_heuristic_on_list():
 #test_heuristic_3()
 #test_heuristic_4()
 #test_heuristic_on_functions_zero()
-test_heuristic_on_functions3()
-#test_heuristic_on_functions4() #this one doesn't work yet!
+#test_heuristic_on_functions3()
+test_heuristic_on_functions4() #this one doesn't work yet!
 
 def multirun():
     for k in range(10):
