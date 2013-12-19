@@ -63,7 +63,7 @@ class Blackboard():
 
     def term_name(self, t):
         """
-        Assumes t is a canonized term without IVars. Returns the index that represents t, if
+        Assumes t is a canonized term without IVars. Returns an IVar that represents t, if
         there is one. If not, recursively creates indices representing t and all its subterms, as
         needed.
         """
