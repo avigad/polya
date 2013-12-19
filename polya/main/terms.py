@@ -42,14 +42,17 @@
 #
 #   term1 comp term2
 #
-# Note: to test two terms for syntactic equality, use
+# For sorting and testing equality, every Term (and Sterm) has an associated key. These keys should
+# be used for all comparisons, because the built-in comparison operators are co-opted for
+# constructing expressions. For example, use
 #
-#   term1.sort_key == term2.sort_key
+#   term1.key == term2.key
 #
 # and similarly for STerms.
 #
-# TODO: would it be better to have one AppTerm, and put all the information into the Function?
+# TODO: would it be better to have one AppTerm, and put all the info into the function component?
 # TODO: could have a generic canonization for AC operations
+# TODO: should __hash__ return the hash of the key?
 #
 ####################################################################################################
 
@@ -71,7 +74,6 @@ class Error(Exception):
 
 ATOM, SUM, PRODUCT = range(3)
 
-
 def pretty_print_fraction(frac):
     if frac.denominator == 1:
         return ATOM, str(frac)
@@ -89,7 +91,7 @@ def pretty_print_fraction(frac):
 class Term:
 
     def __init__(self):
-        self.sort_key = None
+        self.key = None
 
     def pretty_print(self):
         """
@@ -118,7 +120,7 @@ class Term:
         elif isinstance(other, Term):
             if isinstance(other, AddTerm):
                 return other + self
-            elif self.sort_key == other.sort_key:
+            elif self.key == other.key:
                 return STerm(2, self)
             else:
                 return AddTerm([STerm(1, self), STerm(1, other)])
@@ -139,7 +141,7 @@ class Term:
                 return self
             if isinstance(other, MulTerm):
                 return other * self
-            elif self.sort_key == other.sort_key:
+            elif self.key == other.key:
                 return MulPair(self, 2)
             else:
                 return MulTerm([MulPair(self, 1), MulPair(other, 1)])
@@ -198,10 +200,10 @@ class Term:
 
 class Atom(Term):
 
-    def __init__(self, name, sort_key):
+    def __init__(self, name, key):
         Term.__init__(self)
         self.name = name
-        self.sort_key = sort_key
+        self.key = key
 
     def pretty_print(self):
         return ATOM, self.name
@@ -212,11 +214,11 @@ class Atom(Term):
 
 class AppTerm(Term):
 
-    def __init__(self, func_name, args, sort_key):
+    def __init__(self, func_name, args, key):
         Term.__init__(self)
         self.func_name = func_name
         self.args = args
-        self.sort_key = sort_key + ((a.sort_key for a in args),)
+        self.key = key + tuple([a.key for a in args])
 
 
 ####################################################################################################
@@ -229,27 +231,27 @@ class AppTerm(Term):
 class One(Atom):
 
     def __init__(self):
-        Atom.__init__(self, '1', sort_key=(10, 0))
+        Atom.__init__(self, '1', key=(10, 0))
 
 
 class Var(Atom):
 
     def __init__(self, name):
-        Atom.__init__(self, name, sort_key=(20, name))
+        Atom.__init__(self, name, key=(20, name))
 
 
 class IVar(Atom):
 
     def __init__(self, index):
         self.index = index
-        Atom.__init__(self, 't' + str(index), sort_key=(30, index))
+        Atom.__init__(self, 't' + str(index), key=(30, index))
 
 
 class UVar(Atom):
 
     def __init__(self, index):
         self.index = index
-        Atom.__init__(self, 'u' + str(index), sort_key=(40, index))
+        Atom.__init__(self, 'u' + str(index), key=(40, index))
 
 
 def _str_to_list(s):
@@ -289,7 +291,7 @@ def Vars(name_str):
 class AddTerm(AppTerm):
 
     def __init__(self, args):
-        AppTerm.__init__(self, 'sum', args, sort_key=(50, 'sum'))
+        AppTerm.__init__(self, 'sum', args, key=(50, 'sum'))
 
     def pretty_print(self):
         arg_strings = [a.pretty_print()[1] for a in self.args]
@@ -298,7 +300,7 @@ class AddTerm(AppTerm):
     def canonize(self):
         cargs = [arg.canonize() for arg in self.args]
         new_addterm = reduce(lambda x, y: x + y, cargs, 0)    # remove duplicates
-        new_args = sorted(new_addterm.args, key=lambda a: a.sort_key)
+        new_args = sorted(new_addterm.args, key=lambda a: a.key)
         first_coeff = new_args[0].coeff
         new_args2 = [arg / first_coeff for arg in new_args]
         return STerm(first_coeff, AddTerm(new_args2))
@@ -324,20 +326,20 @@ class AddTerm(AppTerm):
         # add each argument in args2 to args
         for b in args2:
             for a in args:
-                if b.term.sort_key == a.term.sort_key:
+                if b.term.key == a.term.key:
                     args.remove(a)
                     if a.coeff != -b.coeff:
                         args.append(STerm(a.coeff + b.coeff, a.term))
                     break
             else:
                 args.append(b)
-        return AddTerm(args) if args else STerm(0, One())
+        return AddTerm(args) if args else zero
 
 
 class MulTerm(AppTerm):
 
     def __init__(self, args):
-        AppTerm.__init__(self, 'prod', args, sort_key=(60, 'prod'))
+        AppTerm.__init__(self, 'prod', args, key=(60, 'prod'))
 
     def pretty_print(self):
         if len(self.args) == 1:
@@ -356,7 +358,7 @@ class MulTerm(AppTerm):
         cargs = [a.canonize() for a in self.args]
         scalar = reduce(lambda x, y: x * y, [a.coeff for a in cargs], 1)
         new_multerm = reduce(lambda x, y: x * y, [a.term for a in cargs], One())
-        new_args = sorted(new_multerm.args, key=lambda a: a.sort_key)
+        new_args = sorted(new_multerm.args, key=lambda a: a.key)
         return STerm(scalar, MulTerm(new_args))
 
     def __mul__(self, other):
@@ -383,7 +385,7 @@ class MulTerm(AppTerm):
         # multiply args by each argument in args2
         for b in args2:
             for a in args:
-                if b.term.sort_key == a.term.sort_key:
+                if b.term.key == a.term.key:
                     args.remove(a)
                     if a.exponent != -b.exponent:
                         args.append(MulPair(a.term, a.exponent + b.exponent))
@@ -391,7 +393,7 @@ class MulTerm(AppTerm):
             else:
                 args.append(b)
         if scalar == 0:
-            return STerm(0, One())
+            return zero
         else:
             result = MulTerm(args) if args else One()
             return result if scalar == 1 else STerm(scalar, result)
@@ -403,7 +405,7 @@ class MulTerm(AppTerm):
 class AbsTerm(AppTerm):
 
     def __init__(self, arg):
-        AppTerm.__init__(self, 'abs', [arg], sort_key=(70, 'abs'))
+        AppTerm.__init__(self, 'abs', [arg], key=(70, 'abs'))
 
     def pretty_print(self):
         return ATOM, 'abs({0})'.format(self.args[0].pretty_print()[1])
@@ -421,13 +423,13 @@ class AbsTerm(AppTerm):
 class MinTerm(AppTerm):
 
     def __init__(self, args):
-        AppTerm.__init__(self, 'min', args, sort_key=(80, 'min'))
+        AppTerm.__init__(self, 'min', args, key=(80, 'min'))
 
 
 class FuncTerm(AppTerm):
 
     def __init__(self, func_name, args):
-        AppTerm.__init__(self, func_name, args, sort_key=(90, func_name))
+        AppTerm.__init__(self, func_name, args, key=(90, func_name))
 
     def pretty_print(self):
         return ATOM, '{0}({1})'.format(self.func_name,
@@ -473,7 +475,7 @@ class STerm:
             self.term = term
         else:
             self.term = One()
-        self.sort_key = (term.sort_key, coeff)
+        self.key = (term.key, coeff)
 
     def pretty_print(self):
         if self.coeff == 0:
@@ -514,7 +516,7 @@ class STerm:
         elif isinstance(other, AddTerm):
             return other + self
         elif isinstance(other, Term):
-            if self.term.sort_key == other.sort_key:
+            if self.term.key == other.key:
                 return STerm(self.coeff + 1, self.term)
             else:
                 return AddTerm([self, STerm(1, other)])
@@ -524,9 +526,9 @@ class STerm:
             elif isinstance(other.term, AddTerm):
                 return other.coeff * other.term + self
             else:
-                if self.term.sort_key == other.term.sort_key:
+                if self.term.key == other.term.key:
                     if self.coeff + other.coeff == 0:
-                        return STerm(0, One())
+                        return zero
                     else:
                         return STerm(self.coeff + other.coeff, self.term)
                 else:
@@ -602,7 +604,7 @@ class MulPair:
     def __init__(self, term, exponent):
         self.term = term
         self.exponent = exponent
-        self.sort_key = (term.sort_key, exponent)
+        self.key = (term.key, exponent)
 
     def pretty_print(self):
         if self.exponent == 1:
@@ -670,14 +672,35 @@ class TermComparison():
         return self.__str__()
 
     def canonize(self):
+        """
+        Returns a comparison "t1 comp t2", where t1 is a Term and t2 is an STerm. A comparison
+        with 0 has the form t1 comp zero. Otherwise, t1 has smaller key than t2.
+        """
         t1 = self.term1.canonize()
         t2 = self.term2.canonize()
         comp = self.comp
-        if t1.sort_key < t2.sort_key:
-            t1, t2, comp = t2, t1, comp_reverse(comp)
+        if t1.term.key == t2.term.key:
+            t1, t2 == t1 - t2, zero
+        if t1.coeff == 0:
+            t1, comp, t2 = t2, comp_reverse, zero
+        elif t1.term.key > t2.term.key:
+            t1, comp, t2 = t2, comp_reverse(comp), t1
         if t1.coeff < 0:
             comp = comp_reverse(comp)
         return TermComparison(t1.term, comp, t2 / t1.coeff)
+
+
+####################################################################################################
+#
+# Constants
+#
+####################################################################################################
+
+
+one = One()
+
+zero = STerm(0, One())
+
 
 
 ####################################################################################################
@@ -712,7 +735,7 @@ if __name__ == '__main__':
     test(u + 3 * v)
     test((x + (y * z)**5 + (3 * u + 2 * v)**2)**4 * (u + 3 * v + u + v + x)**2)
     test(g(f(x,2*y),z+(4*w+u**2)**3))
-    test(x < y)
+    test(x < 3 * y)
     test(2 * f(x, y + z)**2 == 3 * u * v)
     test(-2 * (x + y) * w >= (x + (y * z)**5 + (3 * u + 2 * v)**2)**4 * (u + 3 * v + u + v + x)**2)
     test(x < -3 * y)
