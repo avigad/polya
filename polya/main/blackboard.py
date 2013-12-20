@@ -15,7 +15,7 @@
 #
 #  term_inequalities: inequalities of the form "ti comp c * tj", where c is nonzero
 #  term_zero_inequalities: inequalities of the form "ti comp 0"
-#  term_equalities: equalities of the form "ti = c * tj"
+#  term_equalities: equalities of the form "ti = c * tj", where c is nonzero
 #  term_zero_equalities: equalities of the form "ti = 0"
 #  term_disequalities: disequalities of the form "ti != c * tj", where c is nonzero
 #  term_zero_disequalities: disequalities of the form "ti != 0"
