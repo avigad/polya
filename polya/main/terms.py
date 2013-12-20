@@ -739,3 +739,4 @@ if __name__ == '__main__':
     test(2 * f(x, y + z)**2 == 3 * u * v)
     test(-2 * (x + y) * w >= (x + (y * z)**5 + (3 * u + 2 * v)**2)**4 * (u + 3 * v + u + v + x)**2)
     test(x < -3 * y)
+    test((u+v+3*w)-z)

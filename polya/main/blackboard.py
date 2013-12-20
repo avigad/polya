@@ -194,6 +194,19 @@ class Blackboard():
             '  := {0!s}'.format(terms.TermComparison(self.terms[i], comp, terms.zero)),
             messages.ASSERTION_FULL)
 
+    # Requested by Rob, 12/19:
+    def sign(self, i):
+        """
+        Returns 1 if ti > 0, -1 if ti < 0, 0 otherwise
+        """
+        return 0
+
+    def weak_sign(self, i):
+        """
+        Returns 1 if ti >= 0, -1 if ti <= 0, 0 otherwise
+        """
+        return 0
+
 
 ####################################################################################################
 #

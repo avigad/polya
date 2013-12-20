@@ -8,6 +8,7 @@ import tempfile
 #you may have to change lines 48 and 71 to
 # "./lrs" and "./redund"
 
+
 def make_frac(str):
     i = str.find('/')
     if i<0:
