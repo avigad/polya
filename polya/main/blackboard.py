@@ -30,6 +30,7 @@
 
 
 import terms
+import messages
 
 
 class Error(Exception):
@@ -44,7 +45,6 @@ class Error(Exception):
 
 
 class Blackboard():
-
     def __init__(self):
 
         # named subterms
@@ -85,7 +85,7 @@ class Blackboard():
                                          for a in t.args])
             elif isinstance(t, terms.AppTerm):
                 new_def = terms.FuncTerm(t.func_name, [terms.STerm(a.coeff, self.term_name(a.term))
-                                         for a in t.args])
+                                                       for a in t.args])
             else:
                 raise Error('cannot create name for {0!s}'.format(t))
             i = self.num_terms  # index of the new term
@@ -93,13 +93,9 @@ class Blackboard():
             self.terms[i] = t
             self.term_names[t.key] = i
             self.num_terms += 1
+            messages.announce('Defining t{0!s} := {1!s}'.format(i, new_def), messages.DEF)
+            messages.announce('  := {1!s}'.format(i, t), messages.DEF_FULL)
             return terms.IVar(i)
-
-    def show_terms(self):
-        # TODO: currently for debugging purposes
-        for i in range(self.num_terms):
-            print 't{0!s} := {1!s}'.format(i, self.term_defs[i])
-            print '  := {0!s}'.format(self.terms[i])
 
     def assert_comparison(self, c):
         """
@@ -133,55 +129,70 @@ class Blackboard():
         else:
             raise Error('Unrecognized comparison: {0!s}'.format())
 
-    def assert_term_zero_inequality(self, i, comp):
-        """
-        Adds the inequality "ti comp 0".
-        """
-        # TODO: implement this
-        print 'Asserting {0!s}'.format(terms.TermComparison(terms.IVar(i), comp, terms.zero))
-        return
-
     def assert_term_inequality(self, i, comp, coeff, j):
         """
         Adds the inequality "ti comp coeff * tj".
         """
         # TODO: implement this
-        print 'Asserting {0!s}'.format(terms.TermComparison(terms.IVar(i), comp,
-                                                            coeff * terms.IVar(j)))
+        self.announce_term_comparison(i, comp, coeff, j)
 
-    def assert_term_zero_equality(self, i):
+    def assert_term_zero_inequality(self, i, comp):
         """
-        Adds the equality "ti = 0"
+        Adds the inequality "ti comp 0".
         """
         # TODO: implement this
-        print 'Asserting {0!s}'.format(terms.TermComparison(terms.IVar(i), terms.EQ, terms.zero))
-        return
+        self.announce_term_zero_comparison(i, comp)
 
     def assert_term_equality(self, i, coeff, j):
         """
         Adds the equality "ti = coeff * tj"
         """
         # TODO: implement this
-        print 'Asserting {0!s}'.format(terms.TermComparison(terms.IVar(i), terms.EQ,
-                                                            coeff * terms.IVar(j)))
-        return
+        self.announce_term_comparison(i, terms.EQ, coeff, j)
 
-    def assert_term_zero_disequality(self, i):
+    def assert_term_zero_equality(self, i):
         """
-        Adds the equality "ti != 0"
+        Adds the equality "ti = 0"
         """
         # TODO: implement this
-        print 'Asserting {0!s}'.format(terms.TermComparison(terms.IVar(i), terms.NE, terms.zero))
-        return
+        self.announce_term_zero_comparison(i, terms.EQ)
 
     def assert_term_disequality(self, i, coeff, j):
         """
         Adds the equality "ti != coeff * tj"
         """
         # TODO: implement this
-        print 'Asserting {0!s}'.format(terms.TermComparison(terms.IVar(i), terms.NE,
-                                                            coeff * terms.IVar(j)))
-        return
+        self.announce_term_comparison(i, terms.NE, coeff, j)
+
+    def assert_term_zero_disequality(self, i):
+        """
+        Adds the equality "ti != 0"
+        """
+        # TODO: implement this
+        self.announce_term_zero_comparison(i, terms.NE)
+
+    def announce_term_comparison(self, i, comp, coeff, j):
+        """
+        Reports a successful assertion to the user.
+        """
+        messages.announce(
+            'Asserting {0!s}'.format(terms.TermComparison(terms.IVar(i), comp,
+                                                          coeff * terms.IVar(j))),
+            messages.ASSERTION)
+        messages.announce(
+            '  := {0!s}'.format(terms.TermComparison(self.terms[i], comp, coeff * self.terms[j])),
+            messages.ASSERTION_FULL)
+
+    def announce_term_zero_comparison(self, i, comp):
+        """
+        Reports a successful assertion to the user.
+        """
+        messages.announce(
+            'Asserting {0!s}'.format(terms.TermComparison(terms.IVar(i), comp, terms.zero)),
+            messages.ASSERTION)
+        messages.announce(
+            '  := {0!s}'.format(terms.TermComparison(self.terms[i], comp, terms.zero)),
+            messages.ASSERTION_FULL)
 
 
 ####################################################################################################
@@ -193,6 +204,9 @@ class Blackboard():
 
 if __name__ == '__main__':
 
+    # can change 'normal' to 'quiet' or 'low'
+    messages.set_verbosity(messages.normal)
+
     u, v, w, x, y, z = terms.Vars('u, v, w, x, y, z')
     f = terms.Func('f')
     g = terms.Func('g')
@@ -203,11 +217,11 @@ if __name__ == '__main__':
     B.assert_comparison(x + 0 < f(x, y, z))
     B.assert_comparison((x + y) + (z + x) == 2 * (x + y) * w)
     B.assert_comparison(2 * ((x + y) ** 5) * g(x) * (3 * (x * y + f(x) + 2 + w) ** 2) >=
-                         (u + 3 * v + u + v + x)**2)
+                        (u + 3 * v + u + v + x) ** 2)
     B.assert_comparison(u + 3 * v !=
-                        (x + (y * z)**5 + (3 * u + 2 * v)**2)**4 * (u + 3 * v + u + v + x)**2)
-    B.assert_comparison(2 * f(x, y + z)**2 == 3 * u * v)
+                        (x + (y * z) ** 5 + (3 * u + 2 * v) ** 2) ** 4 * (
+                            u + 3 * v + u + v + x) ** 2)
+    B.assert_comparison(2 * f(x, y + z) ** 2 == 3 * u * v)
     B.assert_comparison(-2 * (x + y) * w >=
-                        (x + (y * z)**5 + (3 * u + 2 * v)**2)**4 * (u + 3 * v + u + v + x)**2)
-
-    B.show_terms()
+                        (x + (y * z) ** 5 + (3 * u + 2 * v) ** 2) ** 4 * (
+                            u + 3 * v + u + v + x) ** 2)
