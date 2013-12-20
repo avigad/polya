@@ -52,7 +52,6 @@
 #
 # TODO: would it be better to have one AppTerm, and put all the info into the function component?
 # TODO: could have a generic canonization for AC operations
-# TODO: should __hash__ return the hash of the key?
 #
 ####################################################################################################
 
@@ -92,6 +91,7 @@ class Term:
 
     def __init__(self):
         self.key = None
+        self.__hash__ = None
 
     def pretty_print(self):
         """
@@ -476,6 +476,7 @@ class STerm:
         else:
             self.term = One()
         self.key = (term.key, coeff)
+        self.__hash__ = None
 
     def pretty_print(self):
         if self.coeff == 0:
@@ -661,15 +662,31 @@ comp_eval = {GT: lambda x, y: x > y, GE: lambda x, y :x >= y, EQ: lambda x, y: x
 class TermComparison():
 
     def __init__(self, term1, comp, term2):
-        self.term1 = term1
-        self.term2 = term2
+        if isinstance(term1, numbers.Rational):
+            self.term1 = STerm(term1, one)
+        else:
+            self.term1 = term1
+        if isinstance(term2, numbers.Rational):
+            self.term2 = STerm(term2, one)
+        else:
+            self.term2 = term2
         self.comp = comp
+        self.key = (self.term1.key, comp, self.term2.key)
 
     def __str__(self):
         return '{0!s} {1} {2!s}'.format(self.term1, comp_str[self.comp], self.term2)
 
     def __repr__(self):
         return self.__str__()
+
+    def __eq__(self, other):
+        """
+        Two TermComparisons are the same if and only if they have the same key.
+        """
+        if not isinstance(other, TermComparison):
+            return False
+        else:
+            return self.term1.key == other.key
 
     def canonize(self):
         """
@@ -680,7 +697,7 @@ class TermComparison():
         t2 = self.term2.canonize()
         comp = self.comp
         if t1.term.key == t2.term.key:
-            t1, t2 == t1 - t2, zero
+            t1, t2 = t1 - t2, zero
         if t1.coeff == 0:
             t1, comp, t2 = t2, comp_reverse, zero
         elif t1.term.key > t2.term.key:

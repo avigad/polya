@@ -45,21 +45,22 @@ class Error(Exception):
 
 
 class Blackboard():
+
     def __init__(self):
 
         # named subterms
         self.num_terms = 1
         self.term_defs = {0: terms.one}       # maps each index to its definition
         self.terms = {0: terms.one}           # maps each index to its fully expanded term
-        self.term_names = {terms.one.key: 0}  # reverse lookup: maps a term to is defining index
+        self.term_names = {terms.one.key: 0}      # reverse lookup: maps a term to is defining index
 
         # comparisons between named subterms
-        self.term_inequalities = {}
-        self.term_zero_inequalities = {0: terms.GT}
-        self.term_equalities = {}
-        self.term_zero_equalities = set([])
-        self.term_disequalities = {}
-        self.term_zero_disequalities = {0}
+        self.inequalities = {}
+        self.zero_inequalities = {0: terms.GT}
+        self.equalities = {}
+        self.zero_equalities = set([])
+        self.disequalities = {}
+        self.zero_disequalities = {}
 
     def term_name(self, t):
         """
@@ -97,6 +98,31 @@ class Blackboard():
             messages.announce('  := {1!s}'.format(i, t), messages.DEF_FULL)
             return terms.IVar(i)
 
+    def get_inequalities(self):
+        inequalities = []
+        for i in self.zero_inequalities:
+            comp = self.zero_inequalities[i]
+            inequalities.append(terms.comp_eval[comp](terms.IVar(i), 0))
+        for (i, j) in self.inequalities:
+            comp, coeff = self.zero_inequalities[(i, j)]
+            inequalities.append(terms.comp_eval[comp](terms.IVar(i), coeff * terms.IVar(j)))
+        return inequalities
+
+    def get_equalities(self):
+        equalities = [terms.IVar(i) == 0 for i in self.zero_equalities]
+        for p in self.equalities:
+            coeff = self.equalities[p]
+            equalities.append(terms.IVar(p[0]) == coeff * terms.IVar(p[1]))
+        return equalities
+
+    def get_disequalities(self):
+        disequalities = [terms.IVar(i) != 0 for i in self.zero_disequalities]
+        for p in self.disequalities:
+            coeff_list = self.disequalities[p]
+            for coeff in coeff_list:
+                disequalities.append(terms.IVar(p[0]) != coeff * terms.IVar(p[1]))
+        return disequalities
+
     def assert_comparison(self, c):
         """
         Take an instance of terms.TermComparison, and adds the comparison to the blackboard.
@@ -113,65 +139,65 @@ class Blackboard():
             term1, comp, coeff, term2 = c.term1, c.comp, c.term2.coeff, c.term2.term
         if comp in (terms.GE, terms.GT, terms.LE, terms.LT):
             if coeff == 0:
-                self.assert_term_zero_inequality(term1.index, comp)
+                self.assert_zero_inequality(term1.index, comp)
             else:
-                self.assert_term_inequality(term1.index, comp, coeff, term2.index)
+                self.assert_inequality(term1.index, comp, coeff, term2.index)
         elif comp == terms.EQ:
             if coeff == 0:
-                self.assert_term_zero_equality(term1.index)
+                self.assert_zero_equality(term1.index)
             else:
-                self.assert_term_equality(term1.index, coeff, term2.index)
+                self.assert_equality(term1.index, coeff, term2.index)
         elif comp == terms.NE:
             if coeff == 0:
-                self.assert_term_zero_disequality(term1.index)
+                self.assert_zero_disequality(term1.index)
             else:
-                self.assert_term_disequality(term1.index, coeff, term2.index)
+                self.assert_disequality(term1.index, coeff, term2.index)
         else:
             raise Error('Unrecognized comparison: {0!s}'.format())
 
-    def assert_term_inequality(self, i, comp, coeff, j):
+    def assert_inequality(self, i, comp, coeff, j):
         """
         Adds the inequality "ti comp coeff * tj".
         """
         # TODO: implement this
-        self.announce_term_comparison(i, comp, coeff, j)
+        self.announce_comparison(i, comp, coeff, j)
 
-    def assert_term_zero_inequality(self, i, comp):
+    def assert_zero_inequality(self, i, comp):
         """
         Adds the inequality "ti comp 0".
         """
         # TODO: implement this
-        self.announce_term_zero_comparison(i, comp)
+        self.announce_zero_comparison(i, comp)
 
-    def assert_term_equality(self, i, coeff, j):
+    def assert_equality(self, i, coeff, j):
         """
         Adds the equality "ti = coeff * tj"
         """
         # TODO: implement this
-        self.announce_term_comparison(i, terms.EQ, coeff, j)
+        self.announce_comparison(i, terms.EQ, coeff, j)
 
-    def assert_term_zero_equality(self, i):
+    def assert_zero_equality(self, i):
         """
         Adds the equality "ti = 0"
         """
         # TODO: implement this
-        self.announce_term_zero_comparison(i, terms.EQ)
+        self.announce_zero_comparison(i, terms.EQ)
 
-    def assert_term_disequality(self, i, coeff, j):
+    def assert_disequality(self, i, coeff, j):
         """
         Adds the equality "ti != coeff * tj"
         """
         # TODO: implement this
-        self.announce_term_comparison(i, terms.NE, coeff, j)
+        self.announce_comparison(i, terms.NE, coeff, j)
 
-    def assert_term_zero_disequality(self, i):
+    def assert_zero_disequality(self, i):
         """
         Adds the equality "ti != 0"
         """
         # TODO: implement this
-        self.announce_term_zero_comparison(i, terms.NE)
+        self.announce_zero_comparison(i, terms.NE)
 
-    def announce_term_comparison(self, i, comp, coeff, j):
+    def announce_comparison(self, i, comp, coeff, j):
         """
         Reports a successful assertion to the user.
         """
@@ -183,7 +209,7 @@ class Blackboard():
             '  := {0!s}'.format(terms.TermComparison(self.terms[i], comp, coeff * self.terms[j])),
             messages.ASSERTION_FULL)
 
-    def announce_term_zero_comparison(self, i, comp):
+    def announce_zero_comparison(self, i, comp):
         """
         Reports a successful assertion to the user.
         """
@@ -199,12 +225,24 @@ class Blackboard():
         """
         Returns 1 if ti > 0, -1 if ti < 0, 0 otherwise
         """
+        if i in self.zero_inequalities:
+            comp = self.zero_inequalities[i]
+            if comp == terms.GT:
+                return 1
+            elif comp == terms.LT:
+                return -1
         return 0
 
     def weak_sign(self, i):
         """
         Returns 1 if ti >= 0, -1 if ti <= 0, 0 otherwise
         """
+        if i in self.zero_inequalities:
+            comp = self.zero_inequalities[i]
+            if comp in (terms.GT, terms.GE):
+                return 1
+            elif comp in (terms.LT, terms.LE):
+                return -1
         return 0
 
 
@@ -238,3 +276,7 @@ if __name__ == '__main__':
     B.assert_comparison(-2 * (x + y) * w >=
                         (x + (y * z) ** 5 + (3 * u + 2 * v) ** 2) ** 4 * (
                             u + 3 * v + u + v + x) ** 2)
+
+    print B.get_equalities()
+    print B.get_inequalities()
+    print B.get_disequalities()
