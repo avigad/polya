@@ -31,6 +31,8 @@
 
 import terms
 import messages
+import geometry
+import fractions
 
 
 class Error(Exception):
@@ -55,12 +57,12 @@ class Blackboard():
         self.term_names = {terms.one.key: 0}      # reverse lookup: maps a term to is defining index
 
         # comparisons between named subterms
-        self.inequalities = {}
-        self.zero_inequalities = {0: terms.GT}
-        self.equalities = {}
-        self.zero_equalities = set([])
-        self.disequalities = {}
-        self.zero_disequalities = {}
+        self.inequalities = {}  # Dictionary mapping (i, j) to a list of pairs (comp, coeff)
+        self.zero_inequalities = {0: terms.GT}  # Dictionary mapping i to comp
+        self.equalities = {}  # Dictionary mapping (i, j) to coeff
+        self.zero_equalities = set([])  # Set of IVar indices equal to 0
+        self.disequalities = {}  # Dictionary mapping (i, j) to a set of coeffs
+        self.zero_disequalities = set([])  # Is this one necessary?
 
     def term_name(self, t):
         """
@@ -104,8 +106,8 @@ class Blackboard():
             comp = self.zero_inequalities[i]
             inequalities.append(terms.comp_eval[comp](terms.IVar(i), 0))
         for (i, j) in self.inequalities:
-            comp, coeff = self.zero_inequalities[(i, j)]
-            inequalities.append(terms.comp_eval[comp](terms.IVar(i), coeff * terms.IVar(j)))
+            for comp, coeff in self.inequalities[i, j]:
+                inequalities.append(terms.comp_eval[comp](terms.IVar(i), coeff * terms.IVar(j)))
         return inequalities
 
     def get_equalities(self):
@@ -123,6 +125,82 @@ class Blackboard():
                 disequalities.append(terms.IVar(p[0]) != coeff * terms.IVar(p[1]))
         return disequalities
 
+    def implies(self, i, comp, coeff, j):
+        """
+        Checks to see if the statement ti comp coeff * tj is known by the Blackboard.
+        """
+        #print 'checking if t{0} {1} {2} t{3}'.format(i, terms.comp_str[comp], coeff, j)
+        if coeff == 0:
+            return self.implies_zero_comparison(i, comp)
+
+        elif i == j:
+            coeff1 = 1 - coeff
+            if coeff1 > 0:
+                return self.implies_zero_comparison(i, comp)
+            elif coeff1 < 0:
+                return self.implies_zero_comparison(i, terms.comp_reverse(comp))
+            elif comp in [terms.GE, terms.LE, terms.EQ]:
+                return True
+            else:
+                return False
+
+        if comp in [terms.LT, terms.LE, terms.GE, terms.GT]:
+            # Gather all of the known information about ti and tj.
+            new_line = geometry.Line(1, -coeff, 0, comp)
+            known_lines = [geometry.Line(1, -coeff1, 0, comp1)
+                           for (comp1, coeff1) in self.inequalities.get((i, j), [])]
+            if i in self.zero_inequalities:
+                known_lines.append(geometry.Line(1, 0, 0, self.zero_inequalities[i]))
+            if j in self.zero_equalities:
+                known_lines.append(geometry.Line(0, 1, 0, self.zero_inequalities[j]))
+
+            # If we don't know anything, we don't know ti comp coeff * tj
+            if len(known_lines) == 0:
+                return False
+
+            # If we only know one thing, then we only know the new info if it is the same.
+            elif len(known_lines) == 1:
+                if new_line.slope() == known_lines[0].slope():
+                    if ((comp == known_lines[0].comp)
+                       or (comp == terms.GE and known_lines[0].comp == terms.GT)
+                       or (comp == terms.LE and known_lines[0].comp == terms.LT)):
+                        return True
+                return False
+
+            # Otherwise, figure out the two strongest things we know, and see if they imply the new.
+            else:
+                # We know at least two facts about i and j.
+                return not new_line.has_new_info(*geometry.find_two_strongest(known_lines))
+
+        # All equality info is stored, so see if we know this equality.
+        elif comp == terms.EQ:
+            return coeff == self.equalities.get((i, j), None)
+
+        # See if we know this disequality, or if the disequality is implied by an inequality.
+        elif comp == terms.NE:
+            if coeff in self.disequalities.get((i, j), []):
+                return True
+            return self.implies(i, terms.GT, coeff, j) or self.implies(i, terms.LT, coeff, j)
+
+    def implies_zero_comparison(self, i, comp):
+        """
+        Checks to see if the statement ti comp 0 is known by the Blackboard.
+        """
+        if comp in [terms.LT, terms.GT]:
+            return self.zero_inequalities.get(i, terms.EQ) == comp
+
+        elif comp == terms.LE:
+            return self.zero_inequalities.get(i, terms.EQ) in [terms.LE, terms.LT]
+
+        elif comp == terms.GE:
+            return self.zero_inequalities.get(i, terms.EQ) in [terms.GE, terms.GT]
+
+        elif comp == terms.EQ:
+            return i in self.zero_equalities
+
+        elif comp == terms.NE:
+            return i in self.zero_disequalities
+
     def assert_comparison(self, c):
         """
         Take an instance of terms.TermComparison, and adds the comparison to the blackboard.
@@ -137,6 +215,12 @@ class Blackboard():
             ivar2 = term1 if isinstance(term1, terms.IVar) else self.term_name(term2)
             c = terms.TermComparison(ivar1, comp, coeff * ivar2).canonize()
             term1, comp, coeff, term2 = c.term1, c.comp, c.term2.coeff, c.term2.term
+
+        if self.implies(term1.index, comp, coeff, term2.index):
+            return
+        elif self.implies(term1.index, terms.comp_negate(comp), coeff, term2.index):
+            self.raise_contradiction(term1.index, comp, coeff, term2.index)
+
         if comp in (terms.GE, terms.GT, terms.LE, terms.LT):
             if coeff == 0:
                 self.assert_zero_inequality(term1.index, comp)
@@ -159,7 +243,22 @@ class Blackboard():
         """
         Adds the inequality "ti comp coeff * tj".
         """
-        # TODO: implement this
+        new_line = geometry.Line(1, -coeff, 0, comp)
+        lines = [geometry.Line(1, -coeff1, 0, comp1)
+                 for (comp1, coeff1) in self.inequalities.get((i, j), [])]
+        if len(lines) == 0:
+            self.inequalities[i, j] = [(comp, coeff)]
+        else:
+            if i in self.zero_inequalities:
+                lines.append(geometry.Line(1, 0, 0, self.zero_inequalities[i]))
+            if j in self.zero_equalities:
+                lines.append(geometry.Line(0, 1, 0, self.zero_inequalities[j]))
+            lines.append(new_line)
+            l1, l2 = geometry.find_two_strongest(lines)
+            ineqs = [((l.comp if l.a > 0 else terms.comp_reverse(l.comp)),
+                      fractions.Fraction(-l.b, l.a))
+                     for l in [l1, l2] if l.a != 0 and l.b != 0]
+            self.inequalities[i, j] = ineqs
         self.announce_comparison(i, comp, coeff, j)
 
     def assert_zero_inequality(self, i, comp):
@@ -180,15 +279,21 @@ class Blackboard():
         """
         Adds the equality "ti = 0"
         """
-        # TODO: implement this
-        self.announce_zero_comparison(i, terms.EQ)
+        if i not in self.zero_equalities:
+            self.zero_equalities.add(i)
+            self.announce_zero_comparison(i, terms.EQ)
 
     def assert_disequality(self, i, coeff, j):
         """
         Adds the equality "ti != coeff * tj"
         """
-        # TODO: implement this
-        self.announce_comparison(i, terms.NE, coeff, j)
+        if (i, j) in self.disequalities:
+            if coeff not in self.disequalities[i, j]:
+                self.disequalities[i, j].add(coeff)
+                self.announce_comparison(i, terms.NE, coeff, j)
+        else:
+            self.disequalities[i, j] = set([coeff])
+            self.announce_comparison(i, terms.NE, coeff, j)
 
     def assert_zero_disequality(self, i):
         """
@@ -220,7 +325,13 @@ class Blackboard():
             '  := {0!s}'.format(terms.TermComparison(self.terms[i], comp, terms.zero)),
             messages.ASSERTION_FULL)
 
-    # Requested by Rob, 12/19:
+    def raise_contradiction(self, i, comp, coeff, j):
+        """
+        Called when the given information contradicts something already known.
+        """
+        # TODO: implement this
+        pass
+
     def sign(self, i):
         """
         Returns 1 if ti > 0, -1 if ti < 0, 0 otherwise
@@ -265,6 +376,9 @@ if __name__ == '__main__':
     B = Blackboard()
 
     B.assert_comparison(x < y)
+    B.assert_comparison(y > 4 * x)
+    B.assert_comparison(y < -x)
+    B.assert_comparison(x < 0)
     B.assert_comparison(x + 0 < f(x, y, z))
     B.assert_comparison((x + y) + (z + x) == 2 * (x + y) * w)
     B.assert_comparison(2 * ((x + y) ** 5) * g(x) * (3 * (x * y + f(x) + 2 + w) ** 2) >=
@@ -280,3 +394,9 @@ if __name__ == '__main__':
     print B.get_equalities()
     print B.get_inequalities()
     print B.get_disequalities()
+
+    print B.implies(0, terms.GT, 2, 0)
+    print B.implies(18, terms.NE, 9, 23)
+
+    print
+    print B.inequalities
