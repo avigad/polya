@@ -57,12 +57,12 @@ class Blackboard():
         self.term_names = {terms.one.key: 0}      # reverse lookup: maps a term to is defining index
 
         # comparisons between named subterms
-        self.inequalities = {}  # Dictionary mapping (i, j) to a list of pairs (comp, coeff)
+        self.inequalities = {}  # Dictionary mapping (i, j) to a list of Halfplanes [h1, h2], such that h2 is cw of h1
         self.zero_inequalities = {0: terms.GT}  # Dictionary mapping i to comp
         self.equalities = {}  # Dictionary mapping (i, j) to coeff
         self.zero_equalities = set([])  # Set of IVar indices equal to 0
         self.disequalities = {}  # Dictionary mapping (i, j) to a set of coeffs
-        self.zero_disequalities = set([])  # Is this one necessary?
+        self.zero_disequalities = set([])  # Set of IVar indices not equal to 0
 
     def term_name(self, t):
         """
@@ -101,13 +101,14 @@ class Blackboard():
             return terms.IVar(i)
 
     def get_inequalities(self):
+        #todo: fix this for new ineqs structure
         inequalities = []
         for i in self.zero_inequalities:
             comp = self.zero_inequalities[i]
             inequalities.append(terms.comp_eval[comp](terms.IVar(i), 0))
         for (i, j) in self.inequalities:
-            for comp, coeff in self.inequalities[i, j]:
-                inequalities.append(terms.comp_eval[comp](terms.IVar(i), coeff * terms.IVar(j)))
+            for hp in self.inequalities[i, j]:
+                inequalities.append(hp.to_comp(terms.IVar(i), terms.IVar(j)))
         return inequalities
 
     def get_equalities(self):
@@ -145,32 +146,41 @@ class Blackboard():
                 return False
 
         if comp in [terms.LT, terms.LE, terms.GE, terms.GT]:
-            # Gather all of the known information about ti and tj.
-            new_line = geometry.Line(1, -coeff, 0, comp)
-            known_lines = [geometry.Line(1, -coeff1, 0, comp1)
-                           for (comp1, coeff1) in self.inequalities.get((i, j), [])]
-            if i in self.zero_inequalities:
-                known_lines.append(geometry.Line(1, 0, 0, self.zero_inequalities[i]))
-            if j in self.zero_equalities:
-                known_lines.append(geometry.Line(0, 1, 0, self.zero_inequalities[j]))
+            if (i, j) in self.equalities:
+                e_coeff = self.equalities[i, j]
+                if coeff == e_coeff:
+                    return comp in [terms.LE, terms.GE]
+                pts = [(e_coeff, 1), (-e_coeff, -1)]
+                pts = [p for p in pts if p[0]*self.sign(i) >= 0 and p[1]*self.sign(j) >= 0]
+                return all(terms.comp_eval[comp](p[0], coeff * p[1]) for p in pts)
 
-            # If we don't know anything, we don't know ti comp coeff * tj
-            if len(known_lines) == 0:
-                return False
-
-            # If we only know one thing, then we only know the new info if it is the same.
-            elif len(known_lines) == 1:
-                if new_line.slope() == known_lines[0].slope():
-                    if ((comp == known_lines[0].comp)
-                       or (comp == terms.GE and known_lines[0].comp == terms.GT)
-                       or (comp == terms.LE and known_lines[0].comp == terms.LT)):
-                        return True
-                return False
-
-            # Otherwise, figure out the two strongest things we know, and see if they imply the new.
+            elif j in self.zero_equalities:
+                if i not in self.zero_inequalities:
+                    return False
+                comp1 = self.zero_inequalities[i]
+                return ((comp1 == comp)
+                        or (comp1 == terms.GT and comp == terms.GE)
+                        or (comp1 == terms.LT and comp == terms.LE))
             else:
-                # We know at least two facts about i and j.
-                return not new_line.has_new_info(*geometry.find_two_strongest(known_lines))
+                new_comp = geometry.halfplane_of_comp(comp, coeff)
+                old_comps = self.inequalities.get((i, j), [])
+                for c in [d for d in old_comps if d.eq_dir(new_comp)]:
+                    if c.strong or not new_comp.strong:
+                        return True
+                    else:
+                        return False
+
+                # If we reach here, then new_comp is not equidirectional with anything in old_comps
+                if len(old_comps) < 2:
+                    return False
+                return new_comp.compare_hp(old_comps[0]) and old_comps[1].compare_hp(new_comp)
+                # We know that b is clockwise from a.
+                # If new_comp is cw from a, and b is cw from new_comp, then new_comp is redundant
+                # If new_comp is cw from b, and a is cw from new_comp, then new_comp is contradictory
+                # If a and b are both cw from new_comp, take new_comp and b in that order.
+                # If new_comp is cw from both a and b, take a and new_comp in that order.
+                # recall that x.compare_hp(y) > 0 iff y is ccw of x.
+
 
         # All equality info is stored, so see if we know this equality.
         elif comp == terms.EQ:
@@ -243,64 +253,129 @@ class Blackboard():
         """
         Adds the inequality "ti comp coeff * tj".
         """
-        new_line = geometry.Line(1, -coeff, 0, comp)
-        lines = [geometry.Line(1, -coeff1, 0, comp1)
-                 for (comp1, coeff1) in self.inequalities.get((i, j), [])]
-        if len(lines) == 0:
-            self.inequalities[i, j] = [(comp, coeff)]
-        else:
-            if i in self.zero_inequalities:
-                lines.append(geometry.Line(1, 0, 0, self.zero_inequalities[i]))
-            if j in self.zero_equalities:
-                lines.append(geometry.Line(0, 1, 0, self.zero_inequalities[j]))
-            lines.append(new_line)
-            l1, l2 = geometry.find_two_strongest(lines)
-            ineqs = [((l.comp if l.a > 0 else terms.comp_reverse(l.comp)),
-                      fractions.Fraction(-l.b, l.a))
-                     for l in [l1, l2] if l.a != 0 and l.b != 0]
-            self.inequalities[i, j] = ineqs
         self.announce_comparison(i, comp, coeff, j)
+
+        old_comps = self.inequalities.get((i, j), [])
+        new_comp = geometry.halfplane_of_comp(comp, coeff)
+
+        if new_comp.strong:
+            for c in old_comps:
+                if c.eq_dir(new_comp):
+                    c.strong = True
+                    return
+        # If we reach this point, we can assume that new_comp is not collinear with anything in old_comps
+
+        if len(old_comps) == 0:
+            new_comps = [new_comp]
+        elif len(old_comps) == 1:
+            old_comp = old_comps[0]
+            new_comp = geometry.half
+            v = old_comp.contains_hp(new_comp)
+            if v < 0:
+                # old_comp is ccw of new_comp
+                new_comps = [old_comp, new_comp]
+            elif v > 0:
+                new_comps = [new_comp, old_comp]
+            else:
+                # we should never reach this point.
+                raise Exception('Mistake made in assert_inequality')
+        else:
+            #a, b = old_comps[0], old_comps[1]
+            # We know that b is clockwise from a.
+            # If new_comp is cw from a, and b is cw from new_comp, then new_comp is redundant: this case is ruled out.
+            # If new_comp is cw from b, and a is cw from new_comp, then new_comp is contradictory: also ruled out.
+            # If a and b are both cw from new_comp, take new_comp and b in that order.
+            # If new_comp is cw from both a and b, take a and new_comp in that order.
+            # recall that x.compare_hp(y) > 0 iff y is ccw of x.
+            if old_comps[0].compare_hp(new_comp) > 0 and old_comps[1].compare_hp(new_comp) > 0:
+                new_comps = [new_comp, old_comps[1]]
+            else:
+                new_comps = [old_comps[0], new_comp]
+
+        self.inequalities[i, j] = new_comps
+
+
+        # new_line = geometry.Line(1, -coeff, 0, comp)
+        # lines = [geometry.Line(1, -coeff1, 0, comp1)
+        #          for (comp1, coeff1) in self.inequalities.get((i, j), [])]
+        # if len(lines) == 0:
+        #     self.inequalities[i, j] = [(comp, coeff)]
+        # else:
+        #     if i in self.zero_inequalities:
+        #         lines.append(geometry.Line(1, 0, 0, self.zero_inequalities[i]))
+        #     if j in self.zero_equalities:
+        #         lines.append(geometry.Line(0, 1, 0, self.zero_inequalities[j]))
+        #     lines.append(new_line)
+        #     l1, l2 = geometry.find_two_strongest(lines)
+        #     ineqs = [((l.comp if l.a > 0 else terms.comp_reverse(l.comp)),
+        #               fractions.Fraction(-l.b, l.a))
+        #              for l in [l1, l2] if l.a != 0 and l.b != 0]
+        #     self.inequalities[i, j] = ineqs
+        # self.announce_comparison(i, comp, coeff, j)
 
     def assert_zero_inequality(self, i, comp):
         """
         Adds the inequality "ti comp 0".
         """
-        # TODO: implement this
+        self.zero_inequalities[i] = comp
         self.announce_zero_comparison(i, comp)
 
     def assert_equality(self, i, coeff, j):
         """
         Adds the equality "ti = coeff * tj"
         """
-        # TODO: implement this
+        self.equalities[i, j] = coeff
+        self.inequalities.pop(i, j)
         self.announce_comparison(i, terms.EQ, coeff, j)
 
     def assert_zero_equality(self, i):
         """
         Adds the equality "ti = 0"
         """
-        if i not in self.zero_equalities:
-            self.zero_equalities.add(i)
-            self.announce_zero_comparison(i, terms.EQ)
+        self.zero_equalities.add(i)
+        # todo: there's a lot of simplification that could happen if a term is equal to 0
+        self.announce_zero_comparison(i, terms.EQ)
 
     def assert_disequality(self, i, coeff, j):
         """
         Adds the equality "ti != coeff * tj"
         """
-        if (i, j) in self.disequalities:
-            if coeff not in self.disequalities[i, j]:
-                self.disequalities[i, j].add(coeff)
-                self.announce_comparison(i, terms.NE, coeff, j)
-        else:
-            self.disequalities[i, j] = set([coeff])
-            self.announce_comparison(i, terms.NE, coeff, j)
+        # Print this now, in case the disequality is superseded; we want to see the disequality first.
+        self.announce_comparison(i, terms.NE, coeff, j)
+
+        superseded = False
+        if (i, j) in self.inequalities:
+            for (comp1, coeff1) in self.inequalities[i, j]:
+                if coeff1 == coeff:
+                    if comp1 == terms.GE:
+                        self.assert_inequality(i, terms.GT, coeff, j)
+                        superseded = True
+                    elif comp1 == terms.LE:
+                        self.assert_inequality(i, terms.LT, coeff, j)
+                        superseded = True
+
+        if not superseded:
+            if (i, j) in self.disequalities:
+                if coeff not in self.disequalities[i, j]:
+                    self.disequalities[i, j].add(coeff)
+            else:
+                self.disequalities[i, j] = set([coeff])
+
 
     def assert_zero_disequality(self, i):
         """
         Adds the equality "ti != 0"
         """
-        # TODO: implement this
         self.announce_zero_comparison(i, terms.NE)
+
+        self.zero_disequalities.add(i)
+
+        if i in self.zero_inequalities:
+            comp = self.zero_inequalities[i]
+            if comp == terms.LE:
+                self.assert_zero_inequality(i, terms.LT)
+            elif comp == terms.GE:
+                self.assert_zero_inequality(i, terms.GT)
 
     def announce_comparison(self, i, comp, coeff, j):
         """

@@ -117,3 +117,84 @@ def find_two_strongest(lines):
         elif not l2.has_new_info(l, l1):
             l2 = l
     return l1, l2
+
+class Halfplane:
+    """
+    Defines the halfplane counterclockwise of the vector (a, b).
+    If strong is true, the line bx - ay = 0 is not included in the halfplane.
+    """
+
+    def __init__(self, a, b, strong):
+        self.a, self.b, self.strong = a, b, strong
+
+    def cross(self, x, y):
+        return self.a * y - self.b * x
+
+    def contains_point(self, x, y):
+        """
+        Returns true if (x, y) lies in the halfplane counterclockwise of (a, b), false otherwise.
+        Respects strength: if self.strong, returns false if the points are collinear.
+        """
+        v = self.cross(x, y)
+        if v == 0:
+            # The vectors are collinear.
+            return not self.strong
+        else:
+            return self.cross(x, y) > 0
+            #same_dir = True if (self.a * x >= 0 and self.b * y >= 0) else False
+
+    def compare_hp(self, hp):
+        """
+        Compares two halfplanes.
+        Returns 1 if hp is counterclockwise of self.
+        Returns -1 if self is counterclockwise of hp.
+        Returns 0 if the two are collinear: note that there is more information to find here (wrt strength, direction)
+        """
+        v = self.cross(hp.a, hp.b)
+        if v > 0:
+            return 1
+        elif v < 0:
+            return -1
+        else:
+            return 0
+
+    def eq_dir(self, hp):
+        """
+        Returns true if self and hp point in the same direction, false otherwise.
+        """
+        return self.cross(hp.a, hp.b) == 0 and self.a * hp.a >= 0 and self.b * hp.b >= 0
+
+    def to_comp(self, t1, t2):
+        if self.a == 0:  # vertical
+            if self.contains_point(1, 0):
+                return t1 > 0 if self.strong else t1 >= 0
+            else:
+                return t1 < 0 if self.strong else t1 <= 0
+
+        elif self.b == 0:  # horizontal
+            if self.contains_point(0, 1):
+                return t2 > 0 if self.strong else t2 >= 0
+            else:
+                return t2 < 0 if self.strong else t2 <= 0
+        else:
+            #todo: FINISH THIS!
+            pass
+
+def halfplane_of_comp(comp, coeff):
+    """
+    Returns a halfplane object representing the inequality x comp coeff * y
+    Assumes comp is LT, LE, GE, or GT
+    """
+    if coeff == 0:
+        if comp in [terms.GT, terms.GE]:
+            return Halfplane(0, -1, (True if comp == terms.GT else False))
+        else:
+            return Halfplane(0, 1, (True if comp == terms.LT else False))
+
+    normal = (1, -coeff) if terms.comp_eval[comp](1, -coeff * coeff) else (-1, coeff)
+    hp = Halfplane(coeff, 1, (True if comp in [terms.GT, terms.LT] else False))
+    if hp.contains_point(*normal):
+        return hp
+    else:
+        return Halfplane(-coeff, -1, (True if comp in [terms.GT, terms.LT] else False))
+
