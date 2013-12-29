@@ -23,6 +23,14 @@
 # These internal representations should be invisible to routines outside this module, which should
 # only assert information and query information through class methods.
 #
+# To limit redundancy, there is a hierarchy of information stored.
+#  * All known comparisons with zero are stored in zero_inequalities, zero_disequalities, and zero_equalities.
+#  * All known equalities between terms are stored in term_equalities.
+#  * The two most relevant comparisons between t_i and t_j are stored in inequalities. If one of these comparisons
+#    is an inequality with 0, it is duplicated here. If equality is known between t_i and t_j, this is NOT stored here.
+#  * All non-redundant disequalities between t_i and t_j are stored in disequalities. Anything that is implied by known
+#    equality or inequality information is removed from this table.
+#
 # TODO: General utility functions for substitution, etc. should be defined in terms.py.
 # TODO: With these, we should define functions here that expand definitions.
 #
@@ -32,7 +40,7 @@
 import terms
 import messages
 import geometry
-import fractions
+#import fractions
 
 
 class Error(Exception):
@@ -101,14 +109,14 @@ class Blackboard():
             return terms.IVar(i)
 
     def get_inequalities(self):
-        #todo: fix this for new ineqs structure
         inequalities = []
         for i in self.zero_inequalities:
             comp = self.zero_inequalities[i]
             inequalities.append(terms.comp_eval[comp](terms.IVar(i), 0))
         for (i, j) in self.inequalities:
             for hp in self.inequalities[i, j]:
-                inequalities.append(hp.to_comp(terms.IVar(i), terms.IVar(j)))
+                if hp.a != 0 and hp.b != 0:
+                    inequalities.append(hp.to_comp(terms.IVar(i), terms.IVar(j)))
         return inequalities
 
     def get_equalities(self):
@@ -181,7 +189,6 @@ class Blackboard():
                 # If new_comp is cw from both a and b, take a and new_comp in that order.
                 # recall that x.compare_hp(y) > 0 iff y is ccw of x.
 
-
         # All equality info is stored, so see if we know this equality.
         elif comp == terms.EQ:
             return coeff == self.equalities.get((i, j), None)
@@ -217,14 +224,18 @@ class Blackboard():
         If the comparison terms are not both IVars, finds or creates indices for the terms.
         """
         c = c.canonize()  # c is now of the form "term comp sterm"
+
         term1, comp, coeff, term2 = c.term1, c.comp, c.term2.coeff, c.term2.term
         if coeff == 0:
             term2 = terms.IVar(0)
         if not isinstance(term1, terms.IVar) or not isinstance(term2, terms.IVar):
             ivar1 = term1 if isinstance(term1, terms.IVar) else self.term_name(term1)
-            ivar2 = term1 if isinstance(term1, terms.IVar) else self.term_name(term2)
+            ivar2 = term2 if isinstance(term2, terms.IVar) else self.term_name(term2)
             c = terms.TermComparison(ivar1, comp, coeff * ivar2).canonize()
             term1, comp, coeff, term2 = c.term1, c.comp, c.term2.coeff, c.term2.term
+            if coeff == 0:
+                term2 = terms.IVar(0)
+            #print isinstance(c.term2.term, terms.IVar)
 
         if self.implies(term1.index, comp, coeff, term2.index):
             return
@@ -269,12 +280,11 @@ class Blackboard():
             new_comps = [new_comp]
         elif len(old_comps) == 1:
             old_comp = old_comps[0]
-            new_comp = geometry.half
-            v = old_comp.contains_hp(new_comp)
-            if v < 0:
+            k = old_comp.compare_hp(new_comp)
+            if k < 0:
                 # old_comp is ccw of new_comp
                 new_comps = [old_comp, new_comp]
-            elif v > 0:
+            elif k > 0:
                 new_comps = [new_comp, old_comp]
             else:
                 # we should never reach this point.
@@ -294,38 +304,61 @@ class Blackboard():
 
         self.inequalities[i, j] = new_comps
 
-
-        # new_line = geometry.Line(1, -coeff, 0, comp)
-        # lines = [geometry.Line(1, -coeff1, 0, comp1)
-        #          for (comp1, coeff1) in self.inequalities.get((i, j), [])]
-        # if len(lines) == 0:
-        #     self.inequalities[i, j] = [(comp, coeff)]
-        # else:
-        #     if i in self.zero_inequalities:
-        #         lines.append(geometry.Line(1, 0, 0, self.zero_inequalities[i]))
-        #     if j in self.zero_equalities:
-        #         lines.append(geometry.Line(0, 1, 0, self.zero_inequalities[j]))
-        #     lines.append(new_line)
-        #     l1, l2 = geometry.find_two_strongest(lines)
-        #     ineqs = [((l.comp if l.a > 0 else terms.comp_reverse(l.comp)),
-        #               fractions.Fraction(-l.b, l.a))
-        #              for l in [l1, l2] if l.a != 0 and l.b != 0]
-        #     self.inequalities[i, j] = ineqs
-        # self.announce_comparison(i, comp, coeff, j)
+        if (i, j) in self.disequalities:
+            diseqs = self.disequalities.pop(i, j)
+            n_diseqs = set(k for k in diseqs if not self.implies(i, terms.NE, k, j))
+            if len(n_diseqs) > 0:
+                self.disequalities[i, j] = n_diseqs
 
     def assert_zero_inequality(self, i, comp):
         """
         Adds the inequality "ti comp 0".
         """
-        self.zero_inequalities[i] = comp
+        if i in self.zero_disequalities:
+            comp = terms.GT if comp in [terms.GE, terms.GT] else terms.LT
+            self.zero_disequalities.remove(i)
+        des = set(k for k in self.disequalities.get((0, i), set()) if not terms.comp_eval[comp](k, 0))
+        if len(des) > 0:
+            self.disequalities[0, i] = des
+
         self.announce_zero_comparison(i, comp)
+
+        self.zero_inequalities[i] = comp
+        for j in (j for j in range(self.num_terms) if j != i):
+            p = (i, j) if i < j else (j, i)
+            old_comps = self.inequalities.get(p, [])
+            if i < j:
+                new_comp = geometry.halfplane_of_comp(comp, 0)
+            else:
+                new_comp = geometry.Halfplane(0,
+                                              (1 if comp in [terms.LE, terms.LT] else -1),
+                                              (True if comp in [terms.LT, terms.GT] else False))
+            for c in old_comps:
+                if c.eq_dir(new_comp) and c.strong is False and new_comp.strong is True:
+                    c.strong = True
+                    return
+
+            if len(old_comps) < 2:
+                new_comps = old_comps + [new_comp]
+            else:
+                a_cw_n, b_cw_n = old_comps[0].compare_hp(new_comp), old_comps[1].compare_hp(new_comp)
+                if a_cw_n > 0 and b_cw_n > 0:
+                    new_comps = [new_comp, old_comps[1]]
+                elif a_cw_n < 0 and b_cw_n < 0:
+                    new_comps = [old_comps[0], new_comp]
+                else:
+                    new_comps = old_comps
+            self.inequalities[p] = new_comps
 
     def assert_equality(self, i, coeff, j):
         """
         Adds the equality "ti = coeff * tj"
         """
         self.equalities[i, j] = coeff
-        self.inequalities.pop(i, j)
+        if (i, j) in self.inequalities:
+            self.inequalities.pop(i, j)
+        if (i, j) in self.disequalities:
+            self.disequalities.pop(i, j)
         self.announce_comparison(i, terms.EQ, coeff, j)
 
     def assert_zero_equality(self, i):
@@ -359,8 +392,7 @@ class Blackboard():
                 if coeff not in self.disequalities[i, j]:
                     self.disequalities[i, j].add(coeff)
             else:
-                self.disequalities[i, j] = set([coeff])
-
+                self.disequalities[i, j] = {coeff}
 
     def assert_zero_disequality(self, i):
         """

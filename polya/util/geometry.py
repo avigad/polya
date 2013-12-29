@@ -127,6 +127,12 @@ class Halfplane:
     def __init__(self, a, b, strong):
         self.a, self.b, self.strong = a, b, strong
 
+    def __str__(self):
+        return "({0}, {1}), {2}".format(self.a, self.b, "strong" if self.strong else "weak")
+
+    def __repr__(self):
+        return str(self)
+
     def cross(self, x, y):
         return self.a * y - self.b * x
 
@@ -177,8 +183,12 @@ class Halfplane:
             else:
                 return t2 < 0 if self.strong else t2 <= 0
         else:
-            #todo: FINISH THIS!
-            pass
+            # p = (-self.b, self.a)  # p is pi/2 ccw of self
+            if -self.b > fractions.Fraction(self.a * self.a, self.b):
+                comp = terms.GT if self.strong else terms.GE
+            else:
+                comp = terms.LT if self.strong else terms.LE
+            return terms.comp_eval[comp](t1, fractions.Fraction(self.a, self.b) * t2)
 
 def halfplane_of_comp(comp, coeff):
     """

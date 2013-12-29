@@ -662,7 +662,8 @@ comp_eval = {GT: lambda x, y: x > y, GE: lambda x, y :x >= y, EQ: lambda x, y: x
 class TermComparison():
 
     def __init__(self, term1, comp, term2):
-        print 'creating t_c: ', term1, comp_str[comp], term2
+        #print comp
+        #print 'creating t_c: ', term1, comp_str[comp], term2
         if isinstance(term1, numbers.Rational):
             self.term1 = STerm(term1, one)
         else:
@@ -694,21 +695,22 @@ class TermComparison():
         Returns a comparison "t1 comp t2", where t1 is a Term and t2 is an STerm. A comparison
         with 0 has the form t1 comp zero. Otherwise, t1 has smaller key than t2.
         """
-        print 'canonizing t_c.', self.term1, self.term2
-        print 'term2 is sterm:', isinstance(self.term2, STerm)
+        #print 'canonizing t_c.', self.term1, self.term2
         t1 = self.term1.canonize()
         t2 = self.term2.canonize()
-        print t2, isinstance(t2, STerm)
+        #print 't1:', t1.coeff, t1.term, 'key:', t1.term.key
+        #print 't2:', t2.coeff, t2.term, 'key:', t2.term.key, isinstance(t2, STerm)
         comp = self.comp
         if t1.term.key == t2.term.key:
             t1, t2 = t1 - t2, zero
-        if t1.coeff == 0:
-            t1, comp, t2 = t2, comp_reverse, zero
-        elif t1.term.key > t2.term.key:
+
+        if t1.term.key > t2.term.key:
             t1, comp, t2 = t2, comp_reverse(comp), t1
+        if t1.coeff == 0:
+            t1, comp, t2 = t2, comp_reverse(comp), zero
         if t1.coeff < 0:
             comp = comp_reverse(comp)
-        print t1.coeff
+        #print t1.coeff
         return TermComparison(t1.term, comp, t2 / t1.coeff)
 
 
