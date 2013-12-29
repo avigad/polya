@@ -40,7 +40,7 @@
 import terms
 import messages
 import geometry
-#import fractions
+import fractions
 
 
 class Error(Exception):
@@ -181,7 +181,7 @@ class Blackboard():
                 # If we reach here, then new_comp is not equidirectional with anything in old_comps
                 if len(old_comps) < 2:
                     return False
-                return new_comp.compare_hp(old_comps[0]) and old_comps[1].compare_hp(new_comp)
+                return new_comp.compare_hp(old_comps[0]) > 0 and old_comps[1].compare_hp(new_comp) > 0
                 # We know that b is clockwise from a.
                 # If new_comp is cw from a, and b is cw from new_comp, then new_comp is redundant
                 # If new_comp is cw from b, and a is cw from new_comp, then new_comp is contradictory
@@ -504,6 +504,7 @@ if __name__ == '__main__':
 
     print B.implies(0, terms.GT, 2, 0)
     print B.implies(18, terms.NE, 9, 23)
+    print B.implies(1, terms.LT, fractions.Fraction(1, 4), 2)
 
     print
     print B.inequalities

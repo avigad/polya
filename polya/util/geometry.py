@@ -13,7 +13,7 @@ class Line:
         return terms.comp_eval[self.comp](self.a * point[0] + self.b * point[1], self.c)
 
     def slope(self):
-        if self.b == 0:
+        if self.a == 0:
             return float('inf')
         else:
             return fractions.Fraction(self.b, self.a)
@@ -190,6 +190,7 @@ class Halfplane:
                 comp = terms.LT if self.strong else terms.LE
             return terms.comp_eval[comp](t1, fractions.Fraction(self.a, self.b) * t2)
 
+
 def halfplane_of_comp(comp, coeff):
     """
     Returns a halfplane object representing the inequality x comp coeff * y
@@ -207,4 +208,3 @@ def halfplane_of_comp(comp, coeff):
         return hp
     else:
         return Halfplane(-coeff, -1, (True if comp in [terms.GT, terms.LT] else False))
-

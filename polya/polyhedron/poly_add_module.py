@@ -20,6 +20,7 @@ import messages
 import geometry as geo
 import itertools
 import lrs_polyhedron_util as lrs_util
+import blackboard
 
 
 ####################################################################################################
@@ -52,7 +53,8 @@ def get_boundary_vertices(vertices):
     if len(vertices) < 2:
         raise VertexSetException('Fewer than two vertices')
 
-    b1, l_b1 = vertices[0],  geo.line_of_point(vertices[0])
+    b1 = next(v for v in vertices)
+    l_b1 = geo.line_of_point(b1)
 
     try:
         b2 = next(v for v in vertices if not geo.are_collinear_rays(b1, v))
@@ -119,7 +121,8 @@ def get_2d_comparisons(vertices, lin_set):
     learned_comparisons = []
 
     # Look for comparisons between t_i and t_j by checking each vertex.
-    for (i, j) in itertools.combinations(range(len(vertices[0])), 2):
+    for (i, j) in itertools.combinations(range(len(vertices[0])-2), 2):
+        messages.announce('Looking for comparisons between {0} and {1}'.format(i, j), messages.DEBUG)
 
         i_j_vertices = set()
         weak = False
@@ -133,11 +136,14 @@ def get_2d_comparisons(vertices, lin_set):
         for k in lin_set:
             v = vertices[k]
             if v[i+2] != 0 or v[j+2] != 0:
-                i_j_vertices.add((v[i+2], v[j+2], v[1]))
+                i_j_vertices.add((-v[i+2], -v[j+2], v[1]))
+
+        messages.announce('vertices:'+str(i_j_vertices), messages.DEBUG)
 
         # Find the extremal vertices.
         try:
             bound1, bound2 = get_boundary_vertices(i_j_vertices)
+            messages.announce('boundary vertices:'+str(bound1)+', '+str(bound2), messages.DEBUG)
         except VertexSetException:  # Nothing we can learn for this i, j pair.
             continue
 
@@ -148,10 +154,10 @@ def get_2d_comparisons(vertices, lin_set):
         if l_b1 == l_b2:
             if bound1[0]*bound2[0] >= 0 and bound1[1]*bound2[1] >= 0:
                 # the rays are collinear. Learn equality.
-                learned_comparisons.append(bound1[0] * terms.IVar(i) == bound2[0] * terms.IVar(j))
+                learned_comparisons.append(bound1[1] * terms.IVar(i) == bound1[0] * terms.IVar(j))
                 if strong1 or strong2:
                     learned_comparisons.append(
-                        bound1[0] * terms.IVar(i) < bound2[0] * terms.IVar(j)
+                        bound1[1] * terms.IVar(i) < bound1[0] * terms.IVar(j)
                     )
 
             else:
@@ -163,7 +169,7 @@ def get_2d_comparisons(vertices, lin_set):
                     continue
                 dir1 = adjust_strength(strong1 and strong2, l_b1.get_direction(pt))
                 learned_comparisons.append(
-                    terms.comp_eval[dir1](bound1[0] * terms.IVar(i), bound1[1] * terms.IVar(j))
+                    terms.comp_eval[dir1](bound1[1] * terms.IVar(i), bound1[0] * terms.IVar(j))
                 )
 
         else:
@@ -171,12 +177,12 @@ def get_2d_comparisons(vertices, lin_set):
             dir1 = adjust_strength(strong1, l_b1.get_direction(bound2))
             dir2 = adjust_strength(strong2, l_b2.get_direction(bound1))
             learned_comparisons.append(
-                terms.comp_eval[dir1](bound1[0] * terms.IVar(i), bound1[1] * terms.IVar(j))
+                terms.comp_eval[dir1](bound1[1] * terms.IVar(i), bound1[0] * terms.IVar(j))
             )
             learned_comparisons.append(
-                terms.comp_eval[dir2](bound2[0] * terms.IVar(i), bound2[1] * terms.IVar(j))
+                terms.comp_eval[dir2](bound2[1] * terms.IVar(i), bound2[0] * terms.IVar(j))
             )
-
+        messages.announce('Learned:'+str(learned_comparisons), messages.DEBUG)
     return learned_comparisons
 
 
@@ -210,7 +216,13 @@ def update_blackboard(blackboard):
 #    learn_additive_sign_info(blackboard)
 
     comparisons = get_additive_information(blackboard)
+    print 'known:'
+    for c in comparisons:
+        print '  ', c
+
     h_matrix = lrs_util.create_h_format_matrix(comparisons, blackboard.num_terms)
+    messages.announce('Halfplane matrix:', messages.DEBUG)
+    messages.announce(h_matrix, messages.DEBUG)
     v_matrix, v_lin_set = lrs_util.get_vertices(h_matrix)
     messages.announce('Vertex matrix:', messages.DEBUG)
     messages.announce(str(v_matrix), messages.DEBUG)
@@ -225,20 +237,38 @@ def update_blackboard(blackboard):
 
 # This method is a placeholder for when proper accessors are defined in blackboard.
 def get_additive_information(blackboard):
-    comparisons = []
+    comparisons = blackboard.get_inequalities() + blackboard.get_equalities()
 
     for key in blackboard.term_defs:
         if isinstance(blackboard.term_defs[key], terms.AddTerm):
             comparisons.append(
                 terms.TermComparison(blackboard.term_defs[key], terms.EQ, terms.IVar(key))
             )
-        #TODO: include term equality and zero equality information here
-
-    #This will depend on the structure of term_inequalities
-    for key in blackboard.term_inequalities:
-        comparisons.append(blackboard.term_inequalities[key])
-
-    for key in blackboard.term_zero_inequalities:
-        comparisons.append(blackboard.term_zero_inequalities[key])
 
     return comparisons
+
+####################################################################################################
+#
+# Tests
+#
+####################################################################################################
+
+
+if __name__ == '__main__':
+
+    # can change 'normal' to 'quiet' or 'low'
+    messages.set_verbosity(messages.normal)
+
+    u, v, w, x, y, z = terms.Vars('u, v, w, x, y, z')
+    f = terms.Func('f')
+    g = terms.Func('g')
+
+    B = blackboard.Blackboard()
+
+    B.assert_comparison(u > 0)
+    B.assert_comparison(u < 1)
+    B.assert_comparison(v > 0)
+    B.assert_comparison(v < 1)
+    B.assert_comparison(u + v > u * v)
+
+    update_blackboard(B)

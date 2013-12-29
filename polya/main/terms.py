@@ -640,8 +640,10 @@ class MulPair:
 # relations between terms
 GT, GE, EQ, LE, LT, NE = range(6)
 
+
 # strings for printing them out
-comp_str = {GT: '>', GE: '>=',EQ: '==', LE: '<=', LT: '<', NE: '!='}
+comp_str = {GT: '>', GE: '>=', EQ: '==', LE: '<=', LT: '<', NE: '!='}
+
 
 # swaps GT and LT, GE and LE, fixes EQ and NE
 def comp_reverse(i):
@@ -650,12 +652,14 @@ def comp_reverse(i):
     else:
         return 4 - i
 
+
 # swaps GT and LE, GE and LT, EQ and NE
 def comp_negate(i):
     return (i+3) % 6
 
+
 # evaluations
-comp_eval = {GT: lambda x, y: x > y, GE: lambda x, y :x >= y, EQ: lambda x, y: x == y,
+comp_eval = {GT: lambda x, y: x > y, GE: lambda x, y: x >= y, EQ: lambda x, y: x == y,
              LE: lambda x, y: x <= y, LT: lambda x, y: x < y, NE: lambda x, y: x != y}
 
 
@@ -726,7 +730,6 @@ one = One()
 zero = STerm(0, One())
 
 
-
 ####################################################################################################
 #
 # Tests
@@ -758,7 +761,7 @@ if __name__ == '__main__':
     test((u + 3 * v + u + v + x)**2)
     test(u + 3 * v)
     test((x + (y * z)**5 + (3 * u + 2 * v)**2)**4 * (u + 3 * v + u + v + x)**2)
-    test(g(f(x,2*y),z+(4*w+u**2)**3))
+    test(g(f(x, 2*y), z+(4*w+u**2)**3))
     test(x < 3 * y)
     test(2 * f(x, y + z)**2 == 3 * u * v)
     test(-2 * (x + y) * w >= (x + (y * z)**5 + (3 * u + 2 * v)**2)**4 * (u + 3 * v + u + v + x)**2)

@@ -56,6 +56,9 @@ def create_h_format_matrix(comparisons, num_vars):
                 comp = terms.comp_reverse(comp)
             term = term.term
 
+        if isinstance(term, terms.IVar):
+            term = terms.AddTerm([terms.STerm(1, term)])
+
         if comp in [terms.LE, terms.LT]:
             comp = terms.comp_reverse(comp)
             for st in term.args:
