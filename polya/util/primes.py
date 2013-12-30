@@ -133,3 +133,6 @@ def gcd(a, b):
 
 def lcm(a, b):
     return abs(a * b) // gcd(a, b)
+
+def lcmm(args):
+    return reduce(lcm, args, 1)

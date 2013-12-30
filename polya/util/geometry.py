@@ -81,6 +81,9 @@ class Line:
             return self.slope() == other.slope() and self.c == other.c
         return False
 
+    def __str__(self):
+        return "{0}x + {1}y {3} {2}".format(self.a, self.b, self.c, terms.comp_str[self.comp])
+
 
 def line_of_point(point, comp=terms.EQ):
     return Line(point[1], -point[0], 0, comp)
@@ -154,7 +157,8 @@ class Halfplane:
         Compares two halfplanes.
         Returns 1 if hp is counterclockwise of self.
         Returns -1 if self is counterclockwise of hp.
-        Returns 0 if the two are collinear: note that there is more information to find here (wrt strength, direction)
+        Returns 0 if the two are collinear: note that there is more information to find here
+        (wrt strength, direction)
         """
         v = self.cross(hp.a, hp.b)
         if v > 0:

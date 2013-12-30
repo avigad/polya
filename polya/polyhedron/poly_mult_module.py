@@ -1,543 +1,431 @@
-from classes import *
-from itertools import combinations
-import primes
+####################################################################################################
+#
+# poly_mult_module.py
+#
+# Authors:
+# Jeremy Avigad
+# Rob Lewis
+#
+# The routine for learning facts about multiplicative terms using polytope projections.
+# Much of the work is done in lrs_polyhedron_util.py, as it is shared with the additive
+# module.
+#
+# TODO:
+#
+####################################################################################################
+
+
+import terms
+import messages
+#import geometry as geo
+import itertools
 import lrs_polyhedron_util as lrs_util
-#import lrs
 import cdd
-import operator
-from math import floor,ceil#,log
-#from copy import deepcopy
-#import timecount
+import blackboard
+import fractions
+import math
+import primes
+import poly_add_module
 
-###############################################################################
+
+####################################################################################################
 #
-# FRACTION ROUNDING
+# Fraction rounding
 #
-###############################################################################
+####################################################################################################
 
 
-# These are used for rounding square roots properly.
-# Take fractions,  return fractions
-precision = 100
+precision = 1000
+
+
 def round_down(f):
+    """
+    Takes a fraction f.
+    Returns the closest fractional approximation to f from below with denominator <= precision.
+    """
     if f.denominator > precision:
-        return Fraction(int(floor(float(f.numerator * precision) / f.denominator)), precision)
+        return fractions.Fraction(int(math.floor(float(f.numerator * precision) / f.denominator)),
+                                  precision)
     else:
         return f
+
 
 def round_up(f):
+    """
+    Takes a fraction f.
+    Returns the closest fractional approximation to f from above with denominator <= precision.
+    """
     if f.denominator > precision:
-        return Fraction(int(ceil(float(f.numerator * precision) / f.denominator)), precision)
+        return fractions.Fraction(int(math.ceil(float(f.numerator * precision) / f.denominator)),
+                                  precision)
     else:
         return f
-    
-# If we have x comp coeff * y, then we also have x comp round_coeff * y    
+
+
 def round_coeff(coeff, comp):
-    if comp in [LE, LT]:
-        return round_up(Fraction(coeff))
+    """
+    Preserves if we have x comp coeff * y, then we also have x comp round_coeff * y
+    Returns a fraction.
+    """
+    if comp in [terms.LE, terms.LT]:
+        return round_up(fractions.Fraction(coeff))
     else:
-        return round_down(Fraction(coeff))
+        return round_down(fractions.Fraction(coeff))
 
 
+def ge_one(B, i):
+    if i == 0:
+        return True
+    return B.implies(i, terms.GE, 1, 0)
 
-def learn_mul_comparisons(H):
+
+def le_one(B, i):
+    if i == 0:
+        return True
+    return B.implies(i, terms.LE, 1, 0)
+
+
+def le_neg_one(B, i):
+    if i == 0:
+        return False
+    return B.implies(i, terms.LE, -1, 0)
+
+
+def ge_neg_one(B, i):
+    if i == 0:
+        return True
+    return B.implies(i, terms.GE, -1, 0)
+
+
+def abs_ge_one(B, i):
+    return ge_one(B, i) or le_neg_one(B, i)
+
+
+def abs_le_one(B, i):
+    return le_one(B, i) and ge_neg_one(B, i)
+
+
+def process_mul_comp(m1, m2, coeff1, comp1, B):
+    """
+    Returns an IVar TermComparison implied by m1 * m2 * coeff comp 1, where m1 and m2 are mulpairs.
+    m1 and m2 are still absolute values
+    """
+    if coeff1 == 0:
+        return terms.comp_eval[terms.comp_reverse(comp1)](terms.one, 0)
+
+    i, j, ei, ej = m1.term.index, m2.term.index, m1.exponent, -m2.exponent
+    comp = comp1 if coeff1 > 0 else terms.comp_reverse(comp1)
+    coeff = 1/fractions.Fraction(coeff1)
+
+    if coeff < 0:
+        if comp in [terms.LT, terms.LE]:  # pos < neg
+            return terms.one < 0
+        return None  # pos > neg. not useful.
     
-    ##############################
-    #
-    #  IVar size info
-    #
-    ##############################
+    if ei == 0:
+        i, ei = 0, 1
+    if ej == 0:
+        j, ej = 0, 1
 
-    def ge_one(i):
-        if i==0: return True
-        if (0, i) in H.term_comparisons.keys():
-            if [c for c in H.term_comparisons[0, i] if c.comp in [LT, LE] and
-                c.coeff > 0 and c.coeff <= 1]:
-                return True
-        return False
-
-    def le_one(i):
-        if i==0: return True
-        if (0, i) in H.term_comparisons.keys():
-            if [c for c in H.term_comparisons[0, i] if (c.comp in [GT, GE] and
-                c.coeff >= 1) or (c.comp in [LT, LE] and c.coeff < 0)]:
-                return True
-        return False
-    
-    def le_neg_one(i):
-        if (0, i) in H.term_comparisons.keys():
-            if [c for c in H.term_comparisons[0, i] if c.comp in [LT, LE] and
-                c.coeff < 0 and c.coeff >= -1]:
-                return True
-        return False
+    # we have ti^ei comp coeff * tj^ej
+    if i == 0:  # a_i = 1, so we can set ei to whatever we want.
+        ei = ej
         
-    def ge_neg_one(i):
-        if i==0: return True
-        if (0, i) in H.term_comparisons.keys():
-            if [c for c in H.term_comparisons[0, i] if (c.comp in [GT, GE] and
-                c.coeff <= -1) or (c.comp in [LE, LT] and c.coeff > 0)]:
-                return True
-        return False
-        
-    def abs_ge_one(i):
-        return ge_one(i) or le_neg_one(i)
+    # Otherwise, both sides of the inequality are positive
+    # a_i and a_j are still abs values, coeff is positive
     
-    def abs_le_one(i):
-        return le_one(i) and ge_neg_one(i)
-    
-    #############################
-    #
-    # Processing learned comparisons
-    #
-    #############################
-    
-    # Takes comparison of the form |a_i|^{e0} comp coeff * |a_j|^{e1}
-    # Assumes coeff > 0
-    # Assumes that setting e1=e0 preserves the truth of the inequality.
-    # Takes e0th root of each side and learns the comparison
-    def take_roots_and_learn(i, j, e0, e1, comp, coeff):
-        if e0 < 0:
-            comp = comp_reverse(comp)
-        e0, e1, coeff = 1, 1, coeff ** Fraction(1, Fraction(e0))
+    if (
+        (ei == ej)  # we have |a_i|^p comp coeff * |a_j|^p
+        or (ei < ej and comp in [terms.LE, terms.LT] and abs_le_one(B, j))
+        # making ej smaller makes rhs bigger, which doesn't mess up comparison.
+        or (ei > ej and comp in [terms.GE, terms.GT] and abs_le_one(B, j))
+        # making ej bigger makes rhs smaller
+        or (ei < ej and comp in [terms.GE, terms.GT] and abs_ge_one(B, j))
+        # making ej smaller makes RHS smaller
+        or (ei > ej and comp in [terms.LE, terms.LT] and abs_ge_one(B, j))
+        # making ej bigger makes RHS bigger
+    ):
+        # we can set ej = ei and preserve the comparison.
+        if ei < 0:
+            comp = terms.comp_reverse(comp)
+        ei, ej, coeff = 1, 1, coeff ** fractions.Fraction(1, ei)
         coeff = round_coeff(coeff, comp)
-        comp, coeff = make_term_comparison_unabs(i, j, 1, 1, comp, coeff)
-        H.learn_term_comparison(i, j, comp, coeff, MUL)
-    
+        comp, coeff = make_term_comparison_unabs(i, j, ei, ej, comp, coeff, B)
+        return terms.comp_eval[comp](terms.IVar(i), coeff * terms.IVar(j))
+
+####################################################################################################
+#
+# Absolute value conversions
+#
+####################################################################################################
 
 
-    # Takes a one_comparison of the form a_i^{e_i} * a_j^{e_j} * const >(=) 1,
-    #  where a_i really represents |a_i|.
+def make_term_comparison_abs(c, B):
+    """
+    c.term1 can be term or sterm, c.term2 must be sterm
+    if c is a * ti comp b * tj, returns a comparison |ti| comp p * |tj|
+    B is a blackboard
+    """
+    if c.term2.coeff == 0:
+        if isinstance(c.term1, terms.STerm):
+            comp = c.comp if c.term1.coeff > 0 else terms.comp_reverse(c.comp)
+            return terms.comp_eval[comp](c.term1.term, 0)
+        else:
+            return terms.comp_eval[c.comp](c.term1, 0)
 
-    def learn_mul_comparison(i,j,comp,coeff,e0,e1):
-        if e0==e1==0:
-            return
-        elif e0==0:
-            i=0
-        elif e1==0:
-            j=0
-        if j<i:
-            i,j,e0,e1 = j,i,e1,e0    
-        coeff = 1/Fraction(coeff)
-        if coeff<0:
-            comp = comp_reverse(comp)
-            
-        e1 = -e1
-        
-        if coeff < 0:
-            if comp in [LT, LE]:  # pos < neg
-                H.raise_contradiction(MUL)
-            return  # pos > neg. not useful.
+    if isinstance(c.term1, terms.Term):
+        term1, comp, coeff, term2 = c.term1, c.comp, c.term2.coeff, c.term2.term
+    else:
+        term1, term2 = c.term1.term, c.term2.term
+        if term1.coeff < 0:
+            comp = terms.comp_reverse(c.comp)
+            coeff = fractions.Fraction(c.term2.coeff, c.term1.coeff)
+        else:
+            comp, coeff = c.comp, fractions.Fraction(c.term2.coeff, c.term1.coeff)
+    i, j = term1.index, term2.index
 
-        
-        if i==0: #a_i = 1, so we can set e0 to whatever we want.
-            e0 = e1
-            
-        # Otherwise, both sides of the inequality are positive
-        # a_i and a_j are still abs values, coeff is positive
-        
-        if (
-            (e0 == e1) # we have |a_i|^p comp coeff * |a_j|^p
-            or (e0 < e1 and comp in [LE, LT] and abs_le_one(j)) # making e1 smaller makes rhs bigger, which doesn't mess up comparison.
-            or (e0 > e1 and comp in [GE, GT] and abs_le_one(j)) # making e1 bigger makes rhs smaller
-            or (e0 < e1 and comp in [GE, GT] and abs_ge_one(j)) # making e1 smaller makes RHS smaller
-            or (e0 > e1 and comp in [LE, LT] and abs_ge_one(j)) # making e1 bigger makes RHS bigger
-            ):
-            take_roots_and_learn(i, j, e0, e1, comp, coeff)
-    
+    # we have term1 comp coeff * term2
+    coeff1 = coeff * B.sign(i) * B.sign(j)
+    if B.sign(i) == 1:
+        return terms.comp_eval[comp](term1, coeff1 * term2)
+    else:
+        return terms.comp_eval[terms.comp_reverse(comp)](term1, coeff1 * term2)
 
-                
-    ###################################
-    #
-    # Sign inference helper functions
-    #
-    ###################################
-    
-    def ivar_zero_comparison(i):
-        if i in H.zero_comparisons.keys():
-            return H.zero_comparisons[i].comp
-        return None
-    
-    def mulpair_zero_comparison(m):
-        if m.term.index in H.zero_comparisons.keys():
-            comp = H.zero_comparisons[m.term.index].comp
-            if m.exp % 2 == 0 or (isinstance(m.exp, Fraction) and m.exp.numerator % 2 == 0):
-                if comp in [GT, LT]:
-                    return GT
-                else:
-                    return GE
+
+def make_term_comparison_unabs(i, j, ei, ej, comp1, coeff1, B):
+    """
+    this routine takes i, j, ei, ej, comp1, coeff1 representing
+       |ai|^{ei} comp1 coeff1 |aj|^{ej}
+    and returns a new pair comp, coeff, so that
+       ai^{ei} comp coeff aj^{aj}
+    is equivalent to the original comparison.
+    assume signs are nonzero
+    """
+    correction = (B.sign(i) ** ei) * (B.sign(j) ** ej)
+    correction = 1 if correction > 0 else -1  # Make correction an int instead of a float
+    coeff = coeff1 * correction
+    if B.sign(i) ** ei == 1:
+        comp = comp1
+    else:
+        comp = terms.comp_reverse(comp1)
+    return comp, coeff
+
+
+####################################################################################################
+#
+# Main functions
+#
+####################################################################################################
+
+
+def derive_info_from_definitions(B):
+    #todo: this could do more (weak sign info)
+    for key in (k for k in B.term_defs if isinstance(B.term_defs[k], terms.MulTerm)):
+        unsigned = [p.term.index for p in B.term_defs[key].args if B.sign(p.term.index) == 0]
+        if len(unsigned) == 0 and B.sign(key) == 0:
+            s = reduce(lambda x, y: x*y, [B.sign(p.term.index) for p in B.term_defs[key].args])
+            if s > 0:
+                B.assert_comparison(terms.IVar(key) > 0)
             else:
-                return comp
-        elif m.exp % 2 == 0:
-            return GE
-        else:
-            return None
-
-    def prod_zero_comparisons(comps):
-        if None in comps:
-            return None
-        else:
-            notstrict = LE in comps or GE in comps
-            if len([m for m in comps if m in [LT, LE]]) % 2 == 0:
-                if not notstrict: 
-                    return GT
-                else:
-                    return GE
+                B.assert_comparison(terms.IVar(key) < 0)
+        elif len(unsigned) == 1 and B.sign(key) != 0:
+            s = reduce(lambda x, y: x*y, [B.sign(p.term.index) for p in B.term_defs[key].args
+                                          if B.sign(p.term.index) != 0])
+            if s == B.sign(key):
+                B.assert_comparison(unsigned[0] > 0)
             else:
-                if not notstrict:
-                    return LT
-                else:
-                    return LE
-
-    def sign_pow(s, n):
-        if s == 1 or (s == -1 and n % 2 == 0):
-            return 1
-        elif s == -1:
-            return -1
-        else:
-            raise Error("sign should be 1 or -1")
+                B.assert_comparison(unsigned[0] < 0)
 
 
-    def multerm_zero_comparison(t):
-        comps = [mulpair_zero_comparison(m) for m in t.mulpairs]
-        return prod_zero_comparisons(comps)
-    
-                
-    def infer_signs_from_learned_equalities():
-        for t in (d for d in H.zero_equations if isinstance(d, Mul_term)):
-            # we have t=0.
-            comps = [mulpair_zero_comparison(m) for m in t.mulpairs]
-            
-            # If there are more than two unknowns, we can't do anything.
-            if comps.count(None) > 1:
-                return
-            
-            # If there is one unknown and every other is strict, that unknown must be equal to 0.
-            if comps.count(None) == 1 and comps.count(LE) + comps.count(GE) == 0:
-                index = comps.index(None)
-                i = t.mulpairs[index].term.index
-                H.learn_zero_equality(i, MUL)
-            
-            elif comps.count(None) == 0:
-                ges, les = comps.count(GE), comps.count(LE)
-                # If there are no unknowns and only one is weak, that weak one must be equal to 0.
-                if ges == 1 and les == 0:
-                    index = comps.index(GE)
-                    H.learn_zero_equality(t.mulpairs[index].term.index, MUL)
-                elif les == 1 and ges == 0:
-                    index = comps.index(LE)
-                    H.learn_zero_equality(t.mulpairs[index].term.index, MUL)
-                    
-                # If there are no weak inequalities, we have a contradiction.
-                elif ges == 0 and les == 0:
-                    H.raise_contradiction(MUL)    
-                    
-    
-    # This method looks at term definitions and tries to infer signs of subterms.
-    # For instance, if a_i = a_j * a_k, a_i > 0, a_j < 0, then it will learn a_k < 0.
-    # Provenance is HYP, so this info is available to mul routine
-    def infer_signs_from_definitions():
-        for i in (j for j in range(H.num_terms) if isinstance(H.name_defs[j], Mul_term)):
-            t = H.name_defs[i]
-            # have the equation a_i = t.
-            leftsign = ivar_zero_comparison(i)
-            comps = [mulpair_zero_comparison(m) for m in t.mulpairs]
-            rightsign = prod_zero_comparisons(comps)
-            
-            
-            if ((leftsign in [GE, GT] and rightsign == LT) or (leftsign in [LT, LE] and rightsign == GT)
-                or (leftsign == GT and rightsign in [LE, LT]) or (leftsign == LT and rightsign in [GE, GT])):
-                H.raise_contradiction(MUL)
-                
-            if leftsign in [GT, LT]:  # strict info on left implies strict info for all on right.
-                for j in range(len(comps)):
-                    if comps[j] in [GE, LE]:
-                        newcomp = (GT if comps[j] == GE else LT)
-                        H.learn_zero_comparison(t.mulpairs[j].term.index, newcomp, HYP)
-                        
-            elif (rightsign in [GT, LT] and leftsign not in [GT, LT]) or (leftsign==None and rightsign!=None):  # strict info on right implies strict info on left
-                H.learn_zero_comparison(i, rightsign, HYP)
-                
-            elif (rightsign == GE and leftsign == LE) or (rightsign == LE and leftsign == GE):  # we have zero equality.
-                H.learn_zero_equality(i, MUL)
-                if comps.count(GE) == 1 and comps.count(LE) == 0:
-                    index = comps.index(GE)
-                    H.learn_zero_equality(t.mulpairs[index].term.index, HYP)
-                elif comps.count(LE) == 1 and comps.count(GE) == 0:
-                    index = comps.index(LE)
-                    H.learn_zero_equality(t.mulpairs[index].term.index, HYP)
-                    
 
-
-            # Reset these with potentially new info
-            leftsign = ivar_zero_comparison(i)
-            comps = [mulpair_zero_comparison(m) for m in t.mulpairs]
-            rightsign = prod_zero_comparisons(comps)
-            
-            # Two possibilities here.
-            # Case 1: lhs is strong, rhs is missing one. All others on rhs must be strong by above. Missing one must be strong too, and we can figure out what it is.
-            # Case 2: lhs is weak, rhs is missing one, all others on rhs are strong. Missing one must be weak.
-            if rightsign == None and comps.count(None) == 1 and (leftsign in [GT, LT] or (leftsign in [GE, LE] and comps.count(GE) + comps.count(LE) == 0)):
-                index = comps.index(None)
-                m = t.mulpairs[index]
-                comps.pop(index)
-                comps.append(leftsign)
-                new_comp = prod_zero_comparisons(comps)
-                index2 = m.term.index
-                H.learn_zero_comparison(index2, new_comp, HYP)
-
-    ################################################
-    #
-    # Handle absolute values for elimination routine
-    #
-    #################################################
-    
-    # this first routine takes i, j, comp, C representing
-    #    ai comp C aj
-    # and returns a new pair comp', C', so that
-    #    abs(ai) comp' C' abs(aj)
-    # is equivalent to the original comparison.
-    # assume signs are nonzero
-    
-    def make_term_comparison_abs(i, j, comp, C):
-        C1 = C * H.sign(i) * H.sign(j)
-        if H.sign(i) == 1:
-            comp1 = comp
-        else: 
-            comp1 = comp_reverse(comp)
-        return comp1, C1
-        
-    # this routine takes i, j, ei, ej, comp1, C1 representing
-    #    |ai|^{ei} comp1 C1 |aj|^{ej}
-    # and returns a new pair comp, C, so that
-    #    ai^{ei} comp C aj^{aj}
-    # is equivalent to the original comparison.
-    # assume signs are nonzero
-    
-    def make_term_comparison_unabs(i, j, ei, ej, comp1, C1):
-        correction = (H.sign(i) ** ei) * (H.sign(j) ** ej)
-        correction = 1 if correction > 0 else -1  # Make correction an int instead of a float
-        C = C1 * correction
-        if H.sign(i) ** ei == 1:
-            comp = comp1
-        else:
-            comp = comp_reverse(comp1)
-        return comp, C
-    
-    # Assumes ai, aj > 0 and j is not 0
-    def one_comparison_from_term_comparison(i, j, comp, C):
-        if C <= 0: 
-            if comp in [LE, LT]:  # pos < neg. contradiction
-                H.raise_contradiction(MUL)
-            else:  # pos > neg. useless
-                return None
-            
-        if comp == GT or comp == GE:
-            new_comp = comp
-            if i == 0:
-                t = Mul_term([(IVar(j), -1)], Fraction(1, C))
-            else:
-                t = Mul_term([(IVar(i), 1), (IVar(j), -1)], Fraction(1, C))
-        else:
-            new_comp = comp_reverse(comp)
-            if i == 0:
-                t = Mul_term([(IVar(j), 1)], C)
-            else:
-                t = Mul_term([(IVar(i), -1), (IVar(j), 1)], C)
-        return One_comparison(t, new_comp)
-    
-    
-    ########################
-    #
-    # MAIN ROUTINE
-    #
-    #######################
-    
-    #H.info_dump()
-    
-    if H.verbose:
-        print 'Learning multiplicative facts (polyhedron style...)'
-        print
-    
-    infer_signs_from_definitions()
-    infer_signs_from_learned_equalities()
-    
-    
-    mul_eqs = [H.name_defs[i]*IVar(i)**(-1) for i in range(H.num_terms) if
-            (isinstance(H.name_defs[i],Mul_term) and
-              all(H.sign(p.term.index)!=0 for p in H.name_defs[i].mulpairs))]
-    
-    if H.verbose:
-        print 'Multiplicative equations:'
-        for e in mul_eqs:
-            print e,'= 1'
-        print
-        
-    mul_comps = []
-    for (i,j) in H.term_comparisons.keys():
-        if H.sign(i)!=0 and H.sign(j)!=0:
-            for c in (c for c in H.term_comparisons[i,j] if c.provenance!=MUL):
-                comp1, C1 = make_term_comparison_abs(i, j, c.comp, c.coeff)
-                onecomp = one_comparison_from_term_comparison(i, j, comp1, C1)
-                if onecomp:
-                    mul_comps.append(onecomp)
-                    
-    if H.verbose:
-        print 'Multiplicative comparisons:'
-        print '(Note: here, a_i represents |a_i|)'
-        for c in mul_comps:
-            print c.term,comp_str[c.comp],'1'
-        print
-
-    
-    #mul_eqs is a list of terms that are equal to 1
-    #mul_cops is a list of one_comparisons.
-    #turn these into zero_comps by taking logs,
-    #and store this info in a matrix to pass to lrs.
-    
-    #Maps a prime number to the index of its ivar
-    index_of_prime = {}
-    class ind_store:
-        i = H.num_terms
-    
-    #Inverse of above
-    prime_of_index = {}
-    
-    #p is a prime
-    #returns the index of the ivar corresponding to p, or creates one
-    def get_index_of(p):
-        try:
-            return index_of_prime[p]
-        except KeyError:
-            index_of_prime[p] = ind_store.i
-            prime_of_index[ind_store.i] = p
-            ind_store.i+=1
-            return ind_store.i-1
-    
-    add_eqs = []
-    for e in mul_eqs:
-        #take the log of each piece
-        p = e.mulpairs[0]
-        term = p.term*p.exp
-        for p in e.mulpairs[1:]:
-            term += p.term*p.exp
-            
-        if e.const != 1:
-            if e.const < 0: #since we have taken absolute value, this should never happen
-                raise Exception
-            c_fract = Fraction(e.const)
-            fac = primes.factorization(c_fract.numerator)
-            for i in fac.keys():
-                term += fac[i]*IVar(get_index_of(i))
-            fac = primes.factorization(c_fract.denominator)
-            for i in fac.keys():
-                term -= fac[i]*IVar(get_index_of(i))
-        add_eqs.append(term)
-        
-    add_comps = []
-    for c in mul_comps:
-        e = c.term
-        p = e.mulpairs[0]
-        term = p.term*p.exp
-        for p in e.mulpairs[1:]:
-            term += p.term*p.exp
-            
-        if e.const != 1:
-            if e.const < 0:
-                raise Exception
-            c_fract = Fraction(e.const)
-            fac = primes.factorization(c_fract.numerator)
-            for i in fac.keys():
-                term += fac[i]*IVar(get_index_of(i))
-            fac = primes.factorization(c_fract.denominator)
-            for i in fac.keys():
-                term -= fac[i]*IVar(get_index_of(i))
-        #print c,'became:',term
-        add_comps.append(Zero_comparison(term,c.comp))
-        
-    plist = sorted(index_of_prime.keys())
-    if H.verbose:
-        print 'We have',len(plist),'prime factors in play.'
-    for i in range(len(plist)-1):
-        add_comps.append(Zero_comparison(IVar(index_of_prime[plist[i+1]])-IVar(index_of_prime[plist[i]]),GT))
-        #add_comps.append(Zero_comparison(IVar(index_of_prime[plist[i]]) - under*IVar(index_of_prime[plist[i+1]]),GT))
-        #add_comps.append(Zero_comparison(IVar(index_of_prime[plist[i]]) - over*IVar(index_of_prime[plist[i+1]]),LT))
-    
-    #if plist: add_comps.append(Zero_comparison(IVar(index_of_prime[plist[0]]),GT))
-    
-    vertices,lin_set = lrs_util.get_generators(add_eqs,add_comps,H.num_terms+len(plist))
-    
-    if H.verbose:
-        print 'Polyhedron vertices:',['Column 1 = delta.']+['Column '+str(j+1)+' = '+str(prime_of_index[j]) for j in sorted(prime_of_index.keys())]      
-        for r in vertices:
-            print r[1:],('(ray)' if r[0]==0 else '(point)')
-        print
-        print 'Linear set:'
-        print lin_set
-        
-    #H.info_dump()
-    
-    
-    for (i,j) in combinations(range(H.num_terms),2):
-        
-        base_matrix = [[vertices[k][0],vertices[k][i+2],vertices[k][j+2]]+vertices[k][H.num_terms+2:] for k in range(len(vertices)) if k not in lin_set]
-        matrix = cdd.Matrix(base_matrix,number_type = 'fraction')
+def get_mul_comparisons(vertices, lin_set, num_vars, prime_of_index):
+    """
+    Returns a list of objects of the form (m1, m2, const, comp),
+    where m1 and m2 are mulpairs, const is an int, comp is terms.GE/GT/LE/LT,
+    and const * m1 * m2 comp 1
+    """
+    new_comparisons = []
+    for (i, j) in itertools.combinations(range(num_vars), 2):
+        base_matrix = [[vertices[k][0], vertices[k][i+2], vertices[k][j+2]]
+                       + vertices[k][num_vars+2:] for k in range(len(vertices)) if k not in lin_set]
+        matrix = cdd.Matrix(base_matrix, number_type='fraction')
         matrix.rep_type = cdd.RepType.GENERATOR
         for k in lin_set:
-            matrix.extend([[vertices[k][0],vertices[k][i+2],vertices[k][j+2]]+vertices[k][H.num_terms+2:]],linear=True)
-         
-        #print (i,j)    
-        #print matrix
-        
-        #matrix.canonicalize()
-        
-        #print len(matrix),'vertices'
-        #print 'generating::'
-        #print lrs.redund_and_generate(matrix)
-        #exit()
-             
-        #timecount.start()
-        #ineqs, lin_set2 = lrs.get_inequalities(matrix) 
+            matrix.extend([[vertices[k][0], vertices[k][i+2], vertices[k][j+2]]
+                           + vertices[k][num_vars+2:]], linear=True)
+
         ineqs = cdd.Polyhedron(matrix).get_inequalities()
-        #timecount.stop()
-        #print len(ineqs), 'inequalities'
-        #ineqs,lin_set2 = lrs.redund_and_generate(matrix) #This will have the same effect, but right now it is slower. Need to import lrs to use
-         
-        #print len([c for c in ineqs if c[2]!=0 or c[3]!=0]),'inequalities for',(i,j)
-         
-         
         for c in ineqs:
-            if c[2]==c[1]==0: #no comp
-                continue 
-                 
-            strong = not any(v[1]!=0 and v[i+2]*c[1]+v[j+2]*c[2]+sum(c[k]*v[H.num_terms+k-1] for k in range(3,len(c)))==0 for v in vertices)
-                 
+            if c[2] == c[1] == 0:  # no comp
+                continue
+            strong = not any(
+                v[1] != 0 and
+                v[i+2]*c[1]+v[j+2]*c[2]+sum(c[k]*v[num_vars+k-1] for k in range(3, len(c))) == 0
+                for v in vertices)
+
             const = 1
             #Don't want constant to a non-int power
-            scale = int(reduce(operator.mul,(Fraction(c[k]).denominator for k in range(3,len(c))),1))
-            if scale!=1:
+            scale = int(primes.lcmm(fractions.Fraction(c[k]).denominator for k in range(3, len(c))))
+            if scale != 1:
                 c = [c[0]]+[scale*v for v in c[1:]]
-                 
+
             skip = False
-            for k in range(3,len(c)):
-                if c[k]!=0:
-                    if c[k]>=1000000 or c[k]<=-1000000:
-                        #Not going to get much here. Causes arithmetic errors.
+            for k in range(3, len(c)):
+                if c[k] != 0:
+                    if c[k] >= 1000000 or c[k] <= -1000000:
+                        # Not going to get much here. Causes arithmetic errors.
                         skip = True
                         break
                     else:
-                        const*=(prime_of_index[k+H.num_terms-3]**c[k])
- 
+                        const*=(prime_of_index[k + num_vars - 3]**c[k])
             if skip:
-                continue        
-   
-            if c[1]==0: #const*a_j^c[3] comp 1
-                learn_mul_comparison(0,j,(GT if strong else GE),const,1,c[2])
-            elif c[2]==0:
-                if i!=0:
-                    learn_mul_comparison(0,i,(GT if strong else GE),const,1,c[1])
-            else: 
-                learn_mul_comparison(i,j,(GT if strong else GE),const,c[1],c[2])
-    
-    if H.verbose:
-        print    
-        
+                continue
+
+            new_comparisons.append((terms.MulPair(terms.IVar(i), c[1]),
+                                   terms.MulPair(terms.IVar(j), c[2]),
+                                   const, terms.GT if strong else terms.GE))
+    return new_comparisons
+
+
+def add_of_mul_comps(m_comparisons, num_terms):
+    """
+    Takes a list of multiplicative comparisons.
+    Returns [(t, comp)], poi, iop, new_num_terms
+    Where each t is a sum of IVars with t comp 0, poi is primes of index
+    And new_num_terms is the number of IVars 0 ... n-1
+    """
+    class indstore:
+        i = num_terms
+
+    index_of_prime = {}  # maps a prime factor to the index of its IVar
+    prime_of_index = {}  # inverse of the above
+
+    def index_of(p):
+        if p in index_of_prime:
+            return index_of_prime[p]
+        index_of_prime[p] = indstore.i
+        prime_of_index[indstore.i] = p
+        indstore.i += 1
+        return indstore.i - 1
+
+    a_comparisons = []
+
+    for c in m_comparisons:
+        #if isinstance(c.term1, terms.MulTerm):
+        if c.comp == terms.EQ:
+            t = -c.term2
+            for mp in c.term1.args:
+                t += mp.term * mp.exponent
+            a_comparisons.append((t, terms.EQ))
+        else:
+            # c is ivar comp coeff * ivar
+            if c.term2.coeff < 0:
+                if c.comp in [terms.GE, terms.GT]:
+                    # pos > neg. irrelevant.
+                    continue
+                elif c.comp in [terms.LE, terms.LT]:
+                    # pos < neg. contradiction. This shouldn't happen
+                    raise Exception("Problem in log conversion.")
+            t = c.term1 - c.term2
+            const = fractions.Fraction(c.term2.coeff)
+            if const.numerator != 1:
+                fac = primes.factorization(const.numerator)
+                for i in fac:
+                    t -= fac[i] * terms.IVar(index_of(fac[i]))
+            if const.denominator != 1:
+                fac = primes.factorization(const.denominator)
+                for i in fac:
+                    t += fac[i] * terms.IVar(index_of(fac[i]))
+            a_comparisons.append((t, c.comp))
+
+    plist = sorted(index_of_prime.keys())
+    for i in range(len(plist)-1):
+        a_comparisons.append((terms.IVar(index_of_prime[plist[i+1]])
+                              - terms.IVar(index_of_prime[plist[i]]), terms.GT))
+    return a_comparisons, prime_of_index, index_of_prime, indstore.i
+
+
+def update_blackboard(blackboard):
+    messages.announce_module('polyhedron multiplicative module')
+
+#    learn_additive_sign_info(blackboard)
+
+    m_comparisons = get_multiplicative_information(blackboard)
+    # Each ti in m_comparisons really represents |t_i|.
+
+    p = add_of_mul_comps(m_comparisons, blackboard.num_terms)
+    a_comparisons, prime_of_index, index_of_prime, num_terms = p
+    a_comparisons = [terms.comp_eval[c[1]](c[0], 0) for c in a_comparisons]
+
+    h_matrix = lrs_util.create_h_format_matrix(a_comparisons, num_terms)
+    messages.announce('Halfplane matrix:', messages.DEBUG)
+    messages.announce(h_matrix, messages.DEBUG)
+    v_matrix, v_lin_set = lrs_util.get_vertices(h_matrix)
+    messages.announce('Vertex matrix:', messages.DEBUG)
+    messages.announce(str(v_matrix), messages.DEBUG)
+    messages.announce('Linear set:', messages.DEBUG)
+    messages.announce(str(v_lin_set), messages.DEBUG)
+
+    new_comparisons = get_mul_comparisons(v_matrix, v_lin_set,
+                                          blackboard.num_terms, prime_of_index)
+
+    for m1, m2, coeff, comp in new_comparisons:
+        # coeff * m1 * m2 comp
+        #print coeff, '*', m1, '*', m2, terms.comp_str[comp], '1'
+        c = process_mul_comp(m1, m2, coeff, comp, blackboard)
+        if c is not None:
+            blackboard.assert_comparison(c)
+
+
+def get_multiplicative_information(blackboard):
+    """
+    Retrieves the relevant information from the blackboard.
+    Filters to only comparisons and equations where sign information is known, and converts to
+    absolute value form.
+    Note: in the returned comparisons, t_j represents |t_j|
+    """
+    derive_info_from_definitions(blackboard)
+
+    comparisons = []
+    for c in (c for c in blackboard.get_inequalities() + blackboard.get_equalities()
+              if c.term2.coeff != 0):
+        ind1 = c.term1.index
+        ind2 = c.term2.term.index
+        if blackboard.sign(ind1) != 0 and blackboard.sign(ind2) != 0:
+            comparisons.append(make_term_comparison_abs(c, blackboard))
+
+    for key in blackboard.term_defs:
+        if (isinstance(blackboard.term_defs[key], terms.MulTerm) and blackboard.sign(key) != 0 and
+                all(blackboard.sign(p.term.index) != 0 for p in blackboard.term_defs[key].args)):
+            comparisons.append(
+                terms.TermComparison(blackboard.term_defs[key], terms.EQ, terms.IVar(key))
+            )
+
+    return comparisons
+
+####################################################################################################
+#
+# Tests
+#
+####################################################################################################
+
+
+if __name__ == '__main__':
+
+    # can change 'normal' to 'quiet' or 'low'
+    messages.set_verbosity(messages.normal)
+
+    u, v, w, x, y, z = terms.Vars('u, v, w, x, y, z')
+    f = terms.Func('f')
+    g = terms.Func('g')
+
+    B = blackboard.Blackboard()
+
+    B.assert_comparison(u > 0)
+    B.assert_comparison(u < 1)
+    B.assert_comparison(v > 0)
+    B.assert_comparison(v < 1)
+    B.assert_comparison(u + v < u * v)
+
+    poly_add_module.update_blackboard(B)
+    update_blackboard(B)

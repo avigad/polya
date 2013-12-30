@@ -24,12 +24,14 @@
 # only assert information and query information through class methods.
 #
 # To limit redundancy, there is a hierarchy of information stored.
-#  * All known comparisons with zero are stored in zero_inequalities, zero_disequalities, and zero_equalities.
+#  * All known comparisons with zero are stored in zero_inequalities, zero_disequalities,
+#    and zero_equalities.
 #  * All known equalities between terms are stored in term_equalities.
-#  * The two most relevant comparisons between t_i and t_j are stored in inequalities. If one of these comparisons
-#    is an inequality with 0, it is duplicated here. If equality is known between t_i and t_j, this is NOT stored here.
-#  * All non-redundant disequalities between t_i and t_j are stored in disequalities. Anything that is implied by known
-#    equality or inequality information is removed from this table.
+#  * The two most relevant comparisons between t_i and t_j are stored in inequalities.
+#    If one of these comparisons is an inequality with 0, it is duplicated here. If equality is
+#    known between t_i and t_j, this is NOT stored here.
+#  * All non-redundant disequalities between t_i and t_j are stored in disequalities. Anything that
+#    is implied by known equality or inequality information is removed from this table.
 #
 # TODO: General utility functions for substitution, etc. should be defined in terms.py.
 # TODO: With these, we should define functions here that expand definitions.
@@ -65,7 +67,8 @@ class Blackboard():
         self.term_names = {terms.one.key: 0}      # reverse lookup: maps a term to is defining index
 
         # comparisons between named subterms
-        self.inequalities = {}  # Dictionary mapping (i, j) to a list of Halfplanes [h1, h2], such that h2 is cw of h1
+        self.inequalities = {}  # Dictionary mapping (i, j) to a list of Halfplanes [h1, h2],
+                                # such that h2 is cw of h1
         self.zero_inequalities = {0: terms.GT}  # Dictionary mapping i to comp
         self.equalities = {}  # Dictionary mapping (i, j) to coeff
         self.zero_equalities = set([])  # Set of IVar indices equal to 0
@@ -181,10 +184,11 @@ class Blackboard():
                 # If we reach here, then new_comp is not equidirectional with anything in old_comps
                 if len(old_comps) < 2:
                     return False
-                return new_comp.compare_hp(old_comps[0]) > 0 and old_comps[1].compare_hp(new_comp) > 0
+                return (new_comp.compare_hp(old_comps[0]) > 0
+                        and old_comps[1].compare_hp(new_comp) > 0)
                 # We know that b is clockwise from a.
                 # If new_comp is cw from a, and b is cw from new_comp, then new_comp is redundant
-                # If new_comp is cw from b, and a is cw from new_comp, then new_comp is contradictory
+                # If new_comp is cw from b, and a is cw from new_comp, then new_comp is contradict
                 # If a and b are both cw from new_comp, take new_comp and b in that order.
                 # If new_comp is cw from both a and b, take a and new_comp in that order.
                 # recall that x.compare_hp(y) > 0 iff y is ccw of x.
@@ -274,7 +278,8 @@ class Blackboard():
                 if c.eq_dir(new_comp):
                     c.strong = True
                     return
-        # If we reach this point, we can assume that new_comp is not collinear with anything in old_comps
+        # If we reach this point, we can assume that new_comp is not collinear with anything
+        # in old_comps
 
         if len(old_comps) == 0:
             new_comps = [new_comp]
@@ -292,8 +297,10 @@ class Blackboard():
         else:
             #a, b = old_comps[0], old_comps[1]
             # We know that b is clockwise from a.
-            # If new_comp is cw from a, and b is cw from new_comp, then new_comp is redundant: this case is ruled out.
-            # If new_comp is cw from b, and a is cw from new_comp, then new_comp is contradictory: also ruled out.
+            # If new_comp is cw from a, and b is cw from new_comp, then new_comp is redundant:
+            #     this case is ruled out.
+            # If new_comp is cw from b, and a is cw from new_comp, then new_comp is contradictory:
+            #     also ruled out.
             # If a and b are both cw from new_comp, take new_comp and b in that order.
             # If new_comp is cw from both a and b, take a and new_comp in that order.
             # recall that x.compare_hp(y) > 0 iff y is ccw of x.
@@ -317,7 +324,8 @@ class Blackboard():
         if i in self.zero_disequalities:
             comp = terms.GT if comp in [terms.GE, terms.GT] else terms.LT
             self.zero_disequalities.remove(i)
-        des = set(k for k in self.disequalities.get((0, i), set()) if not terms.comp_eval[comp](k, 0))
+        des = set(k for k in self.disequalities.get((0, i), set())
+                  if not terms.comp_eval[comp](k, 0))
         if len(des) > 0:
             self.disequalities[0, i] = des
 
@@ -341,7 +349,8 @@ class Blackboard():
             if len(old_comps) < 2:
                 new_comps = old_comps + [new_comp]
             else:
-                a_cw_n, b_cw_n = old_comps[0].compare_hp(new_comp), old_comps[1].compare_hp(new_comp)
+                a_cw_n = old_comps[0].compare_hp(new_comp)
+                b_cw_n = old_comps[1].compare_hp(new_comp)
                 if a_cw_n > 0 and b_cw_n > 0:
                     new_comps = [new_comp, old_comps[1]]
                 elif a_cw_n < 0 and b_cw_n < 0:
@@ -373,7 +382,7 @@ class Blackboard():
         """
         Adds the equality "ti != coeff * tj"
         """
-        # Print this now, in case the disequality is superseded; we want to see the disequality first.
+        # Print this now, in case the disequality is superseded; we want to see this first.
         self.announce_comparison(i, terms.NE, coeff, j)
 
         superseded = False
@@ -437,7 +446,7 @@ class Blackboard():
         Called when the given information contradicts something already known.
         """
         # TODO: implement this
-        pass
+        raise Exception('Contradiction:t{0} {1} {2}*t{3}'.format(i, terms.comp_str[comp], coeff, j))
 
     def sign(self, i):
         """

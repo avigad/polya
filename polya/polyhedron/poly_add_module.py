@@ -122,7 +122,8 @@ def get_2d_comparisons(vertices, lin_set):
 
     # Look for comparisons between t_i and t_j by checking each vertex.
     for (i, j) in itertools.combinations(range(len(vertices[0])-2), 2):
-        messages.announce('Looking for comparisons between {0} and {1}'.format(i, j), messages.DEBUG)
+        messages.announce(
+            'Looking for comparisons between {0} and {1}'.format(i, j), messages.DEBUG)
 
         i_j_vertices = set()
         weak = False
@@ -163,10 +164,11 @@ def get_2d_comparisons(vertices, lin_set):
             else:
                 #the rays are opposite. Figure out the comparison direction another way.
                 try:
-                    pt = next(v for v in vertices if l_b1 != geo.line_of_point(v))
+                    pt = next(v for v in i_j_vertices if not l_b1.get_direction(v) == terms.EQ)
                 except StopIteration:
                     # There is no direction information to be found: all vertices are collinear.
                     continue
+                #print '*** l_b1 = ', l_b1, pt, terms.comp_str[l_b1.get_direction(pt)]
                 dir1 = adjust_strength(strong1 and strong2, l_b1.get_direction(pt))
                 learned_comparisons.append(
                     terms.comp_eval[dir1](bound1[1] * terms.IVar(i), bound1[0] * terms.IVar(j))
@@ -191,7 +193,7 @@ def get_2d_comparisons(vertices, lin_set):
 #    Looks at additive definitions and tries to mine sign information.
 #    """
 #    for j in (
-#        i for i in range(blackboard.num_terms) if isinstance(blackboard.term_defs[i], terms.AddTerm)
+#        i for i in range(blackboard.num_terms) if isinstance(blackboard.term_defs[i],terms.AddTerm)
 #    ):
 #        if blackboard.sign(j) == 0:
 #            args = blackboard.term_defs[j].args
@@ -216,9 +218,6 @@ def update_blackboard(blackboard):
 #    learn_additive_sign_info(blackboard)
 
     comparisons = get_additive_information(blackboard)
-    print 'known:'
-    for c in comparisons:
-        print '  ', c
 
     h_matrix = lrs_util.create_h_format_matrix(comparisons, blackboard.num_terms)
     messages.announce('Halfplane matrix:', messages.DEBUG)
@@ -235,8 +234,10 @@ def update_blackboard(blackboard):
         blackboard.assert_comparison(c)
 
 
-# This method is a placeholder for when proper accessors are defined in blackboard.
 def get_additive_information(blackboard):
+    """
+    Retrieves the relevant information from the blackboard.
+    """
     comparisons = blackboard.get_inequalities() + blackboard.get_equalities()
 
     for key in blackboard.term_defs:
