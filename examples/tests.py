@@ -17,16 +17,17 @@ import blackboard
 import poly_add_module
 import poly_mult_module
 import messages
+import timeit
 
 x, y, u, v, w, z, r = terms.Vars('x, y, u, v, w, z, r')
 
 def run(B):
-    #try:
+    try:
         while True:
             poly_add_module.update_blackboard(B)
             poly_mult_module.update_blackboard(B)
-    #except Exception as e:
-    #    print e
+    except terms.Contradiction as e:
+        print e.msg
 
 def test1():
     B = blackboard.Blackboard()
@@ -64,4 +65,8 @@ def test2():
     # a b c d e f g
     run(B)
 
-test1()
+t = timeit.default_timer()
+
+test2()
+
+print 'Ran in', round(timeit.default_timer()-t, 3), 'seconds'

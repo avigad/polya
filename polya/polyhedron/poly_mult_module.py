@@ -219,23 +219,36 @@ def make_term_comparison_unabs(i, j, ei, ej, comp1, coeff1, B):
 
 
 def derive_info_from_definitions(B):
+    def mulpair_sign(p):
+        if p.exponent % 2 == 0:
+            return 1 if B.sign(p.term.index) != 0 else 0
+        else:
+            return B.sign(p.term.index)
     #todo: this could do more (weak sign info)
     for key in (k for k in B.term_defs if isinstance(B.term_defs[k], terms.MulTerm)):
-        unsigned = [p.term.index for p in B.term_defs[key].args if B.sign(p.term.index) == 0]
-        if len(unsigned) == 0 and B.sign(key) == 0:
-            s = reduce(lambda x, y: x*y, [B.sign(p.term.index) for p in B.term_defs[key].args])
+        if B.sign(key) == 0:
+            s = reduce(lambda x, y: x*y, [mulpair_sign(p) for p in B.term_defs[key].args])
             if s > 0:
                 B.assert_comparison(terms.IVar(key) > 0)
-            else:
+            elif s < 0:
                 B.assert_comparison(terms.IVar(key) < 0)
-        elif len(unsigned) == 1 and B.sign(key) != 0:
-            s = reduce(lambda x, y: x*y, [B.sign(p.term.index) for p in B.term_defs[key].args
-                                          if B.sign(p.term.index) != 0])
-            if s == B.sign(key):
-                B.assert_comparison(unsigned[0] > 0)
-            else:
-                B.assert_comparison(unsigned[0] < 0)
-
+        else:
+            unsigned = [p for p in B.term_defs[key].args if B.sign(p.term.index) == 0]
+            unsigned1 = [p for p in unsigned if mulpair_sign(p) == 0]
+            if len(unsigned1) == 1:
+                s = reduce(lambda x, y: x*y, [mulpair_sign(p) for p in B.term_defs[key].args
+                                              if mulpair_sign(p) != 0])
+                ind, exp = unsigned1[0].term.index, unsigned1[0].exponent
+                if s == B.sign(key):  # we know unsigned1[0] is positive.
+                    if exp % 2 == 0:
+                        B.assert_comparison(terms.IVar(ind) != 0)
+                    else:
+                        B.assert_comparison(terms.IVar(ind) > 0)
+                else:  # we know unsigned1[0] is negative.
+                    if exp % 2 == 0:  # this is a contradiction.
+                        B.assert_comparison(terms.IVar(key) == 0)
+                    else:
+                        B.assert_comparison(terms.IVar(ind) < 0)
 
 
 def get_mul_comparisons(vertices, lin_set, num_vars, prime_of_index):
@@ -255,6 +268,7 @@ def get_mul_comparisons(vertices, lin_set, num_vars, prime_of_index):
                            + vertices[k][num_vars+2:]], linear=True)
 
         ineqs = cdd.Polyhedron(matrix).get_inequalities()
+
         for c in ineqs:
             if c[2] == c[1] == 0:  # no comp
                 continue
@@ -277,7 +291,10 @@ def get_mul_comparisons(vertices, lin_set, num_vars, prime_of_index):
                         skip = True
                         break
                     else:
-                        const*=(prime_of_index[k + num_vars - 3]**c[k])
+                        if c[k] > 0:
+                            const *= (prime_of_index[k +num_vars-3]**c[k])
+                        else:
+                            const *= fractions.Fraction(1, prime_of_index[k+num_vars-3]**(-c[k]))
             if skip:
                 continue
 
@@ -294,17 +311,16 @@ def add_of_mul_comps(m_comparisons, num_terms):
     Where each t is a sum of IVars with t comp 0, poi is primes of index
     And new_num_terms is the number of IVars 0 ... n-1
     """
+    # todo: is there a more elegant way to do this?
     class indstore:
         i = num_terms
 
     index_of_prime = {}  # maps a prime factor to the index of its IVar
-    prime_of_index = {}  # inverse of the above
 
     def index_of(p):
         if p in index_of_prime:
             return index_of_prime[p]
         index_of_prime[p] = indstore.i
-        prime_of_index[indstore.i] = p
         indstore.i += 1
         return indstore.i - 1
 
@@ -326,23 +342,24 @@ def add_of_mul_comps(m_comparisons, num_terms):
                 elif c.comp in [terms.LE, terms.LT]:
                     # pos < neg. contradiction. This shouldn't happen
                     raise Exception("Problem in log conversion.")
-            t = c.term1 - c.term2
+            t = c.term1 - c.term2.term
             const = fractions.Fraction(c.term2.coeff)
             if const.numerator != 1:
                 fac = primes.factorization(const.numerator)
                 for i in fac:
-                    t -= fac[i] * terms.IVar(index_of(fac[i]))
+                    t -= fac[i] * terms.IVar(index_of(i))
             if const.denominator != 1:
                 fac = primes.factorization(const.denominator)
                 for i in fac:
-                    t += fac[i] * terms.IVar(index_of(fac[i]))
+                    t += fac[i] * terms.IVar(index_of(i))
             a_comparisons.append((t, c.comp))
 
     plist = sorted(index_of_prime.keys())
     for i in range(len(plist)-1):
         a_comparisons.append((terms.IVar(index_of_prime[plist[i+1]])
                               - terms.IVar(index_of_prime[plist[i]]), terms.GT))
-    return a_comparisons, prime_of_index, index_of_prime, indstore.i
+    prime_of_index = dict((value, key) for key, value in index_of_prime.iteritems())
+    return a_comparisons, prime_of_index, indstore.i
 
 
 def update_blackboard(blackboard):
@@ -354,7 +371,7 @@ def update_blackboard(blackboard):
     # Each ti in m_comparisons really represents |t_i|.
 
     p = add_of_mul_comps(m_comparisons, blackboard.num_terms)
-    a_comparisons, prime_of_index, index_of_prime, num_terms = p
+    a_comparisons, prime_of_index, num_terms = p
     a_comparisons = [terms.comp_eval[c[1]](c[0], 0) for c in a_comparisons]
 
     h_matrix = lrs_util.create_h_format_matrix(a_comparisons, num_terms)
@@ -400,6 +417,10 @@ def get_multiplicative_information(blackboard):
             comparisons.append(
                 terms.TermComparison(blackboard.term_defs[key], terms.EQ, terms.IVar(key))
             )
+
+    # print 'we have mul comparisons:'
+    # for c in comparisons:
+    #     print '  ', c
 
     return comparisons
 

@@ -64,6 +64,11 @@ class Error(Exception):
     pass
 
 
+class Contradiction(Exception):
+    def __init__(self, msg):
+        self.msg = msg
+
+
 ####################################################################################################
 #
 # For pretty printing
@@ -72,6 +77,7 @@ class Error(Exception):
 
 
 ATOM, SUM, PRODUCT = range(3)
+
 
 def pretty_print_fraction(frac):
     if frac.denominator == 1:

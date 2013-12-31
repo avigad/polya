@@ -264,6 +264,10 @@ class Blackboard():
         else:
             raise Error('Unrecognized comparison: {0!s}'.format())
 
+    def assert_comparisons(self, *comparisons):
+        for c in comparisons:
+            self.assert_comparison(c)
+
     def assert_inequality(self, i, comp, coeff, j):
         """
         Adds the inequality "ti comp coeff * tj".
@@ -445,8 +449,10 @@ class Blackboard():
         """
         Called when the given information contradicts something already known.
         """
-        # TODO: implement this
-        raise Exception('Contradiction:t{0} {1} {2}*t{3}'.format(i, terms.comp_str[comp], coeff, j))
+        msg = 'Contradiction: {0!s}\n'.format(
+            terms.TermComparison(terms.IVar(i), comp, coeff * terms.IVar(j)))
+        msg += '  := {0!s}'.format(terms.TermComparison(self.terms[i], comp, coeff * self.terms[j]))
+        raise terms.Contradiction(msg)
 
     def sign(self, i):
         """
@@ -471,6 +477,38 @@ class Blackboard():
             elif comp in (terms.LT, terms.LE):
                 return -1
         return 0
+
+    def info_dump(self):
+        """
+        For debugging purposes.
+        """
+        print '******'
+        for i in self.term_defs:
+            print terms.IVar(i), ':=', self.term_defs[i]
+
+        for i in self.zero_equalities:
+            print terms.IVar(i), '= 0'
+
+        for i in self.zero_inequalities:
+            print terms.IVar(i), terms.comp_str[self.zero_inequalities[i]], '0'
+
+        for i in self.zero_disequalities:
+            print terms.IVar(i), '!= 0'
+
+        for (i, j) in sorted(self.equalities.keys()):
+            print terms.IVar(i), '=', self.equalities[i, j] * terms.IVar(j)
+
+        for (i, j) in sorted(self.inequalities.keys()):
+            for c in self.inequalities[i, j]:
+                if c.a != 0 and c.b != 0:
+                    print c.to_comp(terms.IVar(i), terms.IVar(j))
+
+        for (i, j) in sorted(self.disequalities.keys()):
+            for val in self.disequalities[i, j]:
+                print terms.IVar(i), '!=', val * terms.IVar[j]
+
+        print '******'
+
 
 
 ####################################################################################################
