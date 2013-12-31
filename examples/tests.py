@@ -24,7 +24,9 @@ x, y, u, v, w, z, r = terms.Vars('x, y, u, v, w, z, r')
 def run(B):
     try:
         while True:
+            #B.info_dump()
             poly_add_module.update_blackboard(B)
+            #B.info_dump()
             poly_mult_module.update_blackboard(B)
     except terms.Contradiction as e:
         print e.msg
@@ -67,6 +69,14 @@ def test2():
 
 t = timeit.default_timer()
 
-test2()
+def test3():
+    messages.set_verbosity(messages.normal)
+    B = blackboard.Blackboard()
+
+    # "x+1/y<2", "y<0", "y/x>1", "-2<=x<=2", "-2<=y<=2", "x^2*y^(-1)>1-x"
+    B.assert_comparisons(x+1/y<2, y<0, y/x>1, -2<=x, x<=2, -2<=y, y<=2, x**2*y**(-1)>1-x)
+    run(B)
+
+test1()
 
 print 'Ran in', round(timeit.default_timer()-t, 3), 'seconds'

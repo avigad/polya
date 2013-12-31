@@ -151,6 +151,9 @@ class Term:
                 return MulPair(self, 2)
             else:
                 return MulTerm([MulPair(self, 1), MulPair(other, 1)])
+        elif isinstance(other, STerm):
+            #todo: I added this, but I'm not sure that this is the desired behavior. Check w Jeremy
+            return other * self
         else:
             raise Error('Cannot multiply Term {0!s} by {1!s}'.format(self, other))
 

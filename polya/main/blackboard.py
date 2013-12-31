@@ -109,6 +109,10 @@ class Blackboard():
             self.num_terms += 1
             messages.announce('Defining t{0!s} := {1!s}'.format(i, new_def), messages.DEF)
             messages.announce('  := {1!s}'.format(i, t), messages.DEF_FULL)
+            for j in self.zero_inequalities:
+                #print 'adding sign info about', j, 'to table for', i
+                hp = geometry.halfplane_of_comp(self.zero_inequalities[j], 0)
+                self.inequalities[j, i] = [hp]
             return terms.IVar(i)
 
     def get_inequalities(self):
@@ -173,8 +177,11 @@ class Blackboard():
                         or (comp1 == terms.GT and comp == terms.GE)
                         or (comp1 == terms.LT and comp == terms.LE))
             else:
+                #print terms.TermComparison(terms.IVar(i), comp, coeff * terms.IVar(j))
                 new_comp = geometry.halfplane_of_comp(comp, coeff)
                 old_comps = self.inequalities.get((i, j), [])
+                #print 'new_comp:', new_comp
+                #print 'old_comps:', old_comps
                 for c in [d for d in old_comps if d.eq_dir(new_comp)]:
                     if c.strong or not new_comp.strong:
                         return True
@@ -315,6 +322,25 @@ class Blackboard():
 
         self.inequalities[i, j] = new_comps
 
+        # check to see if new sign info is known.
+        if self.sign(i) == 0 and len(self.inequalities[i, j]) == 2:
+            i_g_0 = geometry.Halfplane(0, -1, True)
+            cw_a = i_g_0.compare_hp(self.inequalities[i, j][0])
+            cw_b = i_g_0.compare_hp(self.inequalities[i, j][1])
+            if cw_a > 0 > cw_b:
+                self.assert_zero_inequality(i, terms.GT)
+            elif cw_a < 0 < cw_b:
+                self.assert_zero_inequality(i, terms.LT)
+
+        if self.sign(j) == 0 and len(self.inequalities[i, j]) == 2:
+            j_g_0 = geometry.Halfplane(1, 0, True)
+            cw_a = j_g_0.compare_hp(self.inequalities[i, j][0])
+            cw_b = j_g_0.compare_hp(self.inequalities[i, j][1])
+            if cw_a > 0 > cw_b:
+                self.assert_zero_inequality(j, terms.GT)
+            elif cw_a < 0 < cw_b:
+                self.assert_zero_inequality(j, terms.LT)
+
         if (i, j) in self.disequalities:
             diseqs = self.disequalities.pop(i, j)
             n_diseqs = set(k for k in diseqs if not self.implies(i, terms.NE, k, j))
@@ -325,6 +351,7 @@ class Blackboard():
         """
         Adds the inequality "ti comp 0".
         """
+        print 'asserted that t', i, terms.comp_str[comp], '0'
         if i in self.zero_disequalities:
             comp = terms.GT if comp in [terms.GE, terms.GT] else terms.LT
             self.zero_disequalities.remove(i)
@@ -336,22 +363,31 @@ class Blackboard():
         self.announce_zero_comparison(i, comp)
 
         self.zero_inequalities[i] = comp
+        new_zero_ineqs = []
         for j in (j for j in range(self.num_terms) if j != i):
             p = (i, j) if i < j else (j, i)
             old_comps = self.inequalities.get(p, [])
+            #if p == (1, 7): print '1, 7 in as_z_i.', old_comps
             if i < j:
                 new_comp = geometry.halfplane_of_comp(comp, 0)
             else:
-                new_comp = geometry.Halfplane(0,
-                                              (1 if comp in [terms.LE, terms.LT] else -1),
+                new_comp = geometry.Halfplane((1 if comp in [terms.GE, terms.GT] else -1), 0,
                                               (True if comp in [terms.LT, terms.GT] else False))
+            cont = False
             for c in old_comps:
                 if c.eq_dir(new_comp) and c.strong is False and new_comp.strong is True:
                     c.strong = True
-                    return
+                    cont = True
+            if cont:
+                continue
 
-            if len(old_comps) < 2:
-                new_comps = old_comps + [new_comp]
+            if len(old_comps) == 0:
+                new_comps = [new_comp]
+            elif len(old_comps) == 1:
+                if old_comps[0].compare_hp(new_comp) > 0:  # old is cw of new
+                    new_comps = [new_comp, old_comps[0]]
+                else:
+                    new_comps = [old_comps[0], new_comp]
             else:
                 a_cw_n = old_comps[0].compare_hp(new_comp)
                 b_cw_n = old_comps[1].compare_hp(new_comp)
@@ -362,6 +398,20 @@ class Blackboard():
                 else:
                     new_comps = old_comps
             self.inequalities[p] = new_comps
+
+            #if p == (1, 7):
+            #    print "now, ineqs between 1 and 7 are", self.inequalities[p]
+
+            if self.sign(j) == 0 and len(self.inequalities[p]) == 2:
+                j_g_0 = geometry.Halfplane(1, 0, True) if i < j else geometry.Halfplane(0, -1, True)
+                cw_a = j_g_0.compare_hp(self.inequalities[p][0])
+                cw_b = j_g_0.compare_hp(self.inequalities[p][1])
+                if cw_a > 0 > cw_b:
+                    new_zero_ineqs.append(terms.IVar(j) > 0)
+                elif cw_a < 0 < cw_b:
+                    new_zero_ineqs.append(terms.IVar(j) < 0)
+        for c in new_zero_ineqs:
+            self.assert_comparison(c)
 
     def assert_equality(self, i, coeff, j):
         """

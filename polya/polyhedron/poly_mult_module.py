@@ -341,7 +341,7 @@ def add_of_mul_comps(m_comparisons, num_terms):
                     continue
                 elif c.comp in [terms.LE, terms.LT]:
                     # pos < neg. contradiction. This shouldn't happen
-                    raise Exception("Problem in log conversion.")
+                    raise Exception("Problem in log conversion." + str(c))
             t = c.term1 - c.term2.term
             const = fractions.Fraction(c.term2.coeff)
             if const.numerator != 1:
