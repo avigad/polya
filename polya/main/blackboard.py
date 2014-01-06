@@ -38,11 +38,15 @@
 #
 ####################################################################################################
 
-
 import terms
 import messages
 import geometry
 import fractions
+
+# import terms
+# import messages
+# from ..util import geometry
+# import fractions
 
 
 class Error(Exception):
@@ -351,7 +355,7 @@ class Blackboard():
         """
         Adds the inequality "ti comp 0".
         """
-        print 'asserted that t', i, terms.comp_str[comp], '0'
+        #print 'asserted that t', i, terms.comp_str[comp], '0'
         if i in self.zero_disequalities:
             comp = terms.GT if comp in [terms.GE, terms.GT] else terms.LT
             self.zero_disequalities.remove(i)

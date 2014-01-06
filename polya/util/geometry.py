@@ -1,3 +1,4 @@
+#from ..main import terms
 import terms
 import fractions
 

@@ -14,6 +14,7 @@
 #
 ####################################################################################################
 
+#from ..main import terms
 import terms
 import lrs
 import cdd  # This is needed for matrix formatting. Can we get around this?

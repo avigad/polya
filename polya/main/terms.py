@@ -170,6 +170,8 @@ class Term:
         return (-1) * self + other
 
     def __div__(self, other):
+        if isinstance(other, int):
+            return self * fractions.Fraction(1, other)
         return self * (other ** -1)
 
     def __rdiv__(self, other):

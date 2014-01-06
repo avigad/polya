@@ -14,7 +14,6 @@
 #
 ####################################################################################################
 
-
 import terms
 import messages
 #import geometry as geo
@@ -26,6 +25,18 @@ import fractions
 import math
 import primes
 import poly_add_module
+
+# from ..main import terms
+# from ..main import messages
+# #import geometry as geo
+# import itertools
+# import lrs_polyhedron_util as lrs_util
+# import cdd
+# from ..main import blackboard
+# import fractions
+# import math
+# from ..util import primes
+# import poly_add_module
 
 
 ####################################################################################################
@@ -224,6 +235,13 @@ def derive_info_from_definitions(B):
             return 1 if B.sign(p.term.index) != 0 else 0
         else:
             return B.sign(p.term.index)
+
+    def weak_mulpair_sign(p):
+        if p.exponent % 2 == 0:
+            return 1
+        else:
+            return B.weak_sign(p.term.index)
+
     #todo: this could do more (weak sign info)
     for key in (k for k in B.term_defs if isinstance(B.term_defs[k], terms.MulTerm)):
         if B.sign(key) == 0:
@@ -232,12 +250,32 @@ def derive_info_from_definitions(B):
                 B.assert_comparison(terms.IVar(key) > 0)
             elif s < 0:
                 B.assert_comparison(terms.IVar(key) < 0)
+            elif B.weak_sign(key) == 0:
+                s = reduce(lambda x, y: x*y, [weak_mulpair_sign(p) for p in B.term_defs[key].args])
+                if s > 0:
+                    B.assert_comparison(terms.IVar(key) >= 0)
+                elif s < 0:
+                    B.assert_comparison(terms.IVar(key) <= 0)
+            else:
+                #know weak sign for key, but not sign
+                unsigned = [p for p in B.term_defs[key].args if B.weak_sign(p.term.index) == 0]
+                unsigned1 = [p for p in unsigned if weak_mulpair_sign(p) == 0]
+                if len(unsigned1) == 1 and unsigned1[0].exponent % 2 != 0:
+                    s = reduce(lambda x, y: x*y, [weak_mulpair_sign(p)
+                                                  for p in B.term_defs[key].args
+                                                  if weak_mulpair_sign(p) != 0], 1)
+                    ind, exp = unsigned1[0].term.index, unsigned1[0].exponent
+                    if s == B.weak_sign(key):
+                        B.assert_comparison(terms.IVar(ind) >= 0)
+                    else:
+                        B.assert_comparison(terms.IVar(ind) <= 0)
+
         else:
             unsigned = [p for p in B.term_defs[key].args if B.sign(p.term.index) == 0]
             unsigned1 = [p for p in unsigned if mulpair_sign(p) == 0]
             if len(unsigned1) == 1:
                 s = reduce(lambda x, y: x*y, [mulpair_sign(p) for p in B.term_defs[key].args
-                                              if mulpair_sign(p) != 0])
+                                              if mulpair_sign(p) != 0], 1)
                 ind, exp = unsigned1[0].term.index, unsigned1[0].exponent
                 if s == B.sign(key):  # we know unsigned1[0] is positive.
                     if exp % 2 == 0:
@@ -249,6 +287,21 @@ def derive_info_from_definitions(B):
                         B.assert_comparison(terms.IVar(key) == 0)
                     else:
                         B.assert_comparison(terms.IVar(ind) < 0)
+
+            else:
+                unsigned = [p for p in B.term_defs[key].args if B.weak_sign(p.term.index) == 0]
+                unsigned1 = [p for p in unsigned if weak_mulpair_sign(p) == 0]
+                if len(unsigned1) == 1 and unsigned1[0].exponent % 2 != 0:
+                    s = reduce(lambda x, y: x*y, [weak_mulpair_sign(p)
+                                                  for p in B.term_defs[key].args
+                                                  if weak_mulpair_sign(p) != 0], 1)
+                    ind, exp = unsigned1[0].term.index, unsigned1[0].exponent
+                    if s == B.weak_sign(key):
+                        B.assert_comparison(terms.IVar(ind) >= 0)
+                    else:
+                        B.assert_comparison(terms.IVar(ind) <= 0)
+
+
 
 
 def get_mul_comparisons(vertices, lin_set, num_vars, prime_of_index):
@@ -268,6 +321,11 @@ def get_mul_comparisons(vertices, lin_set, num_vars, prime_of_index):
                            + vertices[k][num_vars+2:]], linear=True)
 
         ineqs = cdd.Polyhedron(matrix).get_inequalities()
+        # if (i, j) == (1, 9):
+        #     print 't1, t9.'
+        #     print matrix
+        #     print ineqs
+        #     print prime_of_index
 
         for c in ineqs:
             if c[2] == c[1] == 0:  # no comp
@@ -379,7 +437,9 @@ def update_blackboard(blackboard):
     messages.announce(h_matrix, messages.DEBUG)
     v_matrix, v_lin_set = lrs_util.get_vertices(h_matrix)
     messages.announce('Vertex matrix:', messages.DEBUG)
-    messages.announce(str(v_matrix), messages.DEBUG)
+    for l in v_matrix:
+        messages.announce(str(l), messages.DEBUG)
+    #messages.announce(str(v_matrix), messages.DEBUG)
     messages.announce('Linear set:', messages.DEBUG)
     messages.announce(str(v_lin_set), messages.DEBUG)
 

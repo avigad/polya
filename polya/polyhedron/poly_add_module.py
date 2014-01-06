@@ -14,13 +14,19 @@
 #
 ####################################################################################################
 
-
 import terms
 import messages
 import geometry as geo
 import itertools
 import lrs_polyhedron_util as lrs_util
 import blackboard
+
+# from ..main import terms
+# from ..main import messages
+# from ..util import geometry as geo
+# import itertools
+# import lrs_polyhedron_util as lrs_util
+# from ..main import blackboard
 
 
 ####################################################################################################
@@ -116,14 +122,15 @@ def get_2d_comparisons(vertices, lin_set):
         return comp
 
     if all(v[1] == 0 for v in vertices):  # We have a degenerate system.
+        print 'degenerate matrix!'
         return [terms.IVar(0) == 0]
 
     learned_comparisons = []
 
     # Look for comparisons between t_i and t_j by checking each vertex.
     for (i, j) in itertools.combinations(range(len(vertices[0])-2), 2):
-        messages.announce(
-            'Looking for comparisons between {0} and {1}'.format(i, j), messages.DEBUG)
+        #messages.announce(
+            #'Looking for comparisons between {0} and {1}'.format(i, j), messages.DEBUG)
 
         i_j_vertices = set()
         weak = False
@@ -139,12 +146,12 @@ def get_2d_comparisons(vertices, lin_set):
             if v[i+2] != 0 or v[j+2] != 0:
                 i_j_vertices.add((-v[i+2], -v[j+2], v[1]))
 
-        messages.announce('vertices:'+str(i_j_vertices), messages.DEBUG)
+        #messages.announce('vertices:'+str(i_j_vertices), messages.DEBUG)
 
         # Find the extremal vertices.
         try:
             bound1, bound2 = get_boundary_vertices(i_j_vertices)
-            messages.announce('boundary vertices:'+str(bound1)+', '+str(bound2), messages.DEBUG)
+            #messages.announce('boundary vertices:'+str(bound1)+', '+str(bound2), messages.DEBUG)
         except VertexSetException:  # Nothing we can learn for this i, j pair.
             continue
 
@@ -184,7 +191,7 @@ def get_2d_comparisons(vertices, lin_set):
             learned_comparisons.append(
                 terms.comp_eval[dir2](bound2[1] * terms.IVar(i), bound2[0] * terms.IVar(j))
             )
-        messages.announce('Learned:'+str(learned_comparisons), messages.DEBUG)
+        #messages.announce('Learned:'+str(learned_comparisons), messages.DEBUG)
     return learned_comparisons
 
 
@@ -224,7 +231,9 @@ def update_blackboard(blackboard):
     messages.announce(h_matrix, messages.DEBUG)
     v_matrix, v_lin_set = lrs_util.get_vertices(h_matrix)
     messages.announce('Vertex matrix:', messages.DEBUG)
-    messages.announce(str(v_matrix), messages.DEBUG)
+    #messages.announce(str(v_matrix), messages.DEBUG)
+    for l in v_matrix:
+        messages.announce(str(l), messages.DEBUG)
     messages.announce('Linear set:', messages.DEBUG)
     messages.announce(str(v_lin_set), messages.DEBUG)
 
