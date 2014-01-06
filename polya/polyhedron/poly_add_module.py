@@ -219,43 +219,48 @@ def get_2d_comparisons(vertices, lin_set):
 #        # There's more in the old version here. Is it really necessary?
 
 
-def update_blackboard(blackboard):
-    messages.announce_module('polyhedron additive module')
-
-#    learn_additive_sign_info(blackboard)
-
-    comparisons = get_additive_information(blackboard)
-
-    h_matrix = lrs_util.create_h_format_matrix(comparisons, blackboard.num_terms)
-    messages.announce('Halfplane matrix:', messages.DEBUG)
-    messages.announce(h_matrix, messages.DEBUG)
-    v_matrix, v_lin_set = lrs_util.get_vertices(h_matrix)
-    messages.announce('Vertex matrix:', messages.DEBUG)
-    #messages.announce(str(v_matrix), messages.DEBUG)
-    for l in v_matrix:
-        messages.announce(str(l), messages.DEBUG)
-    messages.announce('Linear set:', messages.DEBUG)
-    messages.announce(str(v_lin_set), messages.DEBUG)
-
-    new_comparisons = get_2d_comparisons(v_matrix, v_lin_set)
-
-    for c in new_comparisons:
-        blackboard.assert_comparison(c)
-
-
-def get_additive_information(blackboard):
+def get_additive_information(B):
     """
     Retrieves the relevant information from the blackboard.
     """
-    comparisons = blackboard.get_inequalities() + blackboard.get_equalities()
+    comparisons = B.get_inequalities() + B.get_equalities()
 
-    for key in blackboard.term_defs:
-        if isinstance(blackboard.term_defs[key], terms.AddTerm):
+    for key in B.term_defs:
+        if isinstance(B.term_defs[key], terms.AddTerm):
             comparisons.append(
-                terms.TermComparison(blackboard.term_defs[key], terms.EQ, terms.IVar(key))
+                terms.TermComparison(B.term_defs[key], terms.EQ, terms.IVar(key))
             )
 
     return comparisons
+
+
+class PolyAdditionModule:
+    def __init__(self):
+        pass
+
+    def update_blackboard(self, B):
+        messages.announce_module('polyhedron additive module')
+
+    #    learn_additive_sign_info(blackboard)
+
+        comparisons = get_additive_information(B)
+
+        h_matrix = lrs_util.create_h_format_matrix(comparisons, B.num_terms)
+        messages.announce('Halfplane matrix:', messages.DEBUG)
+        messages.announce(h_matrix, messages.DEBUG)
+        v_matrix, v_lin_set = lrs_util.get_vertices(h_matrix)
+        messages.announce('Vertex matrix:', messages.DEBUG)
+        #messages.announce(str(v_matrix), messages.DEBUG)
+        for l in v_matrix:
+            messages.announce(str(l), messages.DEBUG)
+        messages.announce('Linear set:', messages.DEBUG)
+        messages.announce(str(v_lin_set), messages.DEBUG)
+
+        new_comparisons = get_2d_comparisons(v_matrix, v_lin_set)
+
+        for c in new_comparisons:
+            B.assert_comparison(c)
+
 
 ####################################################################################################
 #
@@ -281,4 +286,6 @@ if __name__ == '__main__':
     B.assert_comparison(v < 1)
     B.assert_comparison(u + v > u * v)
 
-    update_blackboard(B)
+    p = PolyAdditionModule()
+
+    p.update_blackboard(B)

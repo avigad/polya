@@ -302,8 +302,6 @@ def derive_info_from_definitions(B):
                         B.assert_comparison(terms.IVar(ind) <= 0)
 
 
-
-
 def get_mul_comparisons(vertices, lin_set, num_vars, prime_of_index):
     """
     Returns a list of objects of the form (m1, m2, const, comp),
@@ -350,7 +348,7 @@ def get_mul_comparisons(vertices, lin_set, num_vars, prime_of_index):
                         break
                     else:
                         if c[k] > 0:
-                            const *= (prime_of_index[k +num_vars-3]**c[k])
+                            const *= (prime_of_index[k + num_vars - 3]**c[k])
                         else:
                             const *= fractions.Fraction(1, prime_of_index[k+num_vars-3]**(-c[k]))
             if skip:
@@ -420,40 +418,6 @@ def add_of_mul_comps(m_comparisons, num_terms):
     return a_comparisons, prime_of_index, indstore.i
 
 
-def update_blackboard(blackboard):
-    messages.announce_module('polyhedron multiplicative module')
-
-#    learn_additive_sign_info(blackboard)
-
-    m_comparisons = get_multiplicative_information(blackboard)
-    # Each ti in m_comparisons really represents |t_i|.
-
-    p = add_of_mul_comps(m_comparisons, blackboard.num_terms)
-    a_comparisons, prime_of_index, num_terms = p
-    a_comparisons = [terms.comp_eval[c[1]](c[0], 0) for c in a_comparisons]
-
-    h_matrix = lrs_util.create_h_format_matrix(a_comparisons, num_terms)
-    messages.announce('Halfplane matrix:', messages.DEBUG)
-    messages.announce(h_matrix, messages.DEBUG)
-    v_matrix, v_lin_set = lrs_util.get_vertices(h_matrix)
-    messages.announce('Vertex matrix:', messages.DEBUG)
-    for l in v_matrix:
-        messages.announce(str(l), messages.DEBUG)
-    #messages.announce(str(v_matrix), messages.DEBUG)
-    messages.announce('Linear set:', messages.DEBUG)
-    messages.announce(str(v_lin_set), messages.DEBUG)
-
-    new_comparisons = get_mul_comparisons(v_matrix, v_lin_set,
-                                          blackboard.num_terms, prime_of_index)
-
-    for m1, m2, coeff, comp in new_comparisons:
-        # coeff * m1 * m2 comp
-        #print coeff, '*', m1, '*', m2, terms.comp_str[comp], '1'
-        c = process_mul_comp(m1, m2, coeff, comp, blackboard)
-        if c is not None:
-            blackboard.assert_comparison(c)
-
-
 def get_multiplicative_information(blackboard):
     """
     Retrieves the relevant information from the blackboard.
@@ -484,12 +448,50 @@ def get_multiplicative_information(blackboard):
 
     return comparisons
 
+
+class PolyMultiplicationModule:
+    def __init__(self):
+        pass
+
+    def update_blackboard(self, B):
+        messages.announce_module('polyhedron multiplicative module')
+
+    #    learn_additive_sign_info(blackboard)
+
+        m_comparisons = get_multiplicative_information(B)
+        # Each ti in m_comparisons really represents |t_i|.
+
+        p = add_of_mul_comps(m_comparisons, B.num_terms)
+        a_comparisons, prime_of_index, num_terms = p
+        a_comparisons = [terms.comp_eval[c[1]](c[0], 0) for c in a_comparisons]
+
+        h_matrix = lrs_util.create_h_format_matrix(a_comparisons, num_terms)
+        messages.announce('Halfplane matrix:', messages.DEBUG)
+        messages.announce(h_matrix, messages.DEBUG)
+        v_matrix, v_lin_set = lrs_util.get_vertices(h_matrix)
+        messages.announce('Vertex matrix:', messages.DEBUG)
+        for l in v_matrix:
+            messages.announce(str(l), messages.DEBUG)
+        #messages.announce(str(v_matrix), messages.DEBUG)
+        messages.announce('Linear set:', messages.DEBUG)
+        messages.announce(str(v_lin_set), messages.DEBUG)
+
+        new_comparisons = get_mul_comparisons(v_matrix, v_lin_set,
+                                              B.num_terms, prime_of_index)
+
+        for m1, m2, coeff, comp in new_comparisons:
+            # coeff * m1 * m2 comp
+            #print coeff, '*', m1, '*', m2, terms.comp_str[comp], '1'
+            c = process_mul_comp(m1, m2, coeff, comp, B)
+            if c is not None:
+                B.assert_comparison(c)
+
+
 ####################################################################################################
 #
 # Tests
 #
 ####################################################################################################
-
 
 if __name__ == '__main__':
 
@@ -508,5 +510,8 @@ if __name__ == '__main__':
     B.assert_comparison(v < 1)
     B.assert_comparison(u + v < u * v)
 
-    poly_add_module.update_blackboard(B)
-    update_blackboard(B)
+    pa = poly_add_module.PolyAdditionModule()
+    pm = PolyMultiplicationModule()
+
+    pa.update_blackboard(B)
+    pm.update_blackboard(B)

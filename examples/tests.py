@@ -28,14 +28,15 @@ a, b, c, d, e = terms.Vars('a, b, c, d, e')
 n, k, p = terms.Vars('n, k, p')
 
 def run(B):
+    pa, pm = poly_add_module.PolyAdditionModule(), poly_mult_module.PolyMultiplicationModule()
     try:
         s, s2 = '', '1'
         while s != s2:
             s = s2
             #B.info_dump()
-            poly_add_module.update_blackboard(B)
+            pa.update_blackboard(B)
             #B.info_dump()
-            poly_mult_module.update_blackboard(B)
+            pm.update_blackboard(B)
             s2 = str(B.get_equalities()) + str(B.get_disequalities()) + str(B.get_inequalities())
         #print 'No contradiction found.'
         #print
