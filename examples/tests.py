@@ -20,7 +20,7 @@ import poly_add_module
 import poly_mult_module
 import messages
 import timeit
-import fractions
+#import fractions
 import z3
 
 x, y, u, v, w, z, r = terms.Vars('x, y, u, v, w, z, r')
@@ -119,7 +119,7 @@ def tests():
 
         [a<=b*x/2, 0<c, 0<d, d<1, (1+d/(3*(c+3)))*a>=b*x],
 
-        #[x<1, 1<y, x*y>1, u+x>=y+1, x**2*y<2-u*x*y],
+        [x<1, 1<y, x*y>1, u+x>=y+1, x**2*y<2-u*x*y],
 
         [x<1, 1<y, x*y>1, u+x>=y+1, x**2*y>=2-u*x*y],
 
@@ -129,9 +129,7 @@ def tests():
 
         [0<x, x<1, 0<y, y<1, x**150*y**150>x**150+y**150]
     ]
-    expected = [True, True, True, False, True, True, True, False,
-                #True,
-                False, True, True, True]
+    expected = [True, True, True, False, True, True, True, False, True, False, True, True, True]
 
     for i in range(len(problems)):
         val = solve(*problems[i])
@@ -140,176 +138,139 @@ def tests():
         else:
             print 'Test {} incorrect.'.format(i+1)
 
-# def z3test():
-#     print 'new version:'
-#     t0, t1, t2, t3, t4, t5, t6, t7, t8, t9 = z3.Reals('t0 t1 t2 t3 t4 t5 t6 t7 t8 t9')
-#     a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11 = z3.Reals('a0 a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11')
-#     s = z3.Solver()
-#     #s.add(t4==t0+t2, t6==t5+t1, t8==t0-.5*t7)
-#     s.add(t3==t1*t2, t7==t5*t1*t2, t9==t2*t1**2)
-#     s.add(
-#         t0 > 0,
-#         t1 > 0,
-#         t2 > 0,
-#         t3 > 0,
-#         t4 > 0,
-#         t5 > 0,
-#         t6 > 0,
-#         t7 > 0,
-#         t8 > 0,
-#         t9 > 0,
-#         t0 < 2*t1,
-#         t0 > t1,
-#         t0 < t2,
-#         t0 > (1/2)*t2,
-#         t0 < t3,
-#         t0 > (793/1000)*t3,
-#         t0 < (1/2)*t4,
-#         t0 > (1/3)*t4,
-#         t0 < t5,
-#         t0 > (1/2)*t5,
-#         t0 < (1/2)*t6,
-#         t0 > (1/3)*t6,
-#         t0 < t7,
-#         t0 > (2/3)*t7,
-#         t0 < 4*t8,
-#         t0 > 2*t8,
-#         t0 < 2*t9,
-#         t0 > t9,
-#         t1 < t2,
-#         t1 > (1/3)*t2,
-#         t1 < t3,
-#         t1 > (1/2)*t3,
-#         t1 < (1/2)*t4,
-#         t1 > (1/5)*t4,
-#         t1 < t5,
-#         t1 > (1/4)*t5,
-#         t1 < (1/2)*t6,
-#         t1 > (1/5)*t6,
-#         t1 < t7,
-#         t1 > (1/3)*t7,
-#         t1 < 4*t8,
-#         t1 > t8,
-#         t1 < 2*t9,
-#         t1 > (1/2)*t9,
-#         t2 < 2*t3,
-#         t2 > t3,
-#         t2 < (2/3)*t4,
-#         t2 > (1/2)*t4,
-#         t2 < t5,
-#         t2 > (1/2)*t5,
-#         t2 < (2/3)*t6,
-#         t2 > (1/3)*t6,
-#         t2 < 2*t7,
-#         t2 > (2/3)*t7,
-#         t2 < 8*t8,
-#         t2 > 2*t8,
-#         t2 < 4*t9,
-#         t2 > t9,
-#         t3 < (1000/1793)*t4,
-#         t3 > (1/3)*t4,
-#         t3 < t5,
-#         t3 > (1/2)*t5,
-#         t3 < (1000/1793)*t6,
-#         t3 > (1/3)*t6,
-#         t3 < t7,
-#         t3 > (2/3)*t7,
-#         t3 < (4000/793)*t8,
-#         t3 > 2*t8,
-#         t3 < (2000/793)*t9,
-#         t3 > t9,
-#         t4 < 2*t5,
-#         t4 > t5,
-#         t4 <= t6,
-#         t4 > (2/3)*t6,
-#         t4 < 3*t7,
-#         t4 > (4/3)*t7,
-#         t4 < 12*t8,
-#         t4 > 4*t8,
-#         t4 < 6*t9,
-#         t4 > 2*t9,
-#         t5 < (4/5)*t6,
-#         t5 > (1/2)*t6,
-#         t5 < 2*t7,
-#         t5 > (2/3)*t7,
-#         t5 < 8*t8,
-#         t5 > 2*t8,
-#         t5 < 4*t9,
-#         t5 > t9,
-#         t6 < 3*t7,
-#         t6 > (4/3)*t7,
-#         t6 < 12*t8,
-#         t6 > 4*t8,
-#         t6 < 6*t9,
-#         t6 > 2*t9,
-#         t7 < 6*t8,
-#         t7 > 2*t8,
-#         t7 < 3*t9,
-#         t7 > t9,
-#         t8 < t9,
-#         t8 > (1/2)*t9
-#     )
-#     print s.check()
-#     print s.model()
-#     print
-#     print
-#
-#     print 'old version:'
-#     s = z3.Solver()
-#     s.add(a2 == (a0 + -1*a1),a4 == (a0 + -1*a3),a6 == (a0 + -1*a5),a8 == (a0 + -1*a7 + -1*a1 + a3),a11 == (a0 + -1/2*a9 + -1/2*a10))
-#
-#     s.add(
-#         a0 > 0,
-#         a1 > 0,
-#         a2 > 0,
-#         a3 > 0,
-#         a4 < 0,
-#         a5 > 0,
-#         a6 < 0,
-#         a7 > 0,
-#         a8 <= 0,
-#         a9 > 0,
-#         a10 > 0,
-#         a11 > 0,
-#
-#         a5 < 1 * a9,
-#         a4 > -1 * a7,
-#         a1 < 1 * a3,
-#         a5 > -1 * a6,
-#         a6 > -1 * a9,
-#         a0 < 1 * a7,
-#         a3 < 1 * a7,
-#         a0 < 1 * a3,
-#         a1 > -1 * a2,
-#         a4 > -1 * a9,
-#         a2 < 1 * a9,
-#         a3 > 1 * a10,
-#         a1 < 1 * a5,
-#         a3 > -1 * a6,
-#         a1 < 1 * a10,
-#         a7 < 1 * a9,
-#         a2 < 1 * a7,
-#         a7 > 1 * a10,
-#         a3 < 1 * a9,
-#         a0 < 1 * a5,
-#         a6 > -1 * a7,
-#         a3 > 1 * a5,
-#         a0 > 1 * a1,
-#         a5 > 1 * a10,
-#         a3 > -1 * a4,
-#         a5 < 1 * a7,
-#         a1 > -1 * a7,
-#         a1 < 1 * a7,
-#         a0 < 1 * a9,
-#         a7 > -1 * a8
-#     )
-#     print s.check()
-#     print s.model()
+def z3test():
+    print 'new version:'
+    t0, t1, t2, t3, t4, t5, t6, t7, t8, t9 = z3.Reals('t0 t1 t2 t3 t4 t5 t6 t7 t8 t9')
+    a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11 = \
+        z3.Reals('a0 a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11')
+    bools = [z3.Bool('b'+str(i)) for i in range(100)]
+    s = z3.Solver()
+    #s.add(t4==t0+t2, t6==t5+t1, t8==t0-.5*t7)
+    eqs = [t3==t1*t2, t7==t5*t1*t2, t9==t2*t1**2]
+    ineqs = [
+        t0 > 0,
+        t1 > 0,
+        t2 > 0,
+        t3 > 0,
+        t4 > 0,
+        t5 > 0,
+        t6 > 0,
+        t7 > 0,
+        t8 > 0,
+        t9 > 0,
+        t0 > t1,
+        t0 < t2,
+        t0 < t3,
+        t0 < (1/2)*t4,
+        t0 < t5,
+        t0 < (1/2)*t6,
+        t1 < t2,
+        t1 < t3,
+        t1 < (1/2)*t4,
+        t1 < t5,
+        t1 > -1*t5,
+        t1 < (1/2)*t6,
+        t2 < t4,
+        t2 > (1/2)*t4,
+        t2 < t5,
+        t2 < t6,
+        t4 < 2*t5,
+        t4 <= t6,
+        t5 > (1/2)*t6,
+        t7 > -2*t8,
+        t8 > (1/2)*t9,
 
+        t1 >= t9
+    ]
+
+    i = 0
+    for e in eqs:
+        s.add(z3.Implies(bools[i], e))
+        i+=1
+
+    for e in ineqs:
+        s.add(z3.Implies(bools[i], e))
+        i+=1
+
+    for b in bools:
+        s.add(b)
+
+    print s
+    print s.check()
+    print s.model()
+    print
+    print
+
+
+    i = 0
+
+    print 'old version:'
+    s = z3.Solver()
+    eqs = [a2 == (a0 + -1*a1),a4 == (a0 + -1*a3),a6 == (a0 + -1*a5),a8 == (a0 + -1*a7 + -1*a1 + a3),
+           a11 == (a0 + -1/2*a9 + -1/2*a10)]
+    for e in eqs:
+        s.add(z3.Implies(bools[i], e))
+        i+=1
+
+    ineqs = [
+        a0 > 0,
+        a1 > 0,
+        a2 > 0,
+        a3 > 0,
+        a4 < 0,
+        a5 > 0,
+        a6 < 0,
+        a7 > 0,
+        a8 <= 0,
+        a9 > 0,
+        a10 > 0,
+        a11 > 0,
+
+        a5 < 1 * a9,
+        a4 > -1 * a7,
+        a1 < 1 * a3,
+        a5 > -1 * a6,
+        a6 > -1 * a9,
+        a0 < 1 * a7,
+        a3 < 1 * a7,
+        a0 < 1 * a3,
+        a1 > -1 * a2,
+        a4 > -1 * a9,
+        a2 < 1 * a9,
+        a3 > 1 * a10,
+        a1 < 1 * a5,
+        a3 > -1 * a6,
+        a1 < 1 * a10,
+        a7 < 1 * a9,
+        a2 < 1 * a7,
+        a7 > 1 * a10,
+        a3 < 1 * a9,
+        a0 < 1 * a5,
+        a6 > -1 * a7,
+        a3 > 1 * a5,
+        a0 > 1 * a1,
+        a5 > 1 * a10,
+        a3 > -1 * a4,
+        a5 < 1 * a7,
+        a1 > -1 * a7,
+        a1 < 1 * a7,
+        a0 < 1 * a9,
+        a7 > -1 * a8
+    ]
+
+    for e in ineqs:
+        s.add(z3.Implies(bools[i], e))
+        i+=1
+
+    print s.check(*[b for b in bools])
+    #print s.model()
+    print s.unsat_core()
+    print s
+    #print s.model()
 
 tests()
-messages.set_verbosity(messages.debug)
-#solve(x<1, 1<y, x*y>1, u+x>=y+1, x**2*y<2-u*x*y)
+#messages.set_verbosity(messages.debug)
+#print solve(x<1, 1<y, x*y>1, u+x>=y+1, x**2*y<2-u*x*y)
 #print solve(x*(y+z)<=0, y+z>0, x>=0, x*w>0)
 #z3test()
 

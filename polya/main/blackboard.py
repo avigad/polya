@@ -231,7 +231,11 @@ class Blackboard():
             return i in self.zero_equalities
 
         elif comp == terms.NE:
-            return i in self.zero_disequalities
+            if i in self.zero_disequalities:
+                return True
+            if i in self.zero_inequalities and self.zero_inequalities[i] in [terms.LT, terms.GT]:
+                return True
+            return False
 
     def assert_comparison(self, c):
         """
@@ -250,7 +254,6 @@ class Blackboard():
             term1, comp, coeff, term2 = c.term1, c.comp, c.term2.coeff, c.term2.term
             if coeff == 0:
                 term2 = terms.IVar(0)
-            #print isinstance(c.term2.term, terms.IVar)
 
         if self.implies(term1.index, comp, coeff, term2.index):
             return
@@ -371,7 +374,6 @@ class Blackboard():
         for j in (j for j in range(self.num_terms) if j != i):
             p = (i, j) if i < j else (j, i)
             old_comps = self.inequalities.get(p, [])
-            #if p == (1, 7): print '1, 7 in as_z_i.', old_comps
             if i < j:
                 new_comp = geometry.halfplane_of_comp(comp, 0)
             else:
@@ -402,9 +404,6 @@ class Blackboard():
                 else:
                     new_comps = old_comps
             self.inequalities[p] = new_comps
-
-            #if p == (1, 7):
-            #    print "now, ineqs between 1 and 7 are", self.inequalities[p]
 
             if self.sign(j) == 0 and len(self.inequalities[p]) == 2:
                 j_g_0 = geometry.Halfplane(1, 0, True) if i < j else geometry.Halfplane(0, -1, True)
@@ -559,7 +558,7 @@ class Blackboard():
 
         for (i, j) in sorted(self.disequalities.keys()):
             for val in self.disequalities[i, j]:
-                print terms.IVar(i), '!=', val * terms.IVar[j]
+                print terms.IVar(i), '!=', val * terms.IVar(j)
 
         print '******'
 

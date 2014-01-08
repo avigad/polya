@@ -122,7 +122,6 @@ def get_2d_comparisons(vertices, lin_set):
         return comp
 
     if all(v[1] == 0 for v in vertices):  # We have a degenerate system.
-        print 'degenerate matrix!'
         return [terms.IVar(0) == 0]
 
     learned_comparisons = []

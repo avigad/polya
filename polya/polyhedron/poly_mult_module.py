@@ -319,11 +319,6 @@ def get_mul_comparisons(vertices, lin_set, num_vars, prime_of_index):
                            + vertices[k][num_vars+2:]], linear=True)
 
         ineqs = cdd.Polyhedron(matrix).get_inequalities()
-        # if (i, j) == (1, 9):
-        #     print 't1, t9.'
-        #     print matrix
-        #     print ineqs
-        #     print prime_of_index
 
         for c in ineqs:
             if c[2] == c[1] == 0:  # no comp
@@ -383,10 +378,9 @@ def add_of_mul_comps(m_comparisons, num_terms):
     a_comparisons = []
 
     for c in m_comparisons:
-        #if isinstance(c.term1, terms.MulTerm):
         if c.comp == terms.EQ:
             t = -c.term2
-            for mp in c.term1.args:
+            for mp in [m for m in c.term1.args if m.term.index != 0]:
                 t += mp.term * mp.exponent
             a_comparisons.append((t, terms.EQ))
         else:
@@ -398,7 +392,7 @@ def add_of_mul_comps(m_comparisons, num_terms):
                 elif c.comp in [terms.LE, terms.LT]:
                     # pos < neg. contradiction. This shouldn't happen
                     raise Exception("Problem in log conversion." + str(c))
-            t = c.term1 - c.term2.term
+            t = -c.term2.term if c.term1.index == 0 else c.term1 - c.term2.term
             const = fractions.Fraction(c.term2.coeff)
             if const.numerator != 1:
                 fac = primes.factorization(const.numerator)
@@ -418,33 +412,28 @@ def add_of_mul_comps(m_comparisons, num_terms):
     return a_comparisons, prime_of_index, indstore.i
 
 
-def get_multiplicative_information(blackboard):
+def get_multiplicative_information(B):
     """
     Retrieves the relevant information from the blackboard.
     Filters to only comparisons and equations where sign information is known, and converts to
     absolute value form.
     Note: in the returned comparisons, t_j represents |t_j|
     """
-    derive_info_from_definitions(blackboard)
 
     comparisons = []
-    for c in (c for c in blackboard.get_inequalities() + blackboard.get_equalities()
+    for c in (c for c in B.get_inequalities() + B.get_equalities()
               if c.term2.coeff != 0):
         ind1 = c.term1.index
         ind2 = c.term2.term.index
-        if blackboard.sign(ind1) != 0 and blackboard.sign(ind2) != 0:
-            comparisons.append(make_term_comparison_abs(c, blackboard))
+        if B.sign(ind1) != 0 and B.sign(ind2) != 0:
+            comparisons.append(make_term_comparison_abs(c, B))
 
-    for key in blackboard.term_defs:
-        if (isinstance(blackboard.term_defs[key], terms.MulTerm) and blackboard.sign(key) != 0 and
-                all(blackboard.sign(p.term.index) != 0 for p in blackboard.term_defs[key].args)):
+    for key in B.term_defs:
+        if (isinstance(B.term_defs[key], terms.MulTerm) and B.sign(key) != 0 and
+                all(B.sign(p.term.index) != 0 for p in B.term_defs[key].args)):
             comparisons.append(
-                terms.TermComparison(blackboard.term_defs[key], terms.EQ, terms.IVar(key))
+                terms.TermComparison(B.term_defs[key], terms.EQ, terms.IVar(key))
             )
-
-    # print 'we have mul comparisons:'
-    # for c in comparisons:
-    #     print '  ', c
 
     return comparisons
 
@@ -456,7 +445,7 @@ class PolyMultiplicationModule:
     def update_blackboard(self, B):
         messages.announce_module('polyhedron multiplicative module')
 
-    #    learn_additive_sign_info(blackboard)
+        derive_info_from_definitions(blackboard)
 
         m_comparisons = get_multiplicative_information(B)
         # Each ti in m_comparisons really represents |t_i|.
@@ -472,7 +461,6 @@ class PolyMultiplicationModule:
         messages.announce('Vertex matrix:', messages.DEBUG)
         for l in v_matrix:
             messages.announce(str(l), messages.DEBUG)
-        #messages.announce(str(v_matrix), messages.DEBUG)
         messages.announce('Linear set:', messages.DEBUG)
         messages.announce(str(v_lin_set), messages.DEBUG)
 
@@ -480,8 +468,6 @@ class PolyMultiplicationModule:
                                               B.num_terms, prime_of_index)
 
         for m1, m2, coeff, comp in new_comparisons:
-            # coeff * m1 * m2 comp
-            #print coeff, '*', m1, '*', m2, terms.comp_str[comp], '1'
             c = process_mul_comp(m1, m2, coeff, comp, B)
             if c is not None:
                 B.assert_comparison(c)
