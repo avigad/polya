@@ -743,6 +743,146 @@ class TermComparison():
 
 ####################################################################################################
 #
+# Clauses
+#
+####################################################################################################
+
+class Clause:
+    """
+    A clause contains a dictionary that maps indices (i, j) or i to lists of term comparisons
+    comparing ti and tj, or ti and 0.
+    It represents the disjunction of all contained comparisons.
+    """
+    def __init__(self, comparisons):
+        """
+        comparisons is a list of term comparisons.
+        Indexes them into the comparison map by IVar index.
+        """
+        self.comparisons, self.zero_comparisons = {}, {}
+        for c in comparisons:
+            if isinstance(c, TermComparison):
+                ca = c.canonize()
+                i = ca.term1.index
+                j = ca.term2.term.index if isinstance(ca.term2.term, IVar) else 0
+                comp, coeff = ca.comp, ca.term2.coeff
+            else:  # c is a tuple
+                i, comp, coeff, j = c[0], c[1], c[2], c[3]
+            if coeff == 0:
+                if i in self.zero_comparisons: # do we need to check for ca in self.cmap[i]?
+                    self.zero_comparisons[i].append(comp)
+                else:
+                    self.zero_comparisons[i] = [comp]
+            else:
+                if (i, j) in self.comparisons:
+                    self.comparisons[i, j].append((comp, coeff))
+                else:
+                    self.comparisons[i, j] = [(comp, coeff)]
+        self.satisfied = False
+
+    def __len__(self):
+        """
+        Returns the number of disjuncts in the clause.
+        """
+        return (sum(len(self.comparisons[key]) for key in self.comparisons) +
+                sum(len(self.zero_comparisons[key]) for key in self.zero_comparisons))
+
+    def __str__(self):
+        cstrs = []
+        for key in self.zero_comparisons:
+            for c in self.zero_comparisons[key]:
+                cstrs.append(str(comp_eval[c](IVar(key), 0)))
+
+        for (i, j) in self.comparisons:
+            for (comp, coeff) in self.comparisons[i, j]:
+                cstrs.append(str(comp_eval[comp](IVar(i), coeff*IVar(j))))
+        return "{" + " or ".join(cstrs) + "}"
+
+    def __repr__(self):
+        return str(self)
+
+    def __eq__(self, other):
+        if not isinstance(other, Clause):
+            return False
+        for key in self.comparisons:
+            if key not in other.comparisons or self.comparisons[key] != other.comparisons[key]:
+                return False
+        for key in self.zero_comparisons:
+            if key not in other.zero_comparisons or \
+                            self.zero_comparisons[key] != other.zero_comparisons[key]:
+                return False
+        return True
+
+
+    def unit(self):
+        """
+        Returns true if there is only one disjunct left. False otherwise.
+        """
+        ctr = 0
+        for k in self.comparisons:
+            ctr += len(self.comparisons[k])
+            if ctr>1:
+                return False
+        for k in self.zero_comparisons:
+            ctr += len(self.zero_comparisons[k])
+            if ctr>1:
+                return False
+        return ctr == 1
+
+    def first(self):
+        """
+        Returns an arbitrary disjunct from the clause.
+        Specifically, if the clause has one element, it returns that element.
+        Raises exception if len is 0
+        """
+        try:
+            k = next(key for key in self.comparisons if len(self.comparisons[key]) != 0)
+            comp, coeff = self.comparisons[k][0]
+            return comp_eval[comp](IVar(k[0]), coeff*IVar(k[1]))
+        except StopIteration:
+            pass
+        k = next(key for key in self.zero_comparisons if len(self.zero_comparisons[key]) != 0)
+        return comp_eval[self.zero_comparisons[k][0]](IVar(k), 0)
+
+    def update_on_index(self, i, B):
+        """
+        Looks at all disjuncts involving index i and sees if they are satisfied in blackboard B.
+        """
+        if i in self.zero_comparisons:
+            self.zero_comparisons[i] = [c for c in self.zero_comparisons[i]
+                                     if not B.implies(i, comp_negate(c), 0, 0)]
+            if any(B.implies(i, c, 0, 0) for c in self.zero_comparisons[i]):
+                self.satisfied = True
+                return
+            if len(self.zero_comparisons[i]) == 0:
+                del self.zero_comparisons[i]
+
+        for (j, k) in (key for key in self.comparisons if key[0]==i or key[1]==i):
+            self.update_on_indices(i, j, B)
+
+    def update_on_indices(self, i, j, B):
+        """
+        Looks at all disjuncts involving indices i and j and sees if they are satisfied in B.
+        """
+        if (i, j) in self.comparisons:
+            self.comparisons[i, j] = [(comp, coeff) for (comp, coeff) in self.comparisons[i, j]
+                                      if not B.implies(i, comp_negate(comp), coeff, j)]
+            if any(B.implies(i, comp, coeff, j) for (comp, coeff) in self.comparisons[i, j]):
+                self.satisfied = True
+                return
+            if len(self.comparisons[i, j]) == 0:
+                del self.comparisons[i, j]
+
+    def update(self, B):
+        for k in self.zero_comparisons:
+            self.update_on_index(k, B)
+        for (i, j) in self.comparisons:
+            self.update_on_indices(i, j, B)
+
+
+
+
+####################################################################################################
+#
 # Constants
 #
 ####################################################################################################

@@ -79,12 +79,16 @@ class Blackboard():
         self.disequalities = {}  # Dictionary mapping (i, j) to a set of coeffs
         self.zero_disequalities = set([])  # Set of IVar indices not equal to 0
 
+        self.clauses = []  # List of Clauses
+
     def term_name(self, t):
         """
         Assumes t is a canonized term without IVars. Returns an IVar that represents t, if
         there is one. If not, recursively creates indices representing t and all its subterms, as
         needed.
         """
+        if isinstance(t, terms.IVar):
+            return t
         if t.key in self.term_names:
             return terms.IVar(self.term_names[t.key])
         else:
@@ -144,6 +148,36 @@ class Blackboard():
             for coeff in coeff_list:
                 disequalities.append(terms.IVar(p[0]) != coeff * terms.IVar(p[1]))
         return disequalities
+
+    def update_clause(self, *p):
+        for c in self.clauses:
+            if len(p) == 1:
+                c.update_on_index(p[0], self)
+            else:
+                c.update_on_indices(p[0], p[1], self)
+
+        self.clauses = [c for c in self.clauses if not c.satisfied]
+
+        empty, unit = None, []
+        for c in self.clauses:
+            l = len(c)
+            if l == 0:
+                empty = c
+                break
+            elif l == 1:
+                unit.append(c)
+                self.clauses.remove(c)
+
+        if empty is not None:
+            messages.announce("Contradiction from clause.", messages.DEBUG)
+            self.raise_contradiction(100, terms.EQ, 100, 100)
+        else:
+            for c in unit:
+                tc = c.first()
+                self.assert_comparison(tc)
+                #self.clauses.remove(c)
+
+
 
     def implies(self, i, comp, coeff, j):
         """
@@ -354,6 +388,8 @@ class Blackboard():
             if len(n_diseqs) > 0:
                 self.disequalities[i, j] = n_diseqs
 
+        self.update_clause(i, j)
+
     def assert_zero_inequality(self, i, comp):
         """
         Adds the inequality "ti comp 0".
@@ -416,6 +452,8 @@ class Blackboard():
         for c in new_zero_ineqs:
             self.assert_comparison(c)
 
+        self.update_clause(i)
+
     def assert_equality(self, i, coeff, j):
         """
         Adds the equality "ti = coeff * tj"
@@ -426,6 +464,7 @@ class Blackboard():
         if (i, j) in self.disequalities:
             self.disequalities.pop(i, j)
         self.announce_comparison(i, terms.EQ, coeff, j)
+        self.update_clause(i, j)
 
     def assert_zero_equality(self, i):
         """
@@ -434,6 +473,7 @@ class Blackboard():
         self.zero_equalities.add(i)
         # todo: there's a lot of simplification that could happen if a term is equal to 0
         self.announce_zero_comparison(i, terms.EQ)
+        self.update_clause(i)
 
     def assert_disequality(self, i, coeff, j):
         """
@@ -460,13 +500,13 @@ class Blackboard():
             else:
                 self.disequalities[i, j] = {coeff}
 
+        self.update_clause(i, j)
+
     def assert_zero_disequality(self, i):
         """
         Adds the equality "ti != 0"
         """
         self.announce_zero_comparison(i, terms.NE)
-
-        self.zero_disequalities.add(i)
 
         if i in self.zero_inequalities:
             comp = self.zero_inequalities[i]
@@ -474,6 +514,35 @@ class Blackboard():
                 self.assert_zero_inequality(i, terms.LT)
             elif comp == terms.GE:
                 self.assert_zero_inequality(i, terms.GT)
+        else:
+            self.zero_disequalities.add(i)
+
+        self.update_clause(i)
+
+    def assert_clause(self, *literals):
+        """
+        Takes a list of TermComparisons representing a disjunction.
+        Stores the list as a Clause object.
+        """
+        disjunctions = []
+        for l in literals:
+            tc = l.canonize()
+            i, j = self.term_name(tc.term1).index, self.term_name(tc.term2.term).index
+            disjunctions.append((i, tc.comp, tc.term2.coeff, j))
+        c = terms.Clause(disjunctions)
+
+        messages.announce('Asserting clause: {0!s}'.format(c), messages.ASSERTION)
+        #todo: ASSERTION_FULL version
+
+        c.update(self)
+        l = len(c)
+        if l > 1:
+            self.clauses.append(c)
+        elif l == 1:
+            self.assert_comparison(c.first())
+        else:
+            messages.announce("Contradiction from clause.", messages.DEBUG)
+            self.raise_contradiction(100, terms.EQ, 100, 100)
 
     def announce_comparison(self, i, comp, coeff, j):
         """
@@ -582,6 +651,8 @@ if __name__ == '__main__':
 
     B = Blackboard()
 
+    B.assert_clause(x > y, z != 0, x < y)
+
     B.assert_comparison(x < y)
     B.assert_comparison(y > 4 * x)
     B.assert_comparison(y < -x)
@@ -597,14 +668,3 @@ if __name__ == '__main__':
     B.assert_comparison(-2 * (x + y) * w >=
                         (x + (y * z) ** 5 + (3 * u + 2 * v) ** 2) ** 4 * (
                             u + 3 * v + u + v + x) ** 2)
-
-    print B.get_equalities()
-    print B.get_inequalities()
-    print B.get_disequalities()
-
-    print B.implies(0, terms.GT, 2, 0)
-    print B.implies(18, terms.NE, 9, 23)
-    print B.implies(1, terms.LT, fractions.Fraction(1, 4), 2)
-
-    print
-    print B.inequalities

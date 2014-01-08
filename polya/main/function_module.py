@@ -24,9 +24,20 @@ import messages
 # from scipy.linalg import lu
 # from numpy import array
 
+class Axiom:
+    """
+    literals is a list of term_comparisons
+    triggers is
+    """
+    def __init__(self, literals, triggers=list()):
+        pass
+
+def instantiate(axiom, B):
+    pass
+
 class FunctionModule:
 
-    def __init__(self, axioms = []):
+    def __init__(self, axioms=list()):
         """
         axioms is a list of Axiom objects.
         """
