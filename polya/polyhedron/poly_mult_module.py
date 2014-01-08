@@ -445,7 +445,7 @@ class PolyMultiplicationModule:
     def update_blackboard(self, B):
         messages.announce_module('polyhedron multiplicative module')
 
-        derive_info_from_definitions(blackboard)
+        derive_info_from_definitions(B)
 
         m_comparisons = get_multiplicative_information(B)
         # Each ti in m_comparisons really represents |t_i|.
