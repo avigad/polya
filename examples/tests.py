@@ -45,6 +45,7 @@ def run(B):
     except terms.Contradiction as e:
         #print e.msg
         #print
+        messages.announce(e.msg, messages.ASSERTION)
         return True
 
 def solve(*assertions):
@@ -112,6 +113,22 @@ def test4():
     B.assert_comparison(a<b)
     B.assert_comparison(f(a) > f(b))
     fm.update_blackboard(B)
+
+def test5():
+
+    f = terms.Func('f')
+    x, y, z, w, r, s = terms.Vars('x, y, z, w, r, s')
+    u, v = terms.UVar(1), terms.UVar(2)
+
+    B = blackboard.Blackboard()
+    ax = function_module.Axiom([u>=v, f(u)<f(v)])
+
+    fm = function_module.FunctionModule([ax])
+
+    B.assert_comparisons(0<r, s>1, 0<x, x<y, w>z, z+f(x)>w+f(s*(y+r)))
+    fm.update_blackboard(B)
+
+    run(B)
 
 def tests():
     messages.set_verbosity(messages.quiet)
@@ -283,7 +300,7 @@ def z3test():
     print s
     #print s.model()
 
-test4()
+test5()
 #tests()
 #messages.set_verbosity(messages.debug)
 #print solve(x<1, 1<y, x*y>1, u+x>=y+1, x**2*y<2-u*x*y)
