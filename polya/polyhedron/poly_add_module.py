@@ -14,11 +14,11 @@
 #
 ####################################################################################################
 
-from polya.main import terms
-from polya.main import blackboard
-from polya.main import messages
-from polya.util import geometry as geo
-from polya.polyhedron import lrs_polyhedron_util as lrs_util
+import polya.main.terms as terms
+import polya.main.blackboard as blackboard
+import polya.main.messages as messages
+import polya.util.geometry as geo
+import polya.polyhedron.lrs_polyhedron_util as lrs_util
 import itertools
 
 

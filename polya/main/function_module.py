@@ -15,9 +15,9 @@
 #
 ####################################################################################################
 
-import terms
+import polya.main.terms as terms
 #import blackboard
-import messages
+import polya.main.messages as messages
 import fractions
 import numbers
 import copy

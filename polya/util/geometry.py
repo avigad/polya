@@ -1,5 +1,5 @@
 #from ..main import terms
-from polya.main import terms
+import polya.main.terms as terms
 import fractions
 
 

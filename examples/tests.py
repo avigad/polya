@@ -21,7 +21,7 @@ import polya.polyhedron.poly_mult_module as poly_mult_module
 import polya.main.messages as messages
 import polya.main.function_module as function_module
 import timeit
-#import z3
+import z3
 
 x, y, u, v, w, z, r = terms.Vars('x, y, u, v, w, z, r')
 a, b, c, d, e = terms.Vars('a, b, c, d, e')

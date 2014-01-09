@@ -14,13 +14,12 @@
 #
 ####################################################################################################
 
-from polya.main import terms
-from polya.main import blackboard
-from polya.main import messages
-#from polya.utils import geometry as geo
-from polya.polyhedron import lrs_polyhedron_util as lrs_util
-from polya.polyhedron import poly_add_module
-from polya.util import primes
+import polya.main.terms as terms
+import polya.main.blackboard as blackboard
+import polya.main.messages as messages
+import polya.polyhedron.lrs_polyhedron_util as lrs_util
+import polya.polyhedron.poly_add_module as poly_add_module
+import polya.util.primes as primes
 
 import cdd
 
