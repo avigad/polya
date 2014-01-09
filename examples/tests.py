@@ -18,6 +18,7 @@ import terms
 import blackboard
 import poly_add_module
 import poly_mult_module
+import function_module
 import messages
 import timeit
 #import fractions
@@ -97,6 +98,20 @@ def test3():
     # "x+1/y<2", "y<0", "y/x>1", "-2<=x<=2", "-2<=y<=2", "x^2*y^(-1)>1-x"
     B.assert_comparisons(x+1/y<2, y<0, y/x>1, -2<=x, x<=2, -2<=y, y<=2, x**2*y**(-1)>1-x)
     run(B)
+
+def test4():
+    f = terms.Func('f')
+    a, b, c = terms.Vars('a, b, c')
+    u, v, w = terms.UVar(1), terms.UVar(2), terms.UVar(3)
+
+    B = blackboard.Blackboard()
+    ax = function_module.Axiom([u>=v, f(u)<f(v)])
+
+    fm = function_module.FunctionModule([ax])
+
+    B.assert_comparison(a<b)
+    B.assert_comparison(f(a) > f(b))
+    fm.update_blackboard(B)
 
 def tests():
     messages.set_verbosity(messages.quiet)
@@ -268,7 +283,8 @@ def z3test():
     print s
     #print s.model()
 
-tests()
+test4()
+#tests()
 #messages.set_verbosity(messages.debug)
 #print solve(x<1, 1<y, x*y>1, u+x>=y+1, x**2*y<2-u*x*y)
 #print solve(x*(y+z)<=0, y+z>0, x>=0, x*w>0)
