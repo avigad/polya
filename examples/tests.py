@@ -14,11 +14,11 @@
 
 
 from __future__ import division
-import terms
-import blackboard
-import poly_add_module
-import poly_mult_module
-import messages
+from polya.main import terms
+from polya.main import blackboard
+from polya.polyhedron import poly_add_module
+from polya.polyhedron import poly_mult_module
+from polya.main import messages
 import timeit
 #import fractions
 import z3

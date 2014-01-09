@@ -14,29 +14,19 @@
 #
 ####################################################################################################
 
-import terms
-import messages
-#import geometry as geo
-import itertools
-import lrs_polyhedron_util as lrs_util
+from polya.main import terms
+from polya.main import blackboard
+from polya.main import messages
+#from polya.utils import geometry as geo
+from polya.polyhedron import lrs_polyhedron_util as lrs_util
+from polya.polyhedron import poly_add_module
+from polya.util import primes
+
 import cdd
-import blackboard
+
 import fractions
 import math
-import primes
-import poly_add_module
-
-# from ..main import terms
-# from ..main import messages
-# #import geometry as geo
-# import itertools
-# import lrs_polyhedron_util as lrs_util
-# import cdd
-# from ..main import blackboard
-# import fractions
-# import math
-# from ..util import primes
-# import poly_add_module
+import itertools
 
 
 ####################################################################################################

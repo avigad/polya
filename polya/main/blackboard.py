@@ -40,13 +40,8 @@
 
 import terms
 import messages
-import geometry
+from polya.util import geometry
 import fractions
-
-# import terms
-# import messages
-# from ..util import geometry
-# import fractions
 
 
 class Error(Exception):

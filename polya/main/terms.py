@@ -346,6 +346,10 @@ class AddTerm(AppTerm):
                 args.append(b)
         return AddTerm(args) if args else zero
 
+    def scaled(self, c):
+        "Returns the result of scaling self by a constant, c."
+        return AddTerm([a * c for a in self.args])
+
 
 class MulTerm(AppTerm):
 
@@ -522,7 +526,7 @@ class STerm:
         if self.coeff == 0:
             return other
         elif isinstance(self.term, AddTerm):
-            return self.coeff * self.term + other    # make first term an AddTerm
+            return self.term.scaled(self.coeff) + other    # make first term an AddTerm
         elif isinstance(other, numbers.Rational):
             return self + STerm(other, One())
         elif isinstance(other, AddTerm):

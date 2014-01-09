@@ -14,9 +14,10 @@
 #
 ####################################################################################################
 
-#from ..main import terms
-import terms
-import lrs
+from polya.main import terms
+from polya.polyhedron import lrs
+
+# where should this go?
 import cdd  # This is needed for matrix formatting. Can we get around this?
 
 
