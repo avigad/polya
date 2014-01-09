@@ -877,9 +877,9 @@ class Clause:
                 del self.comparisons[i, j]
 
     def update(self, B):
-        for k in self.zero_comparisons:
+        for k in self.zero_comparisons.keys():
             self.update_on_index(k, B)
-        for (i, j) in self.comparisons:
+        for (i, j) in self.comparisons.keys():
             self.update_on_indices(i, j, B)
 
 

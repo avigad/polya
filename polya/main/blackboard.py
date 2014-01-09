@@ -38,10 +38,10 @@
 #
 ####################################################################################################
 
-import terms
-import messages
-from polya.util import geometry
-import fractions
+
+import polya.main.terms as terms
+import polya.main.messages as messages
+import polya.util.geometry as geometry
 
 
 class Error(Exception):
@@ -519,6 +519,7 @@ class Blackboard():
         Takes a list of TermComparisons representing a disjunction.
         Stores the list as a Clause object.
         """
+        #todo: ASSERTION_FULL version
         disjunctions = []
         for l in literals:
             tc = l.canonize()
@@ -526,10 +527,13 @@ class Blackboard():
             disjunctions.append((i, tc.comp, tc.term2.coeff, j))
         c = terms.Clause(disjunctions)
 
-        messages.announce('Asserting clause: {0!s}'.format(c), messages.ASSERTION)
-        #todo: ASSERTION_FULL version
+        s = str(c)
 
         c.update(self)
+        if c.satisfied:
+            return
+
+        messages.announce('Asserting clause: {0!s}'.format(s), messages.ASSERTION)
         l = len(c)
         if l > 1:
             self.clauses.append(c)
@@ -537,7 +541,7 @@ class Blackboard():
             self.assert_comparison(c.first())
         else:
             messages.announce("Contradiction from clause.", messages.DEBUG)
-            self.raise_contradiction(100, terms.EQ, 100, 100)
+            self.raise_contradiction(0, terms.EQ, 0, 0)
 
     def announce_comparison(self, i, comp, coeff, j):
         """
