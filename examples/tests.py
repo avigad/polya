@@ -18,6 +18,7 @@ import polya.main.terms as terms
 import polya.main.blackboard as blackboard
 import polya.polyhedron.poly_add_module as poly_add_module
 import polya.polyhedron.poly_mult_module as poly_mult_module
+import polya.fourier_motzkin.addition_module as fm_add_module
 import polya.main.messages as messages
 import polya.main.function_module as function_module
 import timeit
@@ -29,6 +30,7 @@ n, k, p = terms.Vars('n, k, p')
 
 def run(B):
     pa, pm = poly_add_module.PolyAdditionModule(), poly_mult_module.PolyMultiplicationModule()
+#    pa, pm = fm_add_module.FMAdditionModule(), poly_mult_module.PolyMultiplicationModule()
     try:
         s, s2 = '', '1'
         while s != s2:
@@ -299,7 +301,7 @@ def z3test():
     print s
     #print s.model()
 
-test5()
+test1()
 #tests()
 #messages.set_verbosity(messages.debug)
 #print solve(x<1, 1<y, x*y>1, u+x>=y+1, x**2*y<2-u*x*y)
