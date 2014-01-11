@@ -125,7 +125,7 @@ def cast_to_sum(term):
     Represents any additive term built up from IVars as a Sum.
     """
     if term.key == terms.zero.key:
-        return terms.Sum([])
+        return Sum([])
     elif isinstance(term, terms.AddTerm):
         return Sum([cast_to_summand(a) for a in term.args])
     else:
@@ -266,7 +266,7 @@ def inequality_to_zero_comparison(c):
 
 def get_additive_information(B):
     """
-    Retrieves known additive comparisons and inequalities from the blackboard B
+    Retrieves known additive comparisons and inequalities from the blackboard B.
     """
     zero_equalities = [equality_to_zero_equality(c) for c in B.get_equalities()]
     zero_comparisons = [inequality_to_zero_comparison(c) for c in B.get_inequalities()]
@@ -354,7 +354,7 @@ class FMAdditionModule:
                 assert_comparisons_to_blackboard(ij_eqs, ij_comps, B)
                 # done with IVar(j)
                 i_eqs, i_comps = elim(i_eqs, i_comps, j)
-            # add this stage, i_eqs and i_comps contain only comparisons with IVar(i) alone
+            # add this point, i_eqs and i_comps contain only comparisons with IVar(i) alone
             assert_comparisons_to_blackboard(i_eqs, i_comps, B)
             # done with IVar(i)
             eqs, comps = elim(eqs, comps, i)
