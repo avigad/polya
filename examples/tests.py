@@ -162,6 +162,19 @@ def test6():
 
     run(C)
 
+def test7():
+    x, y, z = terms.Vars('x, y, z')
+    f = terms.Func('f')
+    fm = function_module.FunctionModule(
+        [formulas.ForAll([x, y], (f(x)+f(y))/2 >= f((x+y)/2))]
+    )
+
+    C = blackboard.Blackboard()
+    C.assert_comparisons(z>0, f(x)+f(y)-z<0, f((x+y)/2)-4*z>0)
+    fm.update_blackboard(C)
+
+    run(C)
+
 
 def arithmetical_tests():
     x, y, u, v, w, z, r = terms.Vars('x, y, u, v, w, z, r')
@@ -210,16 +223,8 @@ def arithmetical_tests():
 #arithmetical_tests()
 messages.set_verbosity(messages.normal)
 
-#######
-# Bizarre bug here: test6() runs correctly if it is the only test run, but if either 4 or 5 are run
-# first, it behaves badly. What could be causing this??
-#######
 
-test4()
-print '###\n\n'
-test5()
-print '###\n\n'
-test6()
+test7()
 #print solve(x<1, 1<y, x*y>1, u+x>=y+1, x**2*y<2-u*x*y)
 #print solve(x*(y+z)<=0, y+z>0, x>=0, x*w>0)
 

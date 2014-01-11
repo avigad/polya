@@ -82,6 +82,7 @@ class Blackboard():
         there is one. If not, recursively creates indices representing t and all its subterms, as
         needed.
         """
+        #print 'getting a name for', t, '. key:', t.key
         if isinstance(t, terms.IVar):
             return t
         if t.key in self.term_names:

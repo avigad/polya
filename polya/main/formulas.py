@@ -30,8 +30,7 @@ class AxiomException(Exception):
 
 class Axiom:
     """
-    literals is a list of term_comparisons
-    triggers is
+    literals is a list of term_comparisons. The axiom represents their disjunction.
     """
     def __init__(self, literals):
         #todo: make triggers a set

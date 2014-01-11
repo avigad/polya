@@ -297,7 +297,7 @@ def instantiate(axiom, B):
                 lcoeff *= red_coeff
             except NoTermException:
                 sred = red.canonize()
-                lterm = B.term_name(sred.term)
+                lterm = B.term_name(sred.term).index
                 lcoeff = sred.coeff
 
             red = reduce_term(l.term2.term, env)[0]
@@ -307,7 +307,7 @@ def instantiate(axiom, B):
                 rcoeff *= l.term2.coeff*red_coeff
             except NoTermException:
                 sred = red.canonize()
-                rterm = B.term_name(sred.term)
+                rterm = B.term_name(sred.term).index
                 rcoeff = sred.coeff * l.term2.coeff
 
             literals.append(
@@ -337,6 +337,7 @@ class FunctionModule:
         self.axioms.extend(formulas.Axiom(c) for c in clauses)
 
     def update_blackboard(self, B):
+        print B.term_names
         messages.announce_module('function axiom module')
         for a in self.axioms:
             messages.announce("Instantiating axiom: {}".format(a), messages.DEBUG)

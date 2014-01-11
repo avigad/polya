@@ -111,6 +111,12 @@ class Term:
         """Puts the term in a canonical normal form. Always returns an STerm."""
         pass
 
+    def substitute(self, x, y):
+        """
+        Substitutes term x in place of term y in self.
+        """
+        pass
+
     def __str__(self):
         return self.pretty_print()[1]
 
@@ -221,6 +227,12 @@ class Atom(Term):
 
     def canonize(self):
         return STerm(1, self)
+
+    def substitute(self, x, y):
+        if self.key == y.key:
+            return x
+        else:
+            return self
 
 
 class AppTerm(Term):
@@ -352,6 +364,9 @@ class AddTerm(AppTerm):
         """
         return AddTerm([a * c for a in self.args])
 
+    def substitute(self, x, y):
+        return AddTerm([a.substitute(x, y) for a in self.args])
+
 
 class MulTerm(AppTerm):
 
@@ -418,6 +433,9 @@ class MulTerm(AppTerm):
     def __pow__(self, n):
         return MulTerm([a ** n for a in self.args])
 
+    def substitute(self, x, y):
+        return MulTerm([a.substitute(x, y) for a in self.args])
+
 
 class AbsTerm(AppTerm):
 
@@ -432,6 +450,9 @@ class AbsTerm(AppTerm):
 
     def __abs__(self):
         return self
+
+    def substitute(self, x, y):
+        return AbsTerm(self.args[0].substitute(x, y))
 
 
 # TODO: not implemented yet
@@ -594,6 +615,9 @@ class STerm:
         else:
             return STerm(self.coeff ** n, self.term ** n)
 
+    def substitute(self, x, y):
+        return STerm(self.coeff, self.term.substitute(x, y))
+
     def __abs__(self):
         return STerm(abs(self.coeff), abs(self.term))
 
@@ -614,6 +638,7 @@ class STerm:
 
     def __ne__(self, other):
         return TermComparison(self, NE, other)
+
 
 
 ####################################################################################################
@@ -651,6 +676,9 @@ class MulPair:
 
     def __pow__(self, n):
         return MulPair(self.term, self.exponent * n)
+
+    def substitute(self, x, y):
+        return MulPair(self.term.substitute(x, y), self.exponent)
 
 
 ####################################################################################################
