@@ -15,17 +15,14 @@
 
 from __future__ import division
 import polya.main.terms as terms
+import polya.main.formulas as formulas
 import polya.main.blackboard as blackboard
 import polya.polyhedron.poly_add_module as poly_add_module
 import polya.polyhedron.poly_mult_module as poly_mult_module
 import polya.main.messages as messages
 import polya.main.function_module as function_module
 import timeit
-import z3
 
-x, y, u, v, w, z, r = terms.Vars('x, y, u, v, w, z, r')
-a, b, c, d, e = terms.Vars('a, b, c, d, e')
-n, k, p = terms.Vars('n, k, p')
 
 def run(B):
     pa, pm = poly_add_module.PolyAdditionModule(), poly_mult_module.PolyMultiplicationModule()
@@ -47,13 +44,17 @@ def run(B):
         messages.announce(e.msg, messages.ASSERTION)
         return True
 
+
 def solve(*assertions):
     #print 'Beginning heuristic.\n'
     B = blackboard.Blackboard()
     B.assert_comparisons(*assertions)
     return run(B)
 
+
 def test1():
+    x, y, u, v, w, z, r = terms.Vars('x, y, u, v, w, z, r')
+
     B = blackboard.Blackboard()
     B.assert_comparison(0 < x)
     B.assert_comparison(x < 3*y)
@@ -67,10 +68,12 @@ def test1():
     # It does not have a model if the last inequality is >=. Contradiction is found.
     # "0<x<3*y", "u<v<0", "1<v^2<x", "u*(3*y)^2+1 >= x^2*v+x"
 
-
     run(B)
 
+
 def test2():
+    x, y, u, v, w, z, r = terms.Vars('x, y, u, v, w, z, r')
+
     messages.set_verbosity(messages.normal)
     B = blackboard.Blackboard()
 
@@ -91,7 +94,10 @@ def test2():
 
 t = timeit.default_timer()
 
+
 def test3():
+    x, y, u, v, w, z, r = terms.Vars('x, y, u, v, w, z, r')
+
     messages.set_verbosity(messages.normal)
     B = blackboard.Blackboard()
 
@@ -99,37 +105,68 @@ def test3():
     B.assert_comparisons(x+1/y<2, y<0, y/x>1, -2<=x, x<=2, -2<=y, y<=2, x**2*y**(-1)>1-x)
     run(B)
 
+
 def test4():
     f = terms.Func('f')
     a, b, c = terms.Vars('a, b, c')
-    u, v, w = terms.UVar(1), terms.UVar(2), terms.UVar(3)
+    #u, v, w = terms.UVar(1), terms.UVar(2), terms.UVar(3)
 
     B = blackboard.Blackboard()
-    ax = function_module.Axiom([u>=v, f(u)<f(v)])
 
-    fm = function_module.FunctionModule([ax])
+    fm = function_module.FunctionModule(
+        [formulas.ForAll([a, b], formulas.Implies(a<b, f(a)<f(b)))]
+    )
 
     B.assert_comparison(a<b)
     B.assert_comparison(f(a) > f(b))
-    fm.update_blackboard(B)
+    try:
+        fm.update_blackboard(B)
+    except terms.Contradiction:
+        print 'contradiction found by axiom module'
+
 
 def test5():
 
     f = terms.Func('f')
     x, y, z, w, r, s = terms.Vars('x, y, z, w, r, s')
-    u, v = terms.UVar(1), terms.UVar(2)
+    #u, v = terms.UVar(1), terms.UVar(2)
 
     B = blackboard.Blackboard()
-    ax = function_module.Axiom([u>=v, f(u)<f(v)])
 
-    fm = function_module.FunctionModule([ax])
+    fm = function_module.FunctionModule([formulas.ForAll([x, y], formulas.Implies(x<y, f(x)<f(y)))])
+    #fm = function_module.FunctionModule([f(p)!=f(q)])
 
     B.assert_comparisons(0<r, s>1, 0<x, x<y, w>z, z+f(x)>w+f(s*(y+r)))
-    fm.update_blackboard(B)
+    try:
+        fm.update_blackboard(B)
+    except terms.Contradiction:
+        print 'contradiction found by axiom module'
+        return
 
     run(B)
 
-def tests():
+
+def test6():
+    f = terms.Func('f')
+    x, y, z, w, r, s = terms.Vars('x, y, z, w, r, s')
+    u, v = terms.UVar(1), terms.UVar(2)
+
+    C = blackboard.Blackboard()
+
+    fm = function_module.FunctionModule(
+        [formulas.ForAll([x, y], (f(x)+f(y))/2 >= f((x+y)/2))]
+    )
+
+    C.assert_comparisons(f(x)+f(y)<z, f((x+y)/2)>4*z, z>0)
+    fm.update_blackboard(C)
+
+    run(C)
+
+
+def arithmetical_tests():
+    x, y, u, v, w, z, r = terms.Vars('x, y, u, v, w, z, r')
+    a, b, c, d, e = terms.Vars('a, b, c, d, e')
+
     messages.set_verbosity(messages.quiet)
 
     problems = [
@@ -169,141 +206,23 @@ def tests():
         else:
             print 'Test {} incorrect.'.format(i+1)
 
-def z3test():
-    print 'new version:'
-    t0, t1, t2, t3, t4, t5, t6, t7, t8, t9 = z3.Reals('t0 t1 t2 t3 t4 t5 t6 t7 t8 t9')
-    a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11 = \
-        z3.Reals('a0 a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11')
-    bools = [z3.Bool('b'+str(i)) for i in range(100)]
-    s = z3.Solver()
-    #s.add(t4==t0+t2, t6==t5+t1, t8==t0-.5*t7)
-    eqs = [t3==t1*t2, t7==t5*t1*t2, t9==t2*t1**2]
-    ineqs = [
-        t0 > 0,
-        t1 > 0,
-        t2 > 0,
-        t3 > 0,
-        t4 > 0,
-        t5 > 0,
-        t6 > 0,
-        t7 > 0,
-        t8 > 0,
-        t9 > 0,
-        t0 > t1,
-        t0 < t2,
-        t0 < t3,
-        t0 < (1/2)*t4,
-        t0 < t5,
-        t0 < (1/2)*t6,
-        t1 < t2,
-        t1 < t3,
-        t1 < (1/2)*t4,
-        t1 < t5,
-        t1 > -1*t5,
-        t1 < (1/2)*t6,
-        t2 < t4,
-        t2 > (1/2)*t4,
-        t2 < t5,
-        t2 < t6,
-        t4 < 2*t5,
-        t4 <= t6,
-        t5 > (1/2)*t6,
-        t7 > -2*t8,
-        t8 > (1/2)*t9,
 
-        t1 >= t9
-    ]
+#arithmetical_tests()
+messages.set_verbosity(messages.normal)
 
-    i = 0
-    for e in eqs:
-        s.add(z3.Implies(bools[i], e))
-        i+=1
+#######
+# Bizarre bug here: test6() runs correctly if it is the only test run, but if either 4 or 5 are run
+# first, it behaves badly. What could be causing this??
+#######
 
-    for e in ineqs:
-        s.add(z3.Implies(bools[i], e))
-        i+=1
-
-    for b in bools:
-        s.add(b)
-
-    print s
-    print s.check()
-    print s.model()
-    print
-    print
-
-
-    i = 0
-
-    print 'old version:'
-    s = z3.Solver()
-    eqs = [a2 == (a0 + -1*a1),a4 == (a0 + -1*a3),a6 == (a0 + -1*a5),a8 == (a0 + -1*a7 + -1*a1 + a3),
-           a11 == (a0 + -1/2*a9 + -1/2*a10)]
-    for e in eqs:
-        s.add(z3.Implies(bools[i], e))
-        i+=1
-
-    ineqs = [
-        a0 > 0,
-        a1 > 0,
-        a2 > 0,
-        a3 > 0,
-        a4 < 0,
-        a5 > 0,
-        a6 < 0,
-        a7 > 0,
-        a8 <= 0,
-        a9 > 0,
-        a10 > 0,
-        a11 > 0,
-
-        a5 < 1 * a9,
-        a4 > -1 * a7,
-        a1 < 1 * a3,
-        a5 > -1 * a6,
-        a6 > -1 * a9,
-        a0 < 1 * a7,
-        a3 < 1 * a7,
-        a0 < 1 * a3,
-        a1 > -1 * a2,
-        a4 > -1 * a9,
-        a2 < 1 * a9,
-        a3 > 1 * a10,
-        a1 < 1 * a5,
-        a3 > -1 * a6,
-        a1 < 1 * a10,
-        a7 < 1 * a9,
-        a2 < 1 * a7,
-        a7 > 1 * a10,
-        a3 < 1 * a9,
-        a0 < 1 * a5,
-        a6 > -1 * a7,
-        a3 > 1 * a5,
-        a0 > 1 * a1,
-        a5 > 1 * a10,
-        a3 > -1 * a4,
-        a5 < 1 * a7,
-        a1 > -1 * a7,
-        a1 < 1 * a7,
-        a0 < 1 * a9,
-        a7 > -1 * a8
-    ]
-
-    for e in ineqs:
-        s.add(z3.Implies(bools[i], e))
-        i+=1
-
-    print s.check(*[b for b in bools])
-    #print s.model()
-    print s.unsat_core()
-    print s
-    #print s.model()
-
+test4()
+print '###\n\n'
 test5()
-#tests()
-#messages.set_verbosity(messages.debug)
+print '###\n\n'
+test6()
 #print solve(x<1, 1<y, x*y>1, u+x>=y+1, x**2*y<2-u*x*y)
 #print solve(x*(y+z)<=0, y+z>0, x>=0, x*w>0)
-#z3test()
+
+
 
 print 'Ran in', round(timeit.default_timer()-t, 3), 'seconds'

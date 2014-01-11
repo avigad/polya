@@ -347,7 +347,9 @@ class AddTerm(AppTerm):
         return AddTerm(args) if args else zero
 
     def scaled(self, c):
-        "Returns the result of scaling self by a constant, c."
+        """
+        Returns the result of scaling self by a constant, c.
+        """
         return AddTerm([a * c for a in self.args])
 
 
@@ -753,8 +755,9 @@ class TermComparison():
 
 class Clause:
     """
-    A clause contains a dictionary that maps indices (i, j) or i to lists of term comparisons
-    comparing ti and tj, or ti and 0.
+    A clause contains dictionaries that map IVar indices i to comparisons representing ti comp 0,
+    and pairs of IVar indices (i, j) to pairs (comp, coeff) representing ti comp coeff*tj.
+
     It represents the disjunction of all contained comparisons.
     """
     def __init__(self, comparisons):
@@ -772,7 +775,10 @@ class Clause:
             else:  # c is a tuple
                 i, comp, coeff, j = c[0], c[1], c[2], c[3]
             if coeff == 0:
-                if i in self.zero_comparisons: # do we need to check for ca in self.cmap[i]?
+                print self.zero_comparisons
+                print self
+                print c
+                if i in self.zero_comparisons:  # do we need to check for ca in self.cmap[i]?
                     self.zero_comparisons[i].append(comp)
                 else:
                     self.zero_comparisons[i] = [comp]
@@ -816,6 +822,8 @@ class Clause:
                 return False
         return True
 
+    def __hash__(self):
+        return hash(str(self))
 
     def unit(self):
         """
@@ -824,11 +832,11 @@ class Clause:
         ctr = 0
         for k in self.comparisons:
             ctr += len(self.comparisons[k])
-            if ctr>1:
+            if ctr > 1:
                 return False
         for k in self.zero_comparisons:
             ctr += len(self.zero_comparisons[k])
-            if ctr>1:
+            if ctr > 1:
                 return False
         return ctr == 1
 
@@ -860,7 +868,7 @@ class Clause:
             if len(self.zero_comparisons[i]) == 0:
                 del self.zero_comparisons[i]
 
-        for (j, k) in (key for key in self.comparisons if key[0]==i or key[1]==i):
+        for (j, k) in (key for key in self.comparisons if key[0] == i or key[1] == i):
             self.update_on_indices(i, j, B)
 
     def update_on_indices(self, i, j, B):
@@ -881,8 +889,6 @@ class Clause:
             self.update_on_index(k, B)
         for (i, j) in self.comparisons.keys():
             self.update_on_indices(i, j, B)
-
-
 
 
 ####################################################################################################
@@ -934,3 +940,4 @@ if __name__ == '__main__':
     test(-2 * (x + y) * w >= (x + (y * z)**5 + (3 * u + 2 * v)**2)**4 * (u + 3 * v + u + v + x)**2)
     test(x < -3 * y)
     test((u+v+3*w)-z)
+    print isinstance((zero < zero).canonize().term1, One)
