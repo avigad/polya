@@ -16,84 +16,15 @@
 ####################################################################################################
 
 import polya.main.terms as terms
-#import blackboard
 import polya.main.messages as messages
+import polya.main.formulas as formulas
 import fractions
-import numbers
 import copy
 # from itertools import product, ifilter
 # from inspect import getargspec
 # from copy import copy
 # from scipy.linalg import lu
 # from numpy import array
-
-
-class Axiom:
-    """
-    literals is a list of term_comparisons
-    triggers is
-    """
-    def __init__(self, literals, triggers=list()):
-        #todo: make triggers a set
-
-        def find_uvars(term):
-            """
-            Takes a Term and returns two sets.
-            The first is the set of all indices UVars that return in that term.
-            The second is the subset of the first that occur alone as function arguments.
-            """
-            if isinstance(term, terms.UVar):
-                return {term.index}, set()
-            elif isinstance(term, (terms.Var, numbers.Rational)):
-                return set(), set()
-            else:
-                vars = set()
-                if isinstance(term, terms.FuncTerm):
-                    arg_vars = set([p.term.index for p in term.args
-                                    if isinstance(p.term, terms.UVar)])
-                else:
-                    arg_vars = set()
-                for p in term.args:
-                    nvars, narg_vars = find_uvars(p.term)
-                    vars.update(nvars)
-                    arg_vars.update(narg_vars)
-                return vars, arg_vars
-
-        def find_func_subterms(term):
-            f_subterms = []
-            if isinstance(term, (terms.Var, terms.UVar)):
-                return f_subterms
-            if isinstance(term, terms.FuncTerm):
-                f_subterms.append(term)
-            for pair in term.args:
-                f_subterms.extend(find_func_subterms(pair.term))
-            return f_subterms
-
-        self.literals = [l.canonize() for l in literals]
-        if len(triggers) == 0:
-            for c in self.literals:
-                triggers.extend(find_func_subterms(c.term1))
-                triggers.extend(find_func_subterms(c.term2.term))
-        self.triggers = triggers
-
-        uvars, arg_uvars, trig_uvars, trig_arg_uvars = set(), set(), set(), set()
-        for c in self.literals:
-            nvars, narg_vars = find_uvars(c.term1)
-            uvars.update(nvars)
-            arg_uvars.update(narg_vars)
-            nvars, narg_vars = find_uvars(c.term2.term)
-            uvars.update(nvars)
-            arg_uvars.update(narg_vars)
-
-        for c in self.triggers:
-            trig_nvars, trig_narg_vars = find_uvars(c)
-            trig_uvars.update(trig_nvars)
-            trig_arg_uvars.update(trig_narg_vars)
-
-        if trig_uvars != uvars:
-            raise Exception('All UVars must be in the trigger set.')
-        else:
-            self.vars, self.arg_vars, self.trig_arg_vars = uvars, arg_uvars, trig_arg_uvars
 
 
 def substitute(term, u_index, coeff, i_index):
@@ -126,8 +57,9 @@ def reduce_term(term, env):
         return terms.STerm(1, t[0]), t[1]
     elif isinstance(term, terms.MulTerm):
         rfunc = lambda (s1, flag1), (s2, flag2): (s1*s2, flag1 and flag2)
-        return reduce(rfunc, [(lambda a:(a[0]**mp.exponent, a[1]))(reduce_term(mp.term, env))
+        t = reduce(rfunc, [(lambda a:(a[0]**mp.exponent, a[1]))(reduce_term(mp.term, env))
                               for mp in term.args])
+        return terms.STerm(1, t[0]), t[1]
     elif isinstance(term, terms.FuncTerm):
         flag1 = True
         nargs = []
@@ -161,13 +93,18 @@ def elim_var(i, pivot, rows):
     return new_rows
 
 
-def find_problem_term(B, term):
+def find_problem_term(B, term1):
     """
     term is a Term such that all variable occurrences are IVars.
     returns (c, i) such that term = c*ti, or raises NoTermException
     """
+    sterm = term1.canonize()
+    term, coeff = sterm.term, sterm.coeff
     if isinstance(term, terms.IVar):
-        return 1, term.index
+        return coeff, term.index
+
+    elif term.key in B.term_names:
+        return coeff, B.term_names[term.key]
 
     elif isinstance(term, terms.FuncTerm):
         nargs = [find_problem_term(B, p.term) for p in term.args]
@@ -186,14 +123,14 @@ def find_problem_term(B, term):
                         break
 
                 if match:
-                    return 1, i
+                    return coeff, i
         raise NoTermException
 
     elif isinstance(term, terms.AddTerm):
         if len(term.args) == 1:
-            return term.args[0].coeff, term.args[0].term.index
+            return coeff*term.args[0].coeff, term.args[0].term.index
         elif term.key in B.term_names:
-            return B.term_names[term.key]
+            return coeff, B.term_names[term.key]
 
         nargs = [find_problem_term(B, p.term) for p in term.args]
         for i in range(len(nargs)):
@@ -216,7 +153,7 @@ def find_problem_term(B, term):
         for i in (i for i in range(B.num_terms) if isinstance(B.term_defs[i], terms.AddTerm)):
             row = [0]*(B.num_terms+1)
             row[i] = -1
-            for p in B.name_defs[i].addpairs:
+            for p in B.term_defs[i].args:
                 row[p.term.index] = p.coeff
             mat.append(row[:])
 
@@ -241,7 +178,7 @@ def find_problem_term(B, term):
             elif l == 2:
                 #we've found a match for u
                 ind = next(k for k in range(len(row)) if row[k] != 0)
-                coeff = -fractions.Fraction(row[ind], row[-1])
+                coeff = -fractions.Fraction(row[ind], row[-1])*coeff
                 return coeff, ind
             else:
                 try:
@@ -253,20 +190,18 @@ def find_problem_term(B, term):
 
         raise NoTermException
 
-
-
     elif isinstance(term, terms.MulTerm):
         #todo: translate the above linear algebra to multiplication
         nargs = [find_problem_term(B, p.term) for p in term.args]
         nt = reduce(lambda x, y: x * y,
                     [nargs[i][0]*nargs[i][1]**term.args[i].exponent for i in range(len(nargs))])
         if nt.term.key in B.term_names:
-            return nt.coeff, B.term_names[nt.term.key]
+            return coeff*nt.coeff, B.term_names[nt.term.key]
 
         raise NoTermException
 
 
-def unify(B, termlist, uvars, arg_uvars, envs=[{}]):
+def unify(B, termlist, uvars, arg_uvars, envs=None):
     """
     Takes Terms s1...sn involving uvars u1...um
     arg_uvars is a subset of uvars: those that occur alone as function arguments in s1...sn.
@@ -334,7 +269,7 @@ def unify(B, termlist, uvars, arg_uvars, envs=[{}]):
         #todo: prob_terms isn't actually used in what follows. Could it be?
 
         # At this point, every closed term matches something in the problem.
-        cenvs = copy.deepcopy(envs)
+        cenvs = copy.deepcopy(envs) if envs else [{}]
         for c in cenvs:
             c[v] = (coeff, j)
             maps = unify(B, [o.term for o in open_terms],
@@ -354,7 +289,7 @@ def instantiate(axiom, B):
         literals = []
         for l in axiom.literals:
             comp = l.comp
-            red = reduce_term(l.term1, env)[0]
+            red = reduce_term(l.term1, env)[0].canonize()
             red_coeff, red_term = red.coeff, red.term
             try:
                 #print 'finding prob term:', red, isinstance(red, terms.STerm)
@@ -387,16 +322,24 @@ class FunctionModule:
 
     def __init__(self, axioms=list()):
         """
-        axioms is a list of Axiom objects.
+        axioms is a list of Formula objects, that need to be converted into Axiom objects.
         """
-        self.axioms = axioms
+        self.axioms = []
+        for a in axioms:
+            clauses = formulas.cnf(a)
+            self.axioms.extend(formulas.Axiom(c) for c in clauses)
 
     def add_axiom(self, axiom):
-        self.axioms.append(axiom)
+        """
+        axiom is a Formula.
+        """
+        clauses = formulas.cnf(axiom)
+        self.axioms.extend(formulas.Axiom(c) for c in clauses)
 
     def update_blackboard(self, B):
         messages.announce_module('function axiom module')
         for a in self.axioms:
+            messages.announce("Instantiating axiom: {}".format(a), messages.DEBUG)
             clauses = instantiate(a, B)
             for c in clauses:
                 #print 'asserting:', c

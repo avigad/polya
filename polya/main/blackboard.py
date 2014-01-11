@@ -74,7 +74,7 @@ class Blackboard():
         self.disequalities = {}  # Dictionary mapping (i, j) to a set of coeffs
         self.zero_disequalities = set([])  # Set of IVar indices not equal to 0
 
-        self.clauses = []  # List of Clauses
+        self.clauses = set()  # List of Clauses
 
     def term_name(self, t):
         """
@@ -151,7 +151,7 @@ class Blackboard():
             else:
                 c.update_on_indices(p[0], p[1], self)
 
-        self.clauses = [c for c in self.clauses if not c.satisfied]
+        self.clauses = set(c for c in self.clauses if not c.satisfied)
 
         empty, unit = None, []
         for c in self.clauses:
@@ -161,18 +161,18 @@ class Blackboard():
                 break
             elif l == 1:
                 unit.append(c)
-                self.clauses.remove(c)
+                #self.clauses.remove(c)
 
         if empty is not None:
             messages.announce("Contradiction from clause.", messages.DEBUG)
             self.raise_contradiction(100, terms.EQ, 100, 100)
-        else:
+        else:  # do these separately, so that learning from one won't recurse to the others.
+            for c in unit:
+                self.clauses.remove(c)
+
             for c in unit:
                 tc = c.first()
                 self.assert_comparison(tc)
-                #self.clauses.remove(c)
-
-
 
     def implies(self, i, comp, coeff, j):
         """
@@ -536,7 +536,7 @@ class Blackboard():
         messages.announce('Asserting clause: {0!s}'.format(s), messages.ASSERTION)
         l = len(c)
         if l > 1:
-            self.clauses.append(c)
+            self.clauses.add(c)
         elif l == 1:
             self.assert_comparison(c.first())
         else:
@@ -630,14 +630,11 @@ class Blackboard():
 
         print '******'
 
-
-
 ####################################################################################################
 #
 # Tests
 #
 ####################################################################################################
-
 
 if __name__ == '__main__':
 
