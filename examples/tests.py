@@ -15,17 +15,22 @@
 
 from __future__ import division
 import polya.main.terms as terms
-import polya.main.formulas as formulas
 import polya.main.blackboard as blackboard
 import polya.polyhedron.poly_add_module as poly_add_module
 import polya.polyhedron.poly_mult_module as poly_mult_module
+import polya.fourier_motzkin.addition_module as fm_add_module
 import polya.main.messages as messages
 import polya.main.function_module as function_module
 import timeit
+import polya.main.formulas as formulas
 
+x, y, u, v, w, z, r = terms.Vars('x, y, u, v, w, z, r')
+a, b, c, d, e = terms.Vars('a, b, c, d, e')
+n, k, p = terms.Vars('n, k, p')
 
 def run(B):
     pa, pm = poly_add_module.PolyAdditionModule(), poly_mult_module.PolyMultiplicationModule()
+#    pa, pm = fm_add_module.FMAdditionModule(), poly_mult_module.PolyMultiplicationModule()
     try:
         s, s2 = '', '1'
         while s != s2:
@@ -44,17 +49,13 @@ def run(B):
         messages.announce(e.msg, messages.ASSERTION)
         return True
 
-
 def solve(*assertions):
     #print 'Beginning heuristic.\n'
     B = blackboard.Blackboard()
     B.assert_comparisons(*assertions)
     return run(B)
 
-
 def test1():
-    x, y, u, v, w, z, r = terms.Vars('x, y, u, v, w, z, r')
-
     B = blackboard.Blackboard()
     B.assert_comparison(0 < x)
     B.assert_comparison(x < 3*y)
@@ -68,12 +69,10 @@ def test1():
     # It does not have a model if the last inequality is >=. Contradiction is found.
     # "0<x<3*y", "u<v<0", "1<v^2<x", "u*(3*y)^2+1 >= x^2*v+x"
 
+
     run(B)
 
-
 def test2():
-    x, y, u, v, w, z, r = terms.Vars('x, y, u, v, w, z, r')
-
     messages.set_verbosity(messages.normal)
     B = blackboard.Blackboard()
 
@@ -94,10 +93,7 @@ def test2():
 
 t = timeit.default_timer()
 
-
 def test3():
-    x, y, u, v, w, z, r = terms.Vars('x, y, u, v, w, z, r')
-
     messages.set_verbosity(messages.normal)
     B = blackboard.Blackboard()
 
@@ -105,46 +101,35 @@ def test3():
     B.assert_comparisons(x+1/y<2, y<0, y/x>1, -2<=x, x<=2, -2<=y, y<=2, x**2*y**(-1)>1-x)
     run(B)
 
-
 def test4():
     f = terms.Func('f')
     a, b, c = terms.Vars('a, b, c')
-    #u, v, w = terms.UVar(1), terms.UVar(2), terms.UVar(3)
+    u, v, w = terms.UVar(1), terms.UVar(2), terms.UVar(3)
 
     B = blackboard.Blackboard()
+    ax = function_module.Axiom([u>=v, f(u)<f(v)])
 
-    fm = function_module.FunctionModule(
-        [formulas.ForAll([a, b], formulas.Implies(a<b, f(a)<f(b)))]
-    )
+    fm = function_module.FunctionModule([ax])
 
     B.assert_comparison(a<b)
     B.assert_comparison(f(a) > f(b))
-    try:
-        fm.update_blackboard(B)
-    except terms.Contradiction:
-        print 'contradiction found by axiom module'
-
+    fm.update_blackboard(B)
 
 def test5():
 
     f = terms.Func('f')
     x, y, z, w, r, s = terms.Vars('x, y, z, w, r, s')
-    #u, v = terms.UVar(1), terms.UVar(2)
+    u, v = terms.UVar(1), terms.UVar(2)
 
     B = blackboard.Blackboard()
+    ax = function_module.Axiom([u>=v, f(u)<f(v)])
 
-    fm = function_module.FunctionModule([formulas.ForAll([x, y], formulas.Implies(x<y, f(x)<f(y)))])
-    #fm = function_module.FunctionModule([f(p)!=f(q)])
+    fm = function_module.FunctionModule([ax])
 
     B.assert_comparisons(0<r, s>1, 0<x, x<y, w>z, z+f(x)>w+f(s*(y+r)))
-    try:
-        fm.update_blackboard(B)
-    except terms.Contradiction:
-        print 'contradiction found by axiom module'
-        return
+    fm.update_blackboard(B)
 
     run(B)
-
 
 def test6():
     f = terms.Func('f')
@@ -220,14 +205,11 @@ def arithmetical_tests():
             print 'Test {} incorrect.'.format(i+1)
 
 
+
+test1()
 #arithmetical_tests()
-messages.set_verbosity(messages.normal)
-
-
-test7()
+#messages.set_verbosity(messages.debug)
 #print solve(x<1, 1<y, x*y>1, u+x>=y+1, x**2*y<2-u*x*y)
 #print solve(x*(y+z)<=0, y+z>0, x>=0, x*w>0)
-
-
 
 print 'Ran in', round(timeit.default_timer()-t, 3), 'seconds'

@@ -42,7 +42,7 @@
 #
 #   term1 comp term2
 #
-# For sorting and testing equality, every Term (and Sterm) has an associated key. These keys should
+# For sorting and testing equality, every Term (and STerm) has an associated key. These keys should
 # be used for all comparisons, because the built-in comparison operators are co-opted for
 # constructing expressions. For example, use
 #
@@ -51,7 +51,7 @@
 # and similarly for STerms.
 #
 # TODO: would it be better to have one AppTerm, and put all the info into the function component?
-# TODO: could have a generic canonization for AC operations
+# TODO: could have a generic canonization for AC o perations
 #
 ####################################################################################################
 
@@ -594,6 +594,9 @@ class STerm:
 
     def __rmul__(self, other):
         return self * other
+
+    def __neg__(self):
+        return self * -1
 
     def __div__(self, other):
         if isinstance(other, numbers.Rational):
