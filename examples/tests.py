@@ -104,30 +104,33 @@ def test3():
 def test4():
     f = terms.Func('f')
     a, b, c = terms.Vars('a, b, c')
-    u, v, w = terms.UVar(1), terms.UVar(2), terms.UVar(3)
 
     B = blackboard.Blackboard()
-    ax = function_module.Axiom([u>=v, f(u)<f(v)])
 
-    fm = function_module.FunctionModule([ax])
+    fm = function_module.FunctionModule([formulas.ForAll([x, y], formulas.Implies(x<y, f(x)<f(y)))])
 
     B.assert_comparison(a<b)
     B.assert_comparison(f(a) > f(b))
-    fm.update_blackboard(B)
+    try:
+        fm.update_blackboard(B)
+    except terms.Contradiction:
+        print 'Contradiction found from axiom module'
 
 def test5():
 
     f = terms.Func('f')
     x, y, z, w, r, s = terms.Vars('x, y, z, w, r, s')
-    u, v = terms.UVar(1), terms.UVar(2)
 
     B = blackboard.Blackboard()
-    ax = function_module.Axiom([u>=v, f(u)<f(v)])
 
-    fm = function_module.FunctionModule([ax])
+    fm = function_module.FunctionModule([formulas.ForAll([x, y], formulas.Implies(x<y, f(x)<f(y)))])
 
     B.assert_comparisons(0<r, s>1, 0<x, x<y, w>z, z+f(x)>w+f(s*(y+r)))
-    fm.update_blackboard(B)
+
+    try:
+        fm.update_blackboard(B)
+    except terms.Contradiction:
+        print 'Contradiction found from axiom module'
 
     run(B)
 
@@ -168,7 +171,7 @@ def arithmetical_tests():
     messages.set_verbosity(messages.quiet)
 
     problems = [
-        [x+1/y<2, y<0, y/x>1, -2<=x, x<=2, -2<=y, y<=2, x**2*y**(-1)>1-x],
+        [x+1/y<2, y<0, y/x>1, -2<=x, x<=2, -2<=y, y<=2, x**2/y>(1-x)],
 
         [0<x, x<y, 0<u, u<v, 0<w+z, w+z < r-1,
           u + (1+x)**2 * (2*w + 2*z + 3) >= 2*v + (1+y)**2 * (2*r + 1)],
@@ -204,9 +207,14 @@ def arithmetical_tests():
         else:
             print 'Test {} incorrect.'.format(i+1)
 
-
-
-test1()
+test4()
+print
+test5()
+print
+test6()
+print
+test7()
+print
 #arithmetical_tests()
 #messages.set_verbosity(messages.debug)
 #print solve(x<1, 1<y, x*y>1, u+x>=y+1, x**2*y<2-u*x*y)

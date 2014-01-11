@@ -251,6 +251,7 @@ def unify(B, termlist, uvars, arg_uvars, envs=None):
 
     nenvs = []
     for (coeff, j) in s:
+        #new_terms = [p.substitute({vkey: coeff*terms.IVar(j)}) for p in termlist]
         new_terms = [substitute(p, v, coeff, j) for p in termlist]
         closed_terms, open_terms = list(), list()
 
@@ -337,7 +338,6 @@ class FunctionModule:
         self.axioms.extend(formulas.Axiom(c) for c in clauses)
 
     def update_blackboard(self, B):
-        print B.term_names
         messages.announce_module('function axiom module')
         for a in self.axioms:
             messages.announce("Instantiating axiom: {}".format(a), messages.DEBUG)

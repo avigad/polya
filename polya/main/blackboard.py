@@ -76,13 +76,13 @@ class Blackboard():
 
         self.clauses = set()  # List of Clauses
 
-    def term_name(self, t):
+    def term_name(self, ti):
         """
         Assumes t is a canonized term without IVars. Returns an IVar that represents t, if
         there is one. If not, recursively creates indices representing t and all its subterms, as
         needed.
         """
-        #print 'getting a name for', t, '. key:', t.key
+        t = ti.substitute({terms.IVar(i).key: self.terms[i] for i in range(self.num_terms)})
         if isinstance(t, terms.IVar):
             return t
         if t.key in self.term_names:
@@ -114,7 +114,6 @@ class Blackboard():
             messages.announce('Defining t{0!s} := {1!s}'.format(i, new_def), messages.DEF)
             messages.announce('  := {1!s}'.format(i, t), messages.DEF_FULL)
             for j in self.zero_inequalities:
-                #print 'adding sign info about', j, 'to table for', i
                 hp = geometry.halfplane_of_comp(self.zero_inequalities[j], 0)
                 self.inequalities[j, i] = [hp]
             return terms.IVar(i)
@@ -211,11 +210,8 @@ class Blackboard():
                         or (comp1 == terms.GT and comp == terms.GE)
                         or (comp1 == terms.LT and comp == terms.LE))
             else:
-                #print terms.TermComparison(terms.IVar(i), comp, coeff * terms.IVar(j))
                 new_comp = geometry.halfplane_of_comp(comp, coeff)
                 old_comps = self.inequalities.get((i, j), [])
-                #print 'new_comp:', new_comp
-                #print 'old_comps:', old_comps
                 for c in [d for d in old_comps if d.eq_dir(new_comp)]:
                     if c.strong or not new_comp.strong:
                         return True
@@ -390,7 +386,6 @@ class Blackboard():
         """
         Adds the inequality "ti comp 0".
         """
-        #print 'asserted that t', i, terms.comp_str[comp], '0'
         if i in self.zero_disequalities:
             comp = terms.GT if comp in [terms.GE, terms.GT] else terms.LT
             self.zero_disequalities.remove(i)

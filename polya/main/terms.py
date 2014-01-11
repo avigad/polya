@@ -111,9 +111,10 @@ class Term:
         """Puts the term in a canonical normal form. Always returns an STerm."""
         pass
 
-    def substitute(self, x, y):
+    def substitute(self, assn):
         """
-        Substitutes term x in place of term y in self.
+        assn is a dictionary mapping keys to Terms.
+        Replaces all instances of atoms with keys in assn with the mapped value.
         """
         pass
 
@@ -228,9 +229,9 @@ class Atom(Term):
     def canonize(self):
         return STerm(1, self)
 
-    def substitute(self, x, y):
-        if self.key == y.key:
-            return x
+    def substitute(self, assn):
+        if self.key in assn:
+            return assn[self.key]
         else:
             return self
 
@@ -364,8 +365,8 @@ class AddTerm(AppTerm):
         """
         return AddTerm([a * c for a in self.args])
 
-    def substitute(self, x, y):
-        return AddTerm([a.substitute(x, y) for a in self.args])
+    def substitute(self, assn):
+        return AddTerm([a.substitute(assn) for a in self.args])
 
 
 class MulTerm(AppTerm):
@@ -433,8 +434,8 @@ class MulTerm(AppTerm):
     def __pow__(self, n):
         return MulTerm([a ** n for a in self.args])
 
-    def substitute(self, x, y):
-        return MulTerm([a.substitute(x, y) for a in self.args])
+    def substitute(self, assn):
+        return MulTerm([a.substitute(assn) for a in self.args])
 
 
 class AbsTerm(AppTerm):
@@ -451,8 +452,8 @@ class AbsTerm(AppTerm):
     def __abs__(self):
         return self
 
-    def substitute(self, x, y):
-        return AbsTerm(self.args[0].substitute(x, y))
+    def substitute(self, assn):
+        return AbsTerm(self.args[0].substitute(assn))
 
 
 # TODO: not implemented yet
@@ -475,6 +476,9 @@ class FuncTerm(AppTerm):
 
     def canonize(self):
         return STerm(1, FuncTerm(self.func_name, [a.canonize() for a in self.args]))
+
+    def substitute(self, assn):
+        return FuncTerm(self.func_name, [a.substitute(assn) for a in self.args])
 
 
 class Func():
@@ -618,8 +622,8 @@ class STerm:
         else:
             return STerm(self.coeff ** n, self.term ** n)
 
-    def substitute(self, x, y):
-        return STerm(self.coeff, self.term.substitute(x, y))
+    def substitute(self, assn):
+        return STerm(self.coeff, self.term.substitute(assn))
 
     def __abs__(self):
         return STerm(abs(self.coeff), abs(self.term))
@@ -680,8 +684,8 @@ class MulPair:
     def __pow__(self, n):
         return MulPair(self.term, self.exponent * n)
 
-    def substitute(self, x, y):
-        return MulPair(self.term.substitute(x, y), self.exponent)
+    def substitute(self, assn):
+        return MulPair(self.term.substitute(assn), self.exponent)
 
 
 ####################################################################################################
@@ -720,8 +724,6 @@ comp_eval = {GT: lambda x, y: x > y, GE: lambda x, y: x >= y, EQ: lambda x, y: x
 class TermComparison():
 
     def __init__(self, term1, comp, term2):
-        #print comp
-        #print 'creating t_c: ', term1, comp_str[comp], term2
         if isinstance(term1, numbers.Rational):
             self.term1 = STerm(term1, one)
         else:
@@ -753,11 +755,8 @@ class TermComparison():
         Returns a comparison "t1 comp t2", where t1 is a Term and t2 is an STerm. A comparison
         with 0 has the form t1 comp zero. Otherwise, t1 has smaller key than t2.
         """
-        #print 'canonizing t_c.', self.term1, comp_str[self.comp], self.term2
         t1 = self.term1.canonize()
         t2 = self.term2.canonize()
-        #print 't1:', t1.coeff, t1.term, 'key:', t1.term.key, isinstance(t1, STerm)
-        #print 't2:', t2.coeff, t2.term, 'key:', t2.term.key, isinstance(t2, STerm)
         comp = self.comp
         if t1.term.key == t2.term.key:
             t = t1.term
@@ -806,9 +805,6 @@ class Clause:
             else:  # c is a tuple
                 i, comp, coeff, j = c[0], c[1], c[2], c[3]
             if coeff == 0:
-                print self.zero_comparisons
-                print self
-                print c
                 if i in self.zero_comparisons:  # do we need to check for ca in self.cmap[i]?
                     self.zero_comparisons[i].append(comp)
                 else:
