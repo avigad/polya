@@ -32,7 +32,7 @@ def run(B):
     pa, pm = poly_add_module.PolyAdditionModule(), poly_mult_module.PolyMultiplicationModule()
 #    pa, pm = fm_add_module.FMAdditionModule(), poly_mult_module.PolyMultiplicationModule()
     try:
-        s, s2 = '', '1'
+        s, s2 = '', str(B.get_equalities()) + str(B.get_disequalities()) + str(B.get_inequalities())
         while s != s2:
             s = s2
             #B.info_dump()
@@ -65,11 +65,6 @@ def test1():
     B.assert_comparison(v**2 < x)
     B.assert_comparison(u*(3*y)**2 + 1 >= x**2 * v + x)
 
-    # This example has a model if the last inequality is <. FM blows up here, poly doesn't
-    # It does not have a model if the last inequality is >=. Contradiction is found.
-    # "0<x<3*y", "u<v<0", "1<v^2<x", "u*(3*y)^2+1 >= x^2*v+x"
-
-
     run(B)
 
 def test2():
@@ -83,12 +78,6 @@ def test2():
     B.assert_comparison(0 < w + z)
     B.assert_comparison(w + z < r - 1)
     B.assert_comparison(u + (1+x)**2 * (2*w + 2*z + 3) >= 2*v + (1+y)**2 * (2*r + 1))
-    #     print("  0 < x < y")
-    # print("  0 < u < v")
-    # print("  0 < w + z < r - 1")
-    #"  u + (1 + x)^2 (2 w + 2 z + 3) < 2 v + (1 + y)^2 (2 r + 1)"
-    # x y u v w z r
-    # a b c d e f g
     run(B)
 
 t = timeit.default_timer()
@@ -164,6 +153,39 @@ def test7():
     run(C)
 
 
+def test8():
+    x, y, z = terms.Vars('x, y, z')
+    f = terms.Func('f')
+    fm = function_module.FunctionModule(
+        [formulas.ForAll([x, y], f(x*y)==f(x)*f(y)),
+         formulas.ForAll([x], formulas.Implies(x>2, f(x)<0))]
+    )
+
+    C = blackboard.Blackboard()
+    C.assert_comparisons(x>1, y>2, f(x*y)>0)
+    fm.update_blackboard(C)
+
+    run(C)
+
+def test9():
+    x, y, z = terms.Vars('x, y, z')
+    f = terms.Func('f')
+    fm = function_module.FunctionModule(
+        [
+            formulas.ForAll([x, y], f((x*y)/2)<=(f(x)*f(y))/2)
+        ]
+    )
+
+    C = blackboard.Blackboard()
+    C.assert_comparisons(z>0, z*f(x)*f(y)<0, 4*z*f(x*y/2)>0)
+    fm.update_blackboard(C)
+    run(C)
+
+    # This example does not run successfully, despite there being a contradiction.
+    # we get t6 = t1*t3*t5, t10=t3*t5, t1>0, t10>0, t6<0.
+    # but because the signs of t1 and t3 are unknown, the mul routine cannot find that contradiction
+
+
 def arithmetical_tests():
     x, y, u, v, w, z, r = terms.Vars('x, y, u, v, w, z, r')
     a, b, c, d, e = terms.Vars('a, b, c, d, e')
@@ -207,16 +229,9 @@ def arithmetical_tests():
         else:
             print 'Test {} incorrect.'.format(i+1)
 
-test4()
-print
-test5()
-print
-test6()
-print
-test7()
-print
-#arithmetical_tests()
 #messages.set_verbosity(messages.debug)
+test9()
+#arithmetical_tests()
 #print solve(x<1, 1<y, x*y>1, u+x>=y+1, x**2*y<2-u*x*y)
 #print solve(x*(y+z)<=0, y+z>0, x>=0, x*w>0)
 

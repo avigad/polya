@@ -76,6 +76,15 @@ class Blackboard():
 
         self.clauses = set()  # List of Clauses
 
+    def has_name(self, term):
+        if term.key in self.term_names:
+            return True, self.term_names[term.key]
+        else:
+            t = term.substitute({terms.IVar(i).key: self.terms[i] for i in range(self.num_terms)})
+            if t.key in self.term_names:
+                return True, self.term_names[t.key]
+        return False, -1
+
     def term_name(self, ti):
         """
         Assumes t is a canonized term without IVars. Returns an IVar that represents t, if

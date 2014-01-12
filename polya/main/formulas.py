@@ -43,7 +43,7 @@ class Axiom:
             """
             if isinstance(term, terms.UVar):
                 return {term.index}, set()
-            elif isinstance(term, (terms.Var, numbers.Rational)):
+            elif isinstance(term, (terms.Atom, numbers.Rational)):
                 return set(), set()
             else:
                 vars = set()
@@ -60,7 +60,7 @@ class Axiom:
 
         def find_func_subterms(term):
             f_subterms = []
-            if isinstance(term, (terms.Var, terms.UVar)):
+            if isinstance(term, terms.Atom):
                 return f_subterms
             if isinstance(term, terms.FuncTerm):
                 f_subterms.append(term)

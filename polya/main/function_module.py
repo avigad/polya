@@ -40,15 +40,18 @@ def reduce_term(term, env):
     Replaces all defined UVars in term with their designated values.
     Returns a pair of a new STerm and a flag whether all UVars have been replaced.
     """
-    if isinstance(term, terms.IVar):
-        return term, True
-
-    elif isinstance(term, terms.UVar):
+    if isinstance(term, terms.STerm):
+        l = reduce_term(term.term, env)
+        return terms.STerm(term.coeff*l[0].coeff, l[0].term), l[1]
+    if isinstance(term, terms.UVar):
         if term.index in env:
             c, j = env[term.index]
-            return c*terms.IVar(j), True
+            return terms.STerm(c, terms.IVar(j)), True
         else:
             return terms.STerm(1, term), False
+
+    elif isinstance(term, terms.Atom):
+        return terms.STerm(1, term), True
 
     elif isinstance(term, terms.AddTerm):
         rfunc = lambda (s1, flag1), (s2, flag2): (s1+s2, flag1 and flag2)
@@ -71,7 +74,7 @@ def reduce_term(term, env):
         return terms.STerm(1, terms.FuncTerm(term.func_name, nargs)), flag1
 
     else:
-        raise Exception("Unknown term type encountered in reduce_term")
+        raise Exception("Unknown term type encountered in reduce_term: "+str(term))
 
 
 class NoTermException(Exception):
@@ -92,21 +95,36 @@ def elim_var(i, pivot, rows):
     new_rows = [add_list(r, scale_list(-fractions.Fraction(r[i], pivot[i]), pivot)) for r in rows]
     return new_rows
 
+def elim_var_mul(i, pivot, rows):
+    if pivot[i] == 0:
+        raise Exception
+    new_rows = []
+    for r in rows:
+        scale = -fractions.Fraction(r[i], pivot[i])
+        if pivot[0] != 1 and scale.denominator != 1:
+            # We (likely) have an irrational.
+            #todo: there are situations where we don't: pivot[0] == 4, scale == 1/2.
+            raise NoTermException
+        new_rows.append([r[0]*pivot[0]**scale] + add_list(r[1:], scale_list(scale, pivot[1:])))
+    return new_rows
+
 
 def find_problem_term(B, term1):
     """
     term is a Term such that all variable occurrences are IVars.
     returns (c, i) such that term = c*ti, or raises NoTermException
     """
+    messages.announce('    finding problem term:' + str(term1), messages.DEBUG)
     sterm = term1.canonize()
     term, coeff = sterm.term, sterm.coeff
     if isinstance(term, terms.IVar):
         return coeff, term.index
 
-    elif term.key in B.term_names:
-        return coeff, B.term_names[term.key]
+    b, ind = B.has_name(term)
+    if b:
+        return coeff, ind
 
-    elif isinstance(term, terms.FuncTerm):
+    if isinstance(term, terms.FuncTerm):
         nargs = [find_problem_term(B, p.term) for p in term.args]
         for i in range(len(nargs)):
             nargs[i] = (term.args[i].coeff*nargs[i][0], nargs[i][1])
@@ -129,8 +147,6 @@ def find_problem_term(B, term1):
     elif isinstance(term, terms.AddTerm):
         if len(term.args) == 1:
             return coeff*term.args[0].coeff, term.args[0].term.index
-        elif term.key in B.term_names:
-            return coeff, B.term_names[term.key]
 
         nargs = [find_problem_term(B, p.term) for p in term.args]
         for i in range(len(nargs)):
@@ -192,11 +208,90 @@ def find_problem_term(B, term1):
 
     elif isinstance(term, terms.MulTerm):
         #todo: translate the above linear algebra to multiplication
-        nargs = [find_problem_term(B, p.term) for p in term.args]
-        nt = reduce(lambda x, y: x * y,
-                    [nargs[i][0]*nargs[i][1]**term.args[i].exponent for i in range(len(nargs))])
-        if nt.term.key in B.term_names:
-            return coeff*nt.coeff, B.term_names[nt.term.key]
+        #print 'at the problem place:', term
+        if len(term.args)==1 and term.args[0].exponent == 1:
+            return coeff, B.term_name(term.args[0]).index
+
+        p = find_problem_term(B, term.args[0].term)
+        nt = coeff*(p[0]*terms.IVar(p[1]))**term.args[0].exponent
+        for a in term.args[1:]:
+            p = find_problem_term(B, a.term)
+            nt *= (p[0]*terms.IVar(p[1]))**a.exponent
+
+        nt = nt.canonize()
+
+        if isinstance(nt, terms.STerm):
+            coeff, nt = nt.coeff, nt.term
+        else:
+            coeff = 1
+
+        if nt.key in B.term_names:
+            return coeff, B.term_names[nt.key].index
+
+        if all(B.implies(a.term.index, terms.NE, 0, 0) for a in nt.args):
+            # we can do FM elim.
+            urow = [0]*B.num_terms + [-1]
+            for a in nt.args:
+                urow[a.term.index] = a.exponent
+
+            mat = []
+            for tc in (e for e in B.get_equalities() if e.coeff != 0):
+                i, c, j = tc.term1.index, tc.coeff, tc.term2.term.index
+                if B.implies(i, terms.NE, 0, 0):  # if ti != 0, then tj != 0
+                    row = [0]*(B.num_terms+1)
+                    row[i] = -1
+                    row[j] = 1
+                    row[0] = c
+                    mat.append(row[:])
+
+            for i in (i for i in range(B.num_terms) if
+                      isinstance(B.term_defs[i], terms.MulTerm) and B.implies(i, terms.NE, 0, 0)):
+                row = [0]*(B.num_terms+1)
+                row[i] = -1
+                for p in (p for p in B.term_defs[i].args if p.term.index != 0):
+                    row[p.term.index] = p.exponent
+                mat.append(row[:])
+
+            mat.append(urow)
+
+            rows_i = copy.copy(mat)
+            for i in range(1, B.num_terms):
+                rows_j = copy.copy(rows_i)
+                for j in range(i+1, B.num_terms):
+                    try:
+                        r = next(r for r in rows_j if r[j] != 0 and r[-1] == 0)
+                        rows_i = elim_var(i, r, [row for row in rows_i if row is not r])
+                    except StopIteration:
+                        continue
+                    rows_j = elim_var(j, r, [row for row in rows_j if row is not r])
+
+                for row in (r for r in rows_j if r[-1] != 0):
+                    l = len([k for k in row if k != 0])
+                    if l == 1 or row[0] == 0:
+                        #we have u = 0. What to do?
+                        return 0, 0
+                    elif l == 2:
+                        #we've found a match for u: it's a constant.
+                        return coeff*row[0], 0
+                    elif l == 3:
+                        #we've found a match for u, nonconstant
+                        coeff = coeff*row[0]
+                        ind = next(i for i in range(1, len(row)) if row[i] != 0)
+                        if row[ind] == 1:  # otherwise, we have u = ti**k, k!=1
+                            return coeff, ind
+
+                try:
+                    r = next(r for r in rows_i if r[i] != 0 and r[-1] == 0 and r[0] == 1)
+                except StopIteration:
+                    try:
+                        r = next(r for r in rows_i if r[i] != 0 and r[-1] == 0)
+                    except StopIteration:
+                        if rows_i[-1][i] != 0:  # there is a t_i in u, and nowhere else.
+                            raise NoTermException
+
+                rows_i = elim_var_mul(i, r, [row for row in rows_i if row is not r])
+            raise NoTermException
+
 
         raise NoTermException
 
@@ -217,7 +312,8 @@ def unify(B, termlist, uvars, arg_uvars, envs=None):
             return False
         return any(a.term.key == varkey for a in term.args)
 
-    #print 'unifying:', termlist, uvars, arg_uvars, envs
+    messages.announce(' Unifying :' + str(termlist) + str(arg_uvars) + str(envs),
+                      messages.DEBUG)
 
     if len(uvars) == 0:
         return envs
@@ -242,7 +338,7 @@ def unify(B, termlist, uvars, arg_uvars, envs=None):
                      and B.term_defs[i].func_name == t.func_name
                      and len(B.term_defs[i].args) == len(t.args))]
 
-    #print 'probfterms:', prob_f_terms
+    messages.announce('   probfterms:' + str(prob_f_terms), messages.DEBUG)
 
     s = [(fractions.Fraction(B.term_defs[i].args[ind].coeff, c),
           B.term_defs[i].args[ind].term.index) for i in prob_f_terms]
@@ -262,6 +358,7 @@ def unify(B, termlist, uvars, arg_uvars, envs=None):
                 open_terms.append(a)
 
         try:
+            messages.announce('   closed terms:' + str(closed_terms), messages.DEBUG)
             prob_terms = [find_problem_term(B, ct.term) for ct in closed_terms]
         except NoTermException:
             #print 'exception for:', v, '=', coeff, j
@@ -282,7 +379,9 @@ def unify(B, termlist, uvars, arg_uvars, envs=None):
 def instantiate(axiom, B):
     # Get a list of assignments that work for all of axiom's triggers.
     envs = unify(B, axiom.triggers, list(axiom.vars), list(axiom.trig_arg_vars))
-    #print 'envs;', envs
+    messages.announce(' Environments:', messages.DEBUG)
+    for e in envs:
+        messages.announce('  '+str(envs), messages.DEBUG)
 
     # For each assignment, use it to instantiate a Clause from axiom and assert it in B.
     clauses = []
@@ -343,5 +442,4 @@ class FunctionModule:
             messages.announce("Instantiating axiom: {}".format(a), messages.DEBUG)
             clauses = instantiate(a, B)
             for c in clauses:
-                #print 'asserting:', c
                 B.assert_clause(*c)
