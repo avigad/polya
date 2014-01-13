@@ -9,17 +9,68 @@ import tempfile
 # "./lrs" and "./redund"
 
 
-lrs_path = '/usr/bin/lrs'
+import subprocess
 
-import subprocess as s
+# look in some standard places for lrs
+while True:
+    try:
+        subprocess.check_output(['lrs', '_pretend_file'])
+    except OSError, e:
+        pass
+    else:
+        lrs_path = 'lrs'
+        break
+    try:
+        subprocess.check_output(['./lrs', '_pretend_file'])
+    except OSError, e:
+        pass
+    else:
+        lrs_path = './lrs'
+        break
+    try:
+        subprocess.check_output(['/usr/bin/lrs', '_pretend_file'])
+    except OSError, e:
+        pass
+    else:
+        lrs_path = '/usr/bin/lrs'
+        break
+    lrs_path == None
+    break
+if lrs_path == None:
+    print 'lrs not found.'
+else:
+    print 'lrs found ({0!s})!'.format(lrs_path)
 
-try:
-    s.check_output([lrs_path, '_stupid_pretend_file'])
-except OSError, e:
-    print "call to", lrs_path, "failed with message:"
-    print str(e)
-    print
-    print "Do you have lrs installed? See instructions for details."
+# look in some standard places for redund
+while True:
+    try:
+        subprocess.check_output(['redund', '_pretend_file'])
+    except OSError, e:
+        pass
+    else:
+        redund_path = 'redund'
+        break
+    try:
+        subprocess.check_output(['./redund', '_pretend_file'])
+    except OSError, e:
+        pass
+    else:
+        redund_path = './redund'
+        break
+    try:
+        subprocess.check_output(['/usr/bin/redund', '_pretend_file'])
+    except OSError, e:
+        pass
+    else:
+        redund_path = '/usr/bin/redund'
+        break
+    redund_path == None
+    break
+if redund_path == None:
+    print 'redund not found.'
+else:
+    print 'redund found ({0!s})!'.format(redund_path)
+print
 
 
 def make_frac(string):
@@ -88,7 +139,7 @@ def get_inequalities(matrix):
 def redund_and_generate(matrix):
     s = str(matrix)
     p = pipes.Template()
-    p.append("redund", "--")
+    p.append(redund_path, "--")
     p.debug(False)
     t = tempfile.NamedTemporaryFile(mode='r')
     f = p.open(t.name, 'w')
