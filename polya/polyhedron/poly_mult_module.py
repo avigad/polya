@@ -369,8 +369,13 @@ def add_of_mul_comps(m_comparisons, num_terms):
     for c in m_comparisons:
         if c.comp == terms.EQ:
             t = -c.term2
-            for mp in [m for m in c.term1.args if m.term.index != 0]:
-                t += mp.term * mp.exponent
+            if isinstance(c.term1, terms.MulTerm):
+                for mp in [m for m in c.term1.args if m.term.index != 0]:
+                    t += mp.term * mp.exponent
+            elif isinstance(c.term1, terms.IVar):
+                t += c.term1
+            else:
+                raise Exception
             a_comparisons.append((t, terms.EQ))
         else:
             # c is ivar comp coeff * ivar

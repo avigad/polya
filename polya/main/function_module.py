@@ -61,7 +61,7 @@ def reduce_term(term, env):
     elif isinstance(term, terms.MulTerm):
         rfunc = lambda (s1, flag1), (s2, flag2): (s1*s2, flag1 and flag2)
         t = reduce(rfunc, [(lambda a:(a[0]**mp.exponent, a[1]))(reduce_term(mp.term, env))
-                              for mp in term.args])
+                           for mp in term.args])
         return terms.STerm(1, t[0]), t[1]
     elif isinstance(term, terms.FuncTerm):
         flag1 = True
@@ -94,6 +94,7 @@ def elim_var(i, pivot, rows):
         raise Exception
     new_rows = [add_list(r, scale_list(-fractions.Fraction(r[i], pivot[i]), pivot)) for r in rows]
     return new_rows
+
 
 def elim_var_mul(i, pivot, rows):
     if pivot[i] == 0:
@@ -132,7 +133,7 @@ def find_problem_term(B, term1):
         for i in range(B.num_terms):
             t = B.term_defs[i]
             if (isinstance(t, terms.FuncTerm) and t.func_name == term.func_name
-                                                                and len(t.args) == len(nargs)):
+               and len(t.args) == len(nargs)):
                 match = True
                 for k in range(len(t.args)):
                     targ, uarg = (t.args[k].coeff, t.args[k].term.index), nargs[k]
@@ -209,7 +210,7 @@ def find_problem_term(B, term1):
     elif isinstance(term, terms.MulTerm):
         #todo: translate the above linear algebra to multiplication
         #print 'at the problem place:', term
-        if len(term.args)==1 and term.args[0].exponent == 1:
+        if len(term.args) == 1 and term.args[0].exponent == 1:
             return coeff, B.term_name(term.args[0]).index
 
         p = find_problem_term(B, term.args[0].term)
@@ -291,7 +292,6 @@ def find_problem_term(B, term1):
 
                 rows_i = elim_var_mul(i, r, [row for row in rows_i if row is not r])
             raise NoTermException
-
 
         raise NoTermException
 
@@ -381,7 +381,7 @@ def instantiate(axiom, B):
     envs = unify(B, axiom.triggers, list(axiom.vars), list(axiom.trig_arg_vars))
     messages.announce(' Environments:', messages.DEBUG)
     for e in envs:
-        messages.announce('  '+str(envs), messages.DEBUG)
+        messages.announce('  '+str(e), messages.DEBUG)
 
     # For each assignment, use it to instantiate a Clause from axiom and assert it in B.
     clauses = []
