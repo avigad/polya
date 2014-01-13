@@ -209,14 +209,14 @@ def arithmetical_tests():
     expected = [True, True, True, False, True, True, True, False, True, False, True, True, True]
 
     for i in range(len(problems)):
-        val = solve(*problems[i])
+        val = solve_poly(*problems[i])
         if val == expected[i]:
             print 'Test {} correct.'.format(i+1)
         else:
             print 'Test {} incorrect.'.format(i+1)
 
 #messages.set_verbosity(messages.debug)
-test9()
+test5()
 #arithmetical_tests()
 #print solve(x < 1, 1 < y, x*y > 1, u+x >= y+1, x**2*y < 2-u*x*y)
 #print solve(x*(y+z) <= 0, y+z > 0, x >= 0, x*w > 0)
