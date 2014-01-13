@@ -35,6 +35,7 @@ while True:
         lrs_path = '/usr/bin/lrs'
         break
     lrs_path == None
+    break
 if lrs_path == None:
     print 'lrs not found.'
 else:
@@ -64,6 +65,7 @@ while True:
         redund_path = '/usr/bin/redund'
         break
     redund_path == None
+    break
 if redund_path == None:
     print 'redund not found.'
 else:
