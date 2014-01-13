@@ -17,7 +17,8 @@ import polya.main.terms as terms
 import polya.main.blackboard as blackboard
 import polya.polyhedron.poly_add_module as poly_add_module
 import polya.polyhedron.poly_mult_module as poly_mult_module
-import polya.fourier_motzkin.addition_module as fm_add_module
+import polya.fourier_motzkin.fm_add_module as fm_add_module
+# import polya.fourier_motzkin.fm_mult_module as fm_mult_module
 import polya.main.messages as messages
 import polya.main.function_module as function_module
 import polya.main.formulas as formulas
