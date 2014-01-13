@@ -14,7 +14,7 @@ lrs_path = '/usr/bin/lrs'
 import subprocess as s
 
 try:
-    s.check_output([lrs_path])
+    s.check_output([lrs_path, '_stupid_pretend_file'])
 except OSError, e:
     print "call to", lrs_path, "failed with message:"
     print str(e)

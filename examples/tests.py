@@ -161,6 +161,16 @@ def test9():
     # we get t6 = t1*t3*t5, t10=t3*t5, t1>0, t10>0, t6<0.
     # but because the signs of t1 and t3 are unknown, the mul routine cannot find that contradiction
 
+def test10():
+    x, y = terms.Vars('x, y')
+    f = terms.Func('f')
+
+    B = blackboard.Blackboard()
+
+    B.assert_comparisons(x==y, f(x)!=f(y))
+
+    run(B)
+
 
 def arithmetical_tests():
     x, y, u, v, w, z, r = Vars('x, y, u, v, w, z, r')
