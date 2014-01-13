@@ -12,8 +12,7 @@
 #
 ####################################################################################################
 
-
-from polya.main.main import *
+from polya import *
 import timeit
 
 t = timeit.default_timer()
