@@ -9,6 +9,19 @@ import tempfile
 # "./lrs" and "./redund"
 
 
+lrs_path = '/usr/bin/lrs'
+
+import subprocess as s
+
+try:
+    s.check_output([lrs_path])
+except OSError, e:
+    print "call to", lrs_path, "failed with message:"
+    print str(e)
+    print
+    print "Do you have lrs installed? See instructions for details."
+
+
 def make_frac(string):
     i = string.find('/')
     if i < 0:
@@ -51,7 +64,7 @@ def get_inequalities(matrix):
     s = str(matrix)
     #timecount.start()
     p = pipes.Template()
-    p.append("lrs", "--")
+    p.append(lrs_path, "--")
     p.debug(False)
     t = tempfile.NamedTemporaryFile(mode='r')
     f = p.open(t.name, 'w')
