@@ -174,7 +174,7 @@ def test11():
     B = Blackboard()
     B.assert_comparisons(0 < u, u < v, 1 < x, x < y, 0 < w, w < z)
     B.assert_comparison(u + x * w >= v + y**2 * z)
-    run(B, False)
+    run(B, True)
 
 
 def arithmetical_tests():
