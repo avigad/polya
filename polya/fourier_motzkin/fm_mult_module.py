@@ -51,7 +51,7 @@ class Product():
     """
 
     def __init__(self, coeff, args):
-        self.coeff = coeff
+        self.coeff = fractions.Fraction(coeff)
         self.args = args
 
     def __pow__(self, exp):
@@ -73,12 +73,12 @@ class Product():
 
     def __str__(self):
         if self.coeff == 1:
-            if len(self.args) == 1:
+            if len(self.args) == 0:
                 return '1'
             else:
                 return '*'.join([str(a) for a in self.args])
         else:
-            if len(self.args) == 1:
+            if len(self.args) == 0:
                 return '1'
             else:
                 return '{0!s}*{1}'.format(self.coeff,'*'.join([str(a) for a in self.args]))
@@ -90,7 +90,6 @@ class Product():
         """
         Determines whether index v occurs in the sum.
         """
-        print self, v
         return v in (a.index for a in self.args)
 
 
@@ -128,7 +127,7 @@ def cast_to_product(term):
         else:
             args = Multiplicand(term.index, 1)
     elif isinstance(term, terms.MulTerm):
-        args = [(Multiplicand(a.index, a.exp) for a in term.args)]
+        args = [Multiplicand(a.term.index, a.exponent) for a in term.args if a.term.index != 0]
     else:
         Error('Cannot cast {0!s} to a product'.format(term))
     return Product(coeff, args)
@@ -199,6 +198,7 @@ def elim_ineq_ineq(c1, c2, v):
     scale2 = -(exp1 * scale1) / exp2
     if scale2 < 0:
         raise Error('ineq_ineq_elim: exponents of {0!s} have the same sign'.format(v))
+    result = t1 ** scale1 * t2 ** scale2
     return OneComparison(t1 ** scale1 * t2 ** scale2, c1.strong or c2.strong)
 
 
@@ -246,7 +246,7 @@ def elim(one_equations, one_comparisons, v):
             c = elim_ineq_ineq(c1, c2, v)
             if not trivial_ineq(c):
                 new_comparisons.append(c)
-    return one_equations, one_comparisons
+    return one_equations, new_comparisons
 
 
 def equality_to_one_equality(c):
@@ -311,13 +311,15 @@ def one_comparison_to_comparison(c, B):
     if l == 0:
         assert c.strong  # comparisons 1 >= 1 should have been eliminated
         return terms.IVar(0) < 0   # TODO: is the a better way of returning a contradiction?
+#        return None
     if l == 1:
         m = multiplicand_to_mulpair(p.args[0])
-        return poly_mult_module.process_mul_comp(m, mulpair_one, c.coeff, comp, B)
+        return poly_mult_module.process_mul_comp(m, mulpair_one, p.coeff, comp, B)
+#        return None
     elif l == 2:
         m1 = multiplicand_to_mulpair(p.args[0])
         m2 = multiplicand_to_mulpair(p.args[1])
-        return poly_mult_module.process_mul_comp(m1, m2, c.coeff, comp, B)
+        return poly_mult_module.process_mul_comp(m1, m2, p.coeff, comp, B)
     else:
         return None
 
@@ -346,10 +348,11 @@ class FMMultiplicationModule:
         Learns sign information and equalities and inequalities from multiplicative information in
         B, and asserts them to B.
         """
-        messages.announce_module('polyhedron multiplicative module')
+        messages.announce_module('Fourier-Motzkin multiplicative module')
         poly_mult_module.derive_info_from_definitions(B)
         eqs, comps = get_multiplicative_information(B)
-        for i in range(B.num_terms):
+        # t0 = 1; ignore
+        for i in range(1, B.num_terms):
             # at this point, eqs and comps have all comparisons with indices >= i
             i_eqs, i_comps = eqs, comps
             # determine all comparisons with IVar(i) and IVar(j) with j >= i

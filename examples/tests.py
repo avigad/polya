@@ -34,9 +34,7 @@ def test1():
     # This example has a model if the last inequality is <. FM blows up here, poly doesn't
     # It does not have a model if the last inequality is >=. Contradiction is found.
     # "0<x<3*y", "u<v<0", "1<v^2<x", "u*(3*y)^2+1 >= x^2*v+x"
-
-    run(B, poly=False)
-    run(B)
+    run(B, poly=True)
 
 
 def test2():
@@ -51,7 +49,6 @@ def test2():
     B.assert_comparison(w + z < r - 1)
     B.assert_comparison(u + (1+x)**2 * (2*w + 2*z + 3) >= 2*v + (1+y)**2 * (2*r + 1))
     run(B, poly=True)
-    run(B)
 
 
 def test3():
@@ -60,8 +57,7 @@ def test3():
 
     # "x+1/y<2", "y<0", "y/x>1", "-2<=x<=2", "-2<=y<=2", "x^2*y^(-1)>1-x"
     B.assert_comparisons(x+1/y<2, y<0, y/x>1, -2<=x, x<=2, -2<=y, y<=2, x**2*y**(-1)>1-x)
-    run(B, poly=True)
-    run(B)
+    run(B, poly=False)
 
 def test4():
     f = Func('f')
@@ -173,6 +169,14 @@ def test10():
     run(B)
 
 
+def test11():
+    u, v, w, x, y, z = Vars('u v w x y z')
+    B = Blackboard()
+    B.assert_comparisons(0 < u, u < v, 1 < x, x < y, 0 < w, w < z)
+    B.assert_comparison(u + x * w >= v + y**2 * z)
+    run(B, False)
+
+
 def arithmetical_tests():
     x, y, u, v, w, z, r = Vars('x, y, u, v, w, z, r')
     a, b, c, d, e = Vars('a, b, c, d, e')
@@ -217,12 +221,13 @@ def arithmetical_tests():
             print 'Test {} incorrect.'.format(i+1)
 
 #messages.set_verbosity(messages.debug)
+test11()
 # test4()
-test5()
-test6()
-test7()
-test8()
-test9()
+# test5()
+# test6()
+# test7()
+# test8()
+# test9()
 #arithmetical_tests()
 #print solve(x < 1, 1 < y, x*y > 1, u+x >= y+1, x**2*y < 2-u*x*y)
 #print solve(x*(y+z) <= 0, y+z > 0, x >= 0, x*w > 0)
