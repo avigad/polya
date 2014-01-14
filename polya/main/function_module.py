@@ -154,9 +154,20 @@ def find_problem_term(B, term1):
                 match = True
                 for k in range(len(t.args)):
                     targ, uarg = (t.args[k].coeff, t.args[k].term.index), nargs[k]
-                    if not targ == uarg:
-                        match = False  # todo: add matching modulo equality here
-                        break
+                    p = tuple(sorted((targ[1], uarg[1])))
+                    if targ == uarg:
+                        continue
+                    elif targ[1] == uarg[1]:
+                        if targ[1] in B.zero_equalities:
+                            continue
+                    elif p in B.equalities:
+                        c = B.equalities[p]
+                        if targ[1] < uarg[1]:
+                            c = fractions.Fraction(1, c)
+                        if uarg[0]*c==targ[0]:
+                            continue
+                    match = False  # todo: add matching modulo equality here
+                    break
 
                 if match:
                     return coeff, i

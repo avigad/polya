@@ -23,7 +23,7 @@ import polya.main.messages as messages
 import polya.main.function_module as function_module
 import polya.main.formulas as formulas
 
-from terms import Vars, UVar, Func, Contradiction
+from terms import Var, Vars, UVar, Func, Contradiction
 from formulas import ForAll, Implies, And, Or, Not
 from blackboard import Blackboard
 
