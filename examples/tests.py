@@ -95,7 +95,7 @@ def test5():
         print 'Contradiction found from axiom module'
 
     run(B, poly=True)
-    run(B)
+    # run(B)
 
 def test6():
     f = Func('f')
@@ -112,7 +112,7 @@ def test6():
     fm.update_blackboard(B)
 
     run(B, poly=True)
-    run(B)
+    # run(B)
 
 def test7():
     x, y, z = Vars('x, y, z')
@@ -126,7 +126,7 @@ def test7():
     fm.update_blackboard(B)
 
     run(B, poly=True)
-    run(B)
+    # run(B)
 
 
 def test8():
@@ -162,12 +162,13 @@ def test9():
     # but because the signs of t1 and t3 are unknown, the mul routine cannot find that contradiction
 
 def test10():
-    x, y = terms.Vars('x, y')
-    f = terms.Func('f')
+    a, b = Vars('a, b')
+    f, g = Func('f'), Func('g')
+    B = Blackboard()
+    B.assert_comparisons(b==g(a), f(b)>0)
 
-    B = blackboard.Blackboard()
-
-    B.assert_comparisons(x==y, f(x)!=f(y))
+    fm = function_module.FunctionModule([ForAll([x], f(g(x))<0)])
+    fm.update_blackboard(B)
 
     run(B)
 
@@ -209,13 +210,18 @@ def arithmetical_tests():
     expected = [True, True, True, False, True, True, True, False, True, False, True, True, True]
 
     for i in range(len(problems)):
-        val = solve(*problems[i])
+        val = solve_poly(*problems[i])
         if val == expected[i]:
             print 'Test {} correct.'.format(i+1)
         else:
             print 'Test {} incorrect.'.format(i+1)
 
 #messages.set_verbosity(messages.debug)
+# test4()
+test5()
+test6()
+test7()
+test8()
 test9()
 #arithmetical_tests()
 #print solve(x < 1, 1 < y, x*y > 1, u+x >= y+1, x**2*y < 2-u*x*y)

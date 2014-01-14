@@ -23,7 +23,7 @@ import polya.main.messages as messages
 import polya.main.function_module as function_module
 import polya.main.formulas as formulas
 
-from terms import Vars, UVar, Func, Contradiction
+from terms import Var, Vars, UVar, Func, Contradiction
 from formulas import ForAll, Implies, And, Or, Not
 from blackboard import Blackboard
 
@@ -33,16 +33,18 @@ def run(B, poly=None, debug=None):
     else:
         pa, pm = fm_add_module.FMAdditionModule(), fm_mult_module.FMMultiplicationModule()
     try:
-        s, s2 = '', '1'
-        while s != s2:
-            s = s2
+        id = B.identify()
+        #s, s2 = '', '1'
+        #while s != s2:
+        while len(B.get_new_info(id)) > 0:
+            #s = s2
             if debug:
                 B.info_dump()
             pa.update_blackboard(B)
             if debug:
                 B.info_dump()
             pm.update_blackboard(B)
-            s2 = str(B.get_equalities()) + str(B.get_disequalities()) + str(B.get_inequalities())
+        #    s2 = str(B.get_equalities()) + str(B.get_disequalities()) + str(B.get_inequalities())
         return False
     except terms.Contradiction as e:
         if debug:
@@ -56,3 +58,8 @@ def solve(*assertions):
     B = blackboard.Blackboard()
     B.assert_comparisons(*assertions)
     return run(B)
+
+def solve_poly(*assertions):
+    B = blackboard.Blackboard()
+    B.assert_comparisons(*assertions)
+    return run(B, poly=True)

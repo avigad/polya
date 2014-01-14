@@ -11,8 +11,6 @@
 # Each time update_blackboard is called, the module will check to see if any new clauses can be
 # instantiated from its known axioms, and if so, will add them to the blackboard.
 #
-# TODO:
-#
 ####################################################################################################
 
 import polya.main.terms as terms
@@ -40,6 +38,8 @@ def reduce_term(term, env):
     Replaces all defined UVars in term with their designated values.
     Returns a pair of a new STerm and a flag whether all UVars have been replaced.
     """
+    #todo: this duplicates some functionality of Term.substitute(), but adds the check for UVars.
+    #can we recover this some other way?
     if isinstance(term, terms.STerm):
         l = reduce_term(term.term, env)
         return terms.STerm(term.coeff*l[0].coeff, l[0].term), l[1]
@@ -82,14 +82,19 @@ class NoTermException(Exception):
 
 
 def add_list(l1, l2):
+    """Adds two vectors component-wise."""
     return [l1[i]+l2[i] for i in range(len(l1))]
 
 
 def scale_list(c, l):
+    """Scales vector l by constant c."""
     return [c*li for li in l]
 
 
 def elim_var(i, pivot, rows):
+    """
+    Adds multiple of vector pivot to each vector in rows to eliminate the ith coordinate.
+    """
     if pivot[i] == 0:
         raise Exception
     new_rows = [add_list(r, scale_list(-fractions.Fraction(r[i], pivot[i]), pivot)) for r in rows]
@@ -97,6 +102,10 @@ def elim_var(i, pivot, rows):
 
 
 def elim_var_mul(i, pivot, rows):
+    """
+    pivot:=[c,a1,a2,...,an] represents c*t1^a1 * t2^a2*...*tn^an. Similarly for r in rows.
+    Uses pivot to eliminate ti from each r in rows, respecting the
+    """
     if pivot[i] == 0:
         raise Exception
     new_rows = []
@@ -113,7 +122,15 @@ def elim_var_mul(i, pivot, rows):
 def find_problem_term(B, term1):
     """
     term is a Term such that all variable occurrences are IVars.
-    returns (c, i) such that term = c*ti, or raises NoTermException
+    returns (c, i) such that term = c*ti, or raises NoTermException.
+
+    if term1 is a FuncTerm, recursively find problem terms matching each of the arguments, then
+    search for a problem term with the same function name whose arguments are equal to the arguments
+    of term1.
+
+    if term1 is an additive or multiplicative term, recursively finds problem terms matching each
+    of the arguments, and performs FM elimination on equalities to see if their sum/product is equal
+    to a problem term.
     """
     messages.announce('    finding problem term:' + str(term1), messages.DEBUG)
     sterm = term1.canonize()
@@ -137,9 +154,20 @@ def find_problem_term(B, term1):
                 match = True
                 for k in range(len(t.args)):
                     targ, uarg = (t.args[k].coeff, t.args[k].term.index), nargs[k]
-                    if not targ == uarg:
-                        match = False  # todo: add matching modulo equality here
-                        break
+                    p = tuple(sorted((targ[1], uarg[1])))
+                    if targ == uarg:
+                        continue
+                    elif targ[1] == uarg[1]:
+                        if targ[1] in B.zero_equalities:
+                            continue
+                    elif p in B.equalities:
+                        c = B.equalities[p]
+                        if targ[1] < uarg[1]:
+                            c = fractions.Fraction(1, c)
+                        if uarg[0]*c==targ[0]:
+                            continue
+                    match = False  # todo: add matching modulo equality here
+                    break
 
                 if match:
                     return coeff, i
@@ -208,7 +236,6 @@ def find_problem_term(B, term1):
         raise NoTermException
 
     elif isinstance(term, terms.MulTerm):
-        #todo: translate the above linear algebra to multiplication
         #print 'at the problem place:', term
         if len(term.args) == 1 and term.args[0].exponent == 1:
             return coeff, B.term_name(term.args[0]).index

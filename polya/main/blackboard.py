@@ -55,6 +55,43 @@ class Error(Exception):
 ####################################################################################################
 
 
+class Tracker:
+    """
+    Allows modules to query for only the information that has been updated since the last time they
+    were called.
+    """
+
+    def __init__(self, bb):
+        self.m_index = 0
+        self.updates = {}
+        self.bb = bb
+
+    def has_new_info(self, module):
+        if module in self.updates:
+            return len(self.updates[module]) > 0
+        else:
+            return True
+
+    def get_new_info(self, module):
+        if module in self.updates:
+            s = self.updates[module]
+            self.updates[module] = set()
+            return s
+        else:
+            s = set(self.bb.inequalities.keys() + self.bb.disequalities.keys()
+                    + self.bb.equalities.keys() + self.bb.zero_inequalities.keys()
+                    + list(self.bb.zero_equalities.union(self.bb.zero_disequalities)))
+            self.updates[module] = set()
+            return s
+
+    def identify(self):
+        self.m_index += 1
+        return self.m_index - 1
+
+    def update(self, key):
+        for k in self.updates:
+            self.updates[k].add(key)
+
 class Blackboard():
 
     def __init__(self):
@@ -75,6 +112,8 @@ class Blackboard():
         self.zero_disequalities = set([])  # Set of IVar indices not equal to 0
 
         self.clauses = set()  # List of Clauses
+
+        self.tracker = Tracker(self)
 
     def has_name(self, term):
         if term.key in self.term_names:
@@ -126,6 +165,15 @@ class Blackboard():
                 hp = geometry.halfplane_of_comp(self.zero_inequalities[j], 0)
                 self.inequalities[j, i] = [hp]
             return terms.IVar(i)
+
+    def has_new_info(self, module):
+        return self.tracker.has_new_info(module)
+
+    def get_new_info(self, module):
+        return self.tracker.get_new_info(module)
+
+    def identify(self):
+        return self.tracker.identify()
 
     def get_inequalities(self):
         inequalities = []
@@ -322,6 +370,7 @@ class Blackboard():
         Adds the inequality "ti comp coeff * tj".
         """
         self.announce_comparison(i, comp, coeff, j)
+        self.tracker.update((i, j))
 
         old_comps = self.inequalities.get((i, j), [])
         new_comp = geometry.halfplane_of_comp(comp, coeff)
@@ -404,6 +453,7 @@ class Blackboard():
             self.disequalities[0, i] = des
 
         self.announce_zero_comparison(i, comp)
+        self.tracker.update(i)
 
         self.zero_inequalities[i] = comp
         new_zero_ineqs = []
@@ -440,6 +490,7 @@ class Blackboard():
                 else:
                     new_comps = old_comps
             self.inequalities[p] = new_comps
+            self.tracker.update((i, j))
 
             if self.sign(j) == 0 and len(self.inequalities[p]) == 2:
                 j_g_0 = geometry.Halfplane(1, 0, True) if i < j else geometry.Halfplane(0, -1, True)
@@ -464,6 +515,7 @@ class Blackboard():
         if (i, j) in self.disequalities:
             self.disequalities.pop(i, j)
         self.announce_comparison(i, terms.EQ, coeff, j)
+        self.tracker.update((i, j))
         self.update_clause(i, j)
 
     def assert_zero_equality(self, i):
@@ -474,6 +526,7 @@ class Blackboard():
         # todo: there's a lot of simplification that could happen if a term is equal to 0
         self.announce_zero_comparison(i, terms.EQ)
         self.update_clause(i)
+        self.tracker.update(i)
 
     def assert_disequality(self, i, coeff, j):
         """
@@ -500,7 +553,8 @@ class Blackboard():
             else:
                 self.disequalities[i, j] = {coeff}
 
-        self.update_clause(i, j)
+            self.update_clause(i, j)
+            self.tracker.update((i, j))
 
     def assert_zero_disequality(self, i):
         """
@@ -518,6 +572,7 @@ class Blackboard():
             self.zero_disequalities.add(i)
 
         self.update_clause(i)
+        self.tracker.update(i)
 
     def assert_clause(self, *literals):
         """
