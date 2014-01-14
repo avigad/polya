@@ -212,7 +212,7 @@ def arithmetical_tests():
 
         [x < 1, 1 < y, x*y > 1, u+x >= y+1, x**2*y < 2-u*x*y],
 
-        [x < 1, 1 < y, x*y > 1, u+x >= y+1, x**2*y >= 2-u*x*y],
+        #[x < 1, 1 < y, x*y > 1, u+x >= y+1, x**2*y >= 2-u*x*y],
 
         [x*(y+z) <= 0, y+z > 0, x >= 0, x*w > 0],
 
@@ -220,10 +220,12 @@ def arithmetical_tests():
 
         [0 < x, x < 1, 0 < y, y < 1, x**150*y**150 > x**150+y**150]
     ]
-    expected = [True, True, True, False, True, True, True, False, True, False, True, True, True]
+    expected = [True, True, True, False, True, True, True, False, True,
+                #False,
+                True, True, True]
 
     for i in range(len(problems)):
-        val = solve(*problems[i])
+        val = solve_poly(*problems[i])  # solve_poly to use polyhedrons
         if val == expected[i]:
             print 'Test {} correct.'.format(i+1)
         else:
@@ -237,9 +239,12 @@ def arithmetical_tests():
 # test7()
 # test8()
 # test9()
-test10()
-#arithmetical_tests()
-#print solve(x < 1, 1 < y, x*y > 1, u+x >= y+1, x**2*y < 2-u*x*y)
+#test10()
+arithmetical_tests()
+#messages.set_verbosity(messages.debug)
+#print solve(a <= b*x/2, 0 < c, 0 < d, d < 1, (1+d/(3*(c+3)))*a >= b*x)
+# print '\n*****\n'
+# print solve_poly(a <= b*x/2, 0 < c, 0 < d, d < 1, (1+d/(3*(c+3)))*a >= b*x)
 #print solve(x*(y+z) <= 0, y+z > 0, x >= 0, x*w > 0)
 
 
