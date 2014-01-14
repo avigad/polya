@@ -1,4 +1,5 @@
 In order to run Polya, import polya, and then:
+
     x, y, z = polya.main.terms.Vars('x, y, z')
     B = polya.main.blackboard.Blackboard()
     B.assert_comparisons(x<y, y<z, z<x)

@@ -297,6 +297,9 @@ def get_mul_comparisons(vertices, lin_set, num_vars, prime_of_index):
     where m1 and m2 are mulpairs, const is an int, comp is terms.GE/GT/LE/LT,
     and const * m1 * m2 comp 1
     """
+    if all(v[1] == 0 for v in vertices):
+        p = terms.MulPair(terms.IVar(0), 1)
+        return [(p, p, 1, terms.LT)]
     new_comparisons = []
     for (i, j) in itertools.combinations(range(num_vars), 2):
         base_matrix = [[vertices[k][0], vertices[k][i+2], vertices[k][j+2]]

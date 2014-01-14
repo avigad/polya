@@ -161,20 +161,29 @@ def test10():
     a, b = Vars('a, b')
     f, g = Func('f'), Func('g')
     B = Blackboard()
-    B.assert_comparisons(b==g(a), f(b)>0)
+    B.assert_comparisons(b==g(c), f(a, b)>0)
 
-    fm = function_module.FunctionModule([ForAll([x], f(g(x))<0)])
+    fm = function_module.FunctionModule([ForAll([x, y], f(x, g(y))==0)])
     fm.update_blackboard(B)
 
-    run(B)
+    run(B, True)
 
 
 def test11():
     u, v, w, x, y, z = Vars('u v w x y z')
+    # B = Blackboard()
+    # B.assert_comparisons(0 < u, u < v, 1 < x, x < y, 0 < w, w < z)
+    # B.assert_comparison(u + x * w >= v + y**2 * z)
+    # run(B)
+    # print
+    # print "**********"
+    print
+    # messages.set_verbosity(messages.debug)
     B = Blackboard()
     B.assert_comparisons(0 < u, u < v, 1 < x, x < y, 0 < w, w < z)
     B.assert_comparison(u + x * w >= v + y**2 * z)
     run(B, True)
+
 
 
 def arithmetical_tests():
@@ -214,20 +223,21 @@ def arithmetical_tests():
     expected = [True, True, True, False, True, True, True, False, True, False, True, True, True]
 
     for i in range(len(problems)):
-        val = solve_poly(*problems[i])
+        val = solve(*problems[i])
         if val == expected[i]:
             print 'Test {} correct.'.format(i+1)
         else:
             print 'Test {} incorrect.'.format(i+1)
 
 #messages.set_verbosity(messages.debug)
-test11()
+#test11()
 # test4()
 # test5()
 # test6()
 # test7()
 # test8()
 # test9()
+test10()
 #arithmetical_tests()
 #print solve(x < 1, 1 < y, x*y > 1, u+x >= y+1, x**2*y < 2-u*x*y)
 #print solve(x*(y+z) <= 0, y+z > 0, x >= 0, x*w > 0)
