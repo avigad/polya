@@ -35,7 +35,7 @@ def test1():
     # It does not have a model if the last inequality is >=. Contradiction is found.
     # "0<x<3*y", "u<v<0", "1<v^2<x", "u*(3*y)^2+1 >= x^2*v+x"
 
-    run(B, poly=True)
+    run(B, poly=False)
     run(B)
 
 

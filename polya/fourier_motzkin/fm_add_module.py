@@ -1,6 +1,6 @@
 ####################################################################################################
 #
-# fourier_motzkin/addition_module.py
+# fourier_motzkin/fm_add_module.py
 #
 # Authors:
 # Jeremy Avigad
@@ -247,7 +247,7 @@ def elim(zero_equations, zero_comparisons, v):
 
 def equality_to_zero_equality(c):
     """
-    Converts an equality to an equation t = 0, with t a .
+    Converts an equality to an equation t = 0, with t a Sum.
     """
     return cast_to_sum(c.term1 - c.term2)
 
