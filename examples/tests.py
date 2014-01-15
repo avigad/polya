@@ -177,6 +177,13 @@ def test11():
     run(B, True)
 
 
+def test12():
+    x = Var('x')
+    B = Blackboard()
+    B.assert_comparisons(x ** 2 + 2 * x + 1 < 0, x <= 0)
+    run(B)
+
+
 def arithmetical_tests():
     x, y, u, v, w, z, r = Vars('x, y, u, v, w, z, r')
     a, b, c, d, e = Vars('a, b, c, d, e')
@@ -221,7 +228,7 @@ def arithmetical_tests():
             print 'Test {} incorrect.'.format(i+1)
 
 #messages.set_verbosity(messages.debug)
-test11()
+test12()
 # test4()
 # test5()
 # test6()
