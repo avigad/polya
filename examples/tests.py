@@ -66,7 +66,7 @@ def test4():
 
     B = Blackboard()
 
-    fm = function_module.FunctionModule([ForAll([x, y], Implies(x<y, f(x)<f(y)))])
+    fm = FunctionModule([ForAll([x, y], Implies(x<y, f(x)<f(y)))])
 
     B.assert_comparison(a<b)
     B.assert_comparison(f(a) > f(b))
@@ -82,7 +82,7 @@ def test5():
 
     B = Blackboard()
 
-    fm = function_module.FunctionModule([ForAll([x, y], Implies(x<y, f(x)<f(y)))])
+    fm = FunctionModule([ForAll([x, y], Implies(x<y, f(x)<f(y)))])
 
     B.assert_comparisons(0<r, s>1, 0<x, x<y, w>z, z+f(x)>w+f(s*(y+r)))
 
@@ -101,7 +101,7 @@ def test6():
 
     B = Blackboard()
 
-    fm = function_module.FunctionModule(
+    fm = FunctionModule(
         [ForAll([x, y], (f(x)+f(y))/2 >= f((x+y)/2))]
     )
 
@@ -114,7 +114,7 @@ def test6():
 def test7():
     x, y, z = Vars('x, y, z')
     f = Func('f')
-    fm = function_module.FunctionModule(
+    fm = FunctionModule(
         [ForAll([x, y], (f(x)+f(y))/2 >= f((x+y)/2))]
     )
 
@@ -127,29 +127,29 @@ def test7():
 
 
 def test8():
-    x, y, z = terms.Vars('x, y, z')
-    f = terms.Func('f')
-    fm = function_module.FunctionModule(
+    x, y, z = Vars('x, y, z')
+    f = Func('f')
+    fm = FunctionModule(
         [formulas.ForAll([x, y], f(x*y)==f(x)*f(y)),
          formulas.ForAll([x], formulas.Implies(x>2, f(x)<0))]
     )
 
-    C = blackboard.Blackboard()
+    C = Blackboard()
     C.assert_comparisons(x>1, y>2, f(x*y)>0)
     fm.update_blackboard(C)
 
     run(C)
 
 def test9():
-    x, y, z = terms.Vars('x, y, z')
-    f = terms.Func('f')
-    fm = function_module.FunctionModule(
+    x, y, z = Vars('x, y, z')
+    f = Func('f')
+    fm = FunctionModule(
         [
             formulas.ForAll([x, y], f((x*y)/2)<=(f(x)*f(y))/2)
         ]
     )
 
-    C = blackboard.Blackboard()
+    C = Blackboard()
     C.assert_comparisons(z>0, z*f(x)*f(y)<0, 4*z*f(x*y/2)>0)
     fm.update_blackboard(C)
     run(C, True)
@@ -165,9 +165,9 @@ def test10():
     B = Blackboard()
     B.assert_comparisons(f(a, b, c*d)<0, a>0, b>0, a==c, b==d)
 
-    fm = function_module.FunctionModule([ForAll([x, y], f(x, y, x*y)>0)])
-    poly_add_module.PolyAdditionModule().update_blackboard(B)
-    poly_mult_module.PolyMultiplicationModule().update_blackboard(B)
+    fm = FunctionModule([ForAll([x, y], f(x, y, x*y)>0)])
+    PolyAdditionModule().update_blackboard(B)
+    PolyMultiplicationModule().update_blackboard(B)
     fm.update_blackboard(B)
 
     run(B, True)
@@ -178,8 +178,8 @@ def test10a():
     B = Blackboard()
     B.assert_comparisons(f(e, b, c+d)<0, a>0, b>0, a==c, b==d, a==e)
 
-    fm = function_module.FunctionModule([ForAll([x, y], f(x, y, x+y)>0)])
-    poly_add_module.PolyAdditionModule().update_blackboard(B)
+    fm = FunctionModule([ForAll([x, y], f(x, y, x+y)>0)])
+    PolyAdditionModule().update_blackboard(B)
     fm.update_blackboard(B)
 
     run(B, True)
@@ -205,7 +205,7 @@ def test12():
     B = Blackboard()
     B.assert_comparisons(0<x, x<y, (1+x**2)/(2+exp(y))>=(2+y**2)/(1+exp(x)))
 
-    fm = function_module.FunctionModule([ForAll([x, y], And(Implies(x<y, exp(x)<exp(y)),
+    fm = FunctionModule([ForAll([x, y], And(Implies(x<y, exp(x)<exp(y)),
                                                             exp(x)>0))])
 
     fm.update_blackboard(B)
@@ -219,6 +219,12 @@ def test13():
     B = Blackboard()
     B.assert_comparisons(x ** 2 + 2 * x + 1 < 0)
     run(B)
+
+
+def test14():
+    f = Func('f')
+    S = Solver([f(x)<y, y<z, z<f(x)], [ForAll([x], f(x)>0)], True)
+    print S.check()
 
 
 def arithmetical_tests():
@@ -268,7 +274,7 @@ def arithmetical_tests():
 
 #messages.set_verbosity(messages.debug)
 
-test13()
+test14()
 
 # test4()
 # test5()

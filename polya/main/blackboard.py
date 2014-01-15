@@ -663,32 +663,33 @@ class Blackboard():
         """
         For debugging purposes.
         """
-        print '******'
+        st = '\n******\n'
         for i in self.term_defs:
-            print terms.IVar(i), ':=', self.term_defs[i]
+            st += '{0!s} := {1!s}\n'.format(terms.IVar(i), self.term_defs[i])
 
         for i in self.zero_equalities:
-            print terms.IVar(i), '= 0'
+            st += '{0!s} = 0\n'.format(terms.IVar(i))
 
         for i in self.zero_inequalities:
-            print terms.IVar(i), terms.comp_str[self.zero_inequalities[i]], '0'
+            st += '{0!s} {1!s} 0\n'.format(terms.IVar(i), terms.comp_str[self.zero_inequalities[i]])
 
         for i in self.zero_disequalities:
-            print terms.IVar(i), '!= 0'
+            st += '{0!s} != 0\n'.format(terms.IVar(i))
 
         for (i, j) in sorted(self.equalities.keys()):
-            print terms.IVar(i), '=', self.equalities[i, j] * terms.IVar(j)
+            st += '{0!s} = {1!s}\n'.format(terms.IVar(i), self.equalities[i, j] * terms.IVar(j))
 
         for (i, j) in sorted(self.inequalities.keys()):
             for c in self.inequalities[i, j]:
                 if c.a != 0 and c.b != 0:
-                    print c.to_comp(terms.IVar(i), terms.IVar(j))
+                    st += str(c.to_comp(terms.IVar(i), terms.IVar(j))) + '\n'
 
         for (i, j) in sorted(self.disequalities.keys()):
             for val in self.disequalities[i, j]:
-                print terms.IVar(i), '!=', val * terms.IVar(j)
+                st += '{0!s} != {1!s}\n'.format(terms.IVar(i), val * terms.IVar(j))
 
-        print '******'
+        st += '\n******\n'
+        return st
 
 ####################################################################################################
 #
