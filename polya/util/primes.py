@@ -136,3 +136,53 @@ def lcm(a, b):
 
 def lcmm(args):
     return reduce(lcm, args, 1)
+
+
+def perfect_root_int(n, k):
+    """Determines whether an Integer n
+    is a perfect k power, returns the integer i such that
+    i^k = n or None if it doesn't exist
+    
+    Arguments:
+    - `n`:
+    - `k`:
+    """
+    high = n
+    low = 0
+    while high - low > 1:
+        mid = (low + high) // 2
+        mid_to_k = pow(mid, k)
+        if mid_to_k < n:
+            low = mid
+        elif n < mid_to_k:
+            high = mid
+        else:
+            return mid
+    if high ** k == n:
+        return high
+    else:
+        return None
+
+
+def perfect_root(p, q):
+    """Determines wheter a rational p is a perfect
+    q root, by dichotomy. and returns it if
+    it exists, and returns None otherwise.
+    
+    Arguments:
+    - `p`: a Rational
+    - `q`: a Rational
+    """
+    n = p.numerator
+    d = p.denominator
+    k = q.denominator
+    l = q.numerator
+    #It suffices to determine if n and d are perfect k roots
+    r_n = perfect_root_int(n, k)
+    r_d = perfect_root_int(d, k)
+    if r_n and r_d:
+        return fractions.Fraction(r_n ** l, r_d ** l)
+    else:
+        return None
+
+
