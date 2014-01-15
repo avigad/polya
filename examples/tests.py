@@ -151,23 +151,37 @@ def test9():
     C = blackboard.Blackboard()
     C.assert_comparisons(z>0, z*f(x)*f(y)<0, 4*z*f(x*y/2)>0)
     fm.update_blackboard(C)
-    run(C)
+    run(C, True)
 
     # This example does not run successfully, despite there being a contradiction.
     # we get t6 = t1*t3*t5, t10=t3*t5, t1>0, t10>0, t6<0.
     # but because the signs of t1 and t3 are unknown, the mul routine cannot find that contradiction
+    # if we add z>0,
 
 def test10():
     a, b = Vars('a, b')
-    f, g = Func('f'), Func('g')
+    f, g, h = Func('f'), Func('g'), Func('h')
     B = Blackboard()
-    B.assert_comparisons(b==g(c), f(a, b)>0)
+    B.assert_comparisons(f(a, b, c*d)<0, a>0, b>0, a==c, b==d)
 
-    fm = function_module.FunctionModule([ForAll([x, y], f(x, g(y))==0)])
+    fm = function_module.FunctionModule([ForAll([x, y], f(x, y, x*y)>0)])
+    poly_add_module.PolyAdditionModule().update_blackboard(B)
+    poly_mult_module.PolyMultiplicationModule().update_blackboard(B)
     fm.update_blackboard(B)
 
     run(B, True)
 
+def test10a():
+    a, b = Vars('a, b')
+    f, g, h = Func('f'), Func('g'), Func('h')
+    B = Blackboard()
+    B.assert_comparisons(f(e, b, c+d)<0, a>0, b>0, a==c, b==d, a==e)
+
+    fm = function_module.FunctionModule([ForAll([x, y], f(x, y, x+y)>0)])
+    poly_add_module.PolyAdditionModule().update_blackboard(B)
+    fm.update_blackboard(B)
+
+    run(B, True)
 
 def test11():
     u, v, w, x, y, z = Vars('u v w x y z')
@@ -238,9 +252,9 @@ def arithmetical_tests():
 # test6()
 # test7()
 # test8()
-# test9()
-#test10()
-arithmetical_tests()
+#test9()
+test10a()
+#arithmetical_tests()
 #messages.set_verbosity(messages.debug)
 #print solve(a <= b*x/2, 0 < c, 0 < d, d < 1, (1+d/(3*(c+3)))*a >= b*x)
 # print '\n*****\n'
