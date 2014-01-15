@@ -11,61 +11,38 @@ import tempfile
 
 import subprocess
 
+
 # look in some standard places for lrs
-while True:
-    try:
-        subprocess.check_output(['lrs', '_pretend_file'])
-    except OSError, e:
-        pass
-    else:
-        lrs_path = 'lrs'
-        break
-    try:
-        subprocess.check_output(['./lrs', '_pretend_file'])
-    except OSError, e:
-        pass
-    else:
-        lrs_path = './lrs'
-        break
-    try:
-        subprocess.check_output(['/usr/bin/lrs', '_pretend_file'])
-    except OSError, e:
-        pass
-    else:
-        lrs_path = '/usr/bin/lrs'
-        break
-    lrs_path == None
-    break
+def find_lrs_path():
+    for s in ['lrs', './lrs', '/usr/bin/lrs']:
+        try:
+            subprocess.check_output([s, '_pretend_file'])
+        except OSError, e:
+            pass
+        else:
+            return s
+
+
+lrs_path = find_lrs_path()
+
 if lrs_path == None:
     print 'lrs not found.'
 else:
     print 'lrs found ({0!s})!'.format(lrs_path)
 
+
 # look in some standard places for redund
-while True:
-    try:
-        subprocess.check_output(['redund', '_pretend_file'])
-    except OSError, e:
-        pass
-    else:
-        redund_path = 'redund'
-        break
-    try:
-        subprocess.check_output(['./redund', '_pretend_file'])
-    except OSError, e:
-        pass
-    else:
-        redund_path = './redund'
-        break
-    try:
-        subprocess.check_output(['/usr/bin/redund', '_pretend_file'])
-    except OSError, e:
-        pass
-    else:
-        redund_path = '/usr/bin/redund'
-        break
-    redund_path == None
-    break
+def find_redund_path():
+    for s in ['redund', './redund', '/usr/bin/lrs']:
+        try:
+            subprocess.check_output([s, '_pretend_file'])
+        except OSError, e:
+            pass
+        else:
+            return s
+
+redund_path = find_redund_path()
+
 if redund_path == None:
     print 'redund not found.'
 else:
@@ -153,6 +130,5 @@ def redund_and_generate(matrix):
     #print matrix
     #print 'turned into'
     #print out
-    
-    
+
     return get_inequalities(out)
