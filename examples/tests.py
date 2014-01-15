@@ -14,6 +14,7 @@
 
 from polya import *
 import timeit
+import polya.util.timer as timer
 
 t = timeit.default_timer()
 
@@ -198,6 +199,19 @@ def test11():
     B.assert_comparison(u + x * w >= v + y**2 * z)
     run(B, True)
 
+def test12():
+    exp = Func('exp')
+
+    B = Blackboard()
+    B.assert_comparisons(0<x, x<y, (1+x**2)/(2+exp(y))>=(2+y**2)/(1+exp(x)))
+
+    fm = function_module.FunctionModule([ForAll([x, y], And(Implies(x<y, exp(x)<exp(y)),
+                                                            exp(x)>0))])
+
+    fm.update_blackboard(B)
+    run(B, True)
+
+    # This example comes from Avigad and Friedman (2006)
 
 
 def arithmetical_tests():
@@ -253,7 +267,8 @@ def arithmetical_tests():
 # test7()
 # test8()
 #test9()
-test10a()
+#test10a()
+test12()
 #arithmetical_tests()
 #messages.set_verbosity(messages.debug)
 #print solve(a <= b*x/2, 0 < c, 0 < d, d < 1, (1+d/(3*(c+3)))*a >= b*x)
@@ -261,5 +276,8 @@ test10a()
 # print solve_poly(a <= b*x/2, 0 < c, 0 < d, d < 1, (1+d/(3*(c+3)))*a >= b*x)
 #print solve(x*(y+z) <= 0, y+z > 0, x >= 0, x*w > 0)
 
+messages.set_verbosity(messages.debug)
 
 print 'Ran in', round(timeit.default_timer()-t, 3), 'seconds'
+
+timer.announce_times()

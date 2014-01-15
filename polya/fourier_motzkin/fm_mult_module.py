@@ -18,6 +18,7 @@
 import polya.main.terms as terms
 import polya.main.messages as messages
 import polya.polyhedron.poly_mult_module as poly_mult_module
+import polya.util.timer as timer
 import fractions
 
 
@@ -351,6 +352,7 @@ class FMMultiplicationModule:
         Learns sign information and equalities and inequalities from multiplicative information in
         B, and asserts them to B.
         """
+        timer.start(timer.FMMUL)
         messages.announce_module('Fourier-Motzkin multiplicative module')
         poly_mult_module.derive_info_from_definitions(B)
         eqs, comps = get_multiplicative_information(B)
@@ -372,3 +374,4 @@ class FMMultiplicationModule:
             assert_comparisons_to_blackboard(i_eqs, i_comps, B)
             # done with IVar(i)
             eqs, comps = elim(eqs, comps, i)
+        timer.stop(timer.FMMUL)

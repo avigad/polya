@@ -19,6 +19,7 @@ import polya.main.blackboard as blackboard
 import polya.main.messages as messages
 import polya.util.geometry as geo
 import polya.polyhedron.lrs_polyhedron_util as lrs_util
+import polya.util.timer as timer
 import itertools
 
 
@@ -231,6 +232,7 @@ class PolyAdditionModule:
         pass
 
     def update_blackboard(self, B):
+        timer.start(timer.PADD)
         messages.announce_module('polyhedron additive module')
 
     #    learn_additive_sign_info(blackboard)
@@ -252,6 +254,7 @@ class PolyAdditionModule:
 
         for c in new_comparisons:
             B.assert_comparison(c)
+        timer.stop(timer.PADD)
 
 
 ####################################################################################################

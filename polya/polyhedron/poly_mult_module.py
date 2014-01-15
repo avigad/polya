@@ -20,6 +20,7 @@ import polya.main.messages as messages
 import polya.polyhedron.lrs_polyhedron_util as lrs_util
 import polya.polyhedron.poly_add_module as poly_add_module
 import polya.util.primes as primes
+import polya.util.timer as timer
 
 import cdd
 
@@ -440,6 +441,7 @@ class PolyMultiplicationModule:
         pass
 
     def update_blackboard(self, B):
+        timer.start(timer.PMUL)
         messages.announce_module('polyhedron multiplicative module')
 
         derive_info_from_definitions(B)
@@ -468,6 +470,7 @@ class PolyMultiplicationModule:
             c = process_mul_comp(m1, m2, coeff, comp, B)
             if c is not None:
                 B.assert_comparison(c)
+        timer.stop(timer.PMUL)
 
 
 ####################################################################################################
