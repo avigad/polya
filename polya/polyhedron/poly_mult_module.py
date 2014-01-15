@@ -20,6 +20,7 @@ import polya.main.messages as messages
 import polya.polyhedron.lrs_polyhedron_util as lrs_util
 import polya.polyhedron.poly_add_module as poly_add_module
 import polya.util.primes as primes
+import polya.util.timer as timer
 
 import cdd
 
@@ -297,6 +298,9 @@ def get_mul_comparisons(vertices, lin_set, num_vars, prime_of_index):
     where m1 and m2 are mulpairs, const is an int, comp is terms.GE/GT/LE/LT,
     and const * m1 * m2 comp 1
     """
+    if all(v[1] == 0 for v in vertices):
+        p = terms.MulPair(terms.IVar(0), 1)
+        return [(p, p, 1, terms.LT)]
     new_comparisons = []
     for (i, j) in itertools.combinations(range(num_vars), 2):
         base_matrix = [[vertices[k][0], vertices[k][i+2], vertices[k][j+2]]
@@ -437,6 +441,7 @@ class PolyMultiplicationModule:
         pass
 
     def update_blackboard(self, B):
+        timer.start(timer.PMUL)
         messages.announce_module('polyhedron multiplicative module')
 
         derive_info_from_definitions(B)
@@ -465,6 +470,7 @@ class PolyMultiplicationModule:
             c = process_mul_comp(m1, m2, coeff, comp, B)
             if c is not None:
                 B.assert_comparison(c)
+        timer.stop(timer.PMUL)
 
 
 ####################################################################################################

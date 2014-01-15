@@ -14,6 +14,7 @@
 
 from polya import *
 import timeit
+import polya.util.timer as timer
 
 t = timeit.default_timer()
 
@@ -151,33 +152,69 @@ def test9():
     C = blackboard.Blackboard()
     C.assert_comparisons(z>0, z*f(x)*f(y)<0, 4*z*f(x*y/2)>0)
     fm.update_blackboard(C)
-    run(C)
+    run(C, True)
 
     # This example does not run successfully, despite there being a contradiction.
     # we get t6 = t1*t3*t5, t10=t3*t5, t1>0, t10>0, t6<0.
     # but because the signs of t1 and t3 are unknown, the mul routine cannot find that contradiction
+    # if we add z>0,
 
 def test10():
     a, b = Vars('a, b')
-    f, g = Func('f'), Func('g')
+    f, g, h = Func('f'), Func('g'), Func('h')
     B = Blackboard()
-    B.assert_comparisons(b==g(a), f(b)>0)
+    B.assert_comparisons(f(a, b, c*d)<0, a>0, b>0, a==c, b==d)
 
-    fm = function_module.FunctionModule([ForAll([x], f(g(x))<0)])
+    fm = function_module.FunctionModule([ForAll([x, y], f(x, y, x*y)>0)])
+    poly_add_module.PolyAdditionModule().update_blackboard(B)
+    poly_mult_module.PolyMultiplicationModule().update_blackboard(B)
     fm.update_blackboard(B)
 
-    run(B)
+    run(B, True)
 
+def test10a():
+    a, b = Vars('a, b')
+    f, g, h = Func('f'), Func('g'), Func('h')
+    B = Blackboard()
+    B.assert_comparisons(f(e, b, c+d)<0, a>0, b>0, a==c, b==d, a==e)
+
+    fm = function_module.FunctionModule([ForAll([x, y], f(x, y, x+y)>0)])
+    poly_add_module.PolyAdditionModule().update_blackboard(B)
+    fm.update_blackboard(B)
+
+    run(B, True)
 
 def test11():
     u, v, w, x, y, z = Vars('u v w x y z')
+    # B = Blackboard()
+    # B.assert_comparisons(0 < u, u < v, 1 < x, x < y, 0 < w, w < z)
+    # B.assert_comparison(u + x * w >= v + y**2 * z)
+    # run(B)
+    # print
+    # print "**********"
+    print
+    # messages.set_verbosity(messages.debug)
     B = Blackboard()
     B.assert_comparisons(0 < u, u < v, 1 < x, x < y, 0 < w, w < z)
     B.assert_comparison(u + x * w >= v + y**2 * z)
     run(B, True)
 
-
 def test12():
+    exp = Func('exp')
+
+    B = Blackboard()
+    B.assert_comparisons(0<x, x<y, (1+x**2)/(2+exp(y))>=(2+y**2)/(1+exp(x)))
+
+    fm = function_module.FunctionModule([ForAll([x, y], And(Implies(x<y, exp(x)<exp(y)),
+                                                            exp(x)>0))])
+
+    fm.update_blackboard(B)
+    run(B, True)
+
+    # This example comes from Avigad and Friedman (2006)
+
+
+def test13():
     x = Var('x')
     B = Blackboard()
     B.assert_comparisons(x ** 2 + 2 * x + 1 < 0, x <= 0)
@@ -210,7 +247,7 @@ def arithmetical_tests():
 
         [x < 1, 1 < y, x*y > 1, u+x >= y+1, x**2*y < 2-u*x*y],
 
-        [x < 1, 1 < y, x*y > 1, u+x >= y+1, x**2*y >= 2-u*x*y],
+        #[x < 1, 1 < y, x*y > 1, u+x >= y+1, x**2*y >= 2-u*x*y],
 
         [x*(y+z) <= 0, y+z > 0, x >= 0, x*w > 0],
 
@@ -218,26 +255,38 @@ def arithmetical_tests():
 
         [0 < x, x < 1, 0 < y, y < 1, x**150*y**150 > x**150+y**150]
     ]
-    expected = [True, True, True, False, True, True, True, False, True, False, True, True, True]
+    expected = [True, True, True, False, True, True, True, False, True,
+                #False,
+                True, True, True]
 
     for i in range(len(problems)):
-        val = solve_poly(*problems[i])
+        val = solve_poly(*problems[i])  # solve_poly to use polyhedrons
         if val == expected[i]:
             print 'Test {} correct.'.format(i+1)
         else:
             print 'Test {} incorrect.'.format(i+1)
 
 #messages.set_verbosity(messages.debug)
-test12()
+
+test13()
+
 # test4()
 # test5()
 # test6()
 # test7()
 # test8()
 # test9()
+# test10a()
+# test12()
 #arithmetical_tests()
-#print solve(x < 1, 1 < y, x*y > 1, u+x >= y+1, x**2*y < 2-u*x*y)
+#messages.set_verbosity(messages.debug)
+#print solve(a <= b*x/2, 0 < c, 0 < d, d < 1, (1+d/(3*(c+3)))*a >= b*x)
+# print '\n*****\n'
+# print solve_poly(a <= b*x/2, 0 < c, 0 < d, d < 1, (1+d/(3*(c+3)))*a >= b*x)
 #print solve(x*(y+z) <= 0, y+z > 0, x >= 0, x*w > 0)
 
+messages.set_verbosity(messages.debug)
 
 print 'Ran in', round(timeit.default_timer()-t, 3), 'seconds'
+
+timer.announce_times()

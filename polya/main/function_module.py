@@ -16,6 +16,7 @@
 import polya.main.terms as terms
 import polya.main.messages as messages
 import polya.main.formulas as formulas
+import polya.util.timer as timer
 import fractions
 import copy
 # from itertools import product, ifilter
@@ -119,6 +120,171 @@ def elim_var_mul(i, pivot, rows):
     return new_rows
 
 
+def add_fm_eq_elim(coeff, term, B):
+    """
+    Given an additive term, performs fourier-motzkin elimination on known equalities to deduce
+    whether term is equal to any problem term.
+    """
+    if len(term.args) == 1:
+        return coeff*term.args[0].coeff, term.args[0].term.index
+
+    nargs = [find_problem_term(B, p.term) for p in term.args]
+    for i in range(len(nargs)):
+        nargs[i] = (term.args[i].coeff*nargs[i][0], nargs[i][1])
+
+    # Do some linear algebra
+    urow = [0]*B.num_terms + [-1]
+    for (c, i) in nargs:
+        urow[i] = c
+
+    mat = []
+    for tc in B.get_equalities():
+        i, c = tc.term1.index, tc.term2.coeff
+        j = (B.num_terms if c == 0 else tc.term2.term.index)
+        row = [0]*(B.num_terms+1)
+        row[i] = -1
+        row[j] = c
+        mat.append(row[:])
+
+    for i in (i for i in range(B.num_terms) if isinstance(B.term_defs[i], terms.AddTerm)):
+        row = [0]*(B.num_terms+1)
+        row[i] = -1
+        for p in B.term_defs[i].args:
+            row[p.term.index] = p.coeff
+        mat.append(row[:])
+
+    mat.append(urow)
+
+    #begin FM elimination
+    rows_i = copy.copy(mat)
+    for i in range(B.num_terms):  # check if u = c*i
+        rows_j = copy.copy(rows_i)
+        for j in range(i + 1, B.num_terms):
+            try:
+                r = next(r for r in rows_j if r[j] != 0 and r[-1] == 0)
+            except StopIteration:
+                continue
+            rows_j = elim_var(j, r, [row for row in rows_j if row is not r])
+
+        row = next(r for r in rows_j if r[-1] != 0)
+        l = len([k for k in row if k != 0])
+        if l == 1:
+            #we have u = 0. What to do?
+            return 0, 0
+        elif l == 2:
+            #we've found a match for u
+            ind = next(k for k in range(len(row)) if row[k] != 0)
+            coeff = -fractions.Fraction(row[ind], row[-1])*coeff
+            return coeff, ind
+        else:
+            try:
+                r = next(r for r in rows_i if r[i] != 0 and r[-1] == 0)
+                rows_i = elim_var(i, r, [row for row in rows_i if row is not r])
+            except StopIteration:
+                if rows_i[-1][i] != 0:  # there is a t_i in u, and nowhere else. Can't elim.
+                    raise NoTermException
+
+    raise NoTermException
+
+
+def mul_fm_eq_elim(coeff, term, B):
+    """
+    Given a multiplicative term, performs fourier motzkin elimination on known equalities to see
+    whether term is equal to a problem term.
+    The first coordinate of the elimination matrix represents the constant coefficient; the ith
+    coordinate represents the exponent of ti in c*t1^e1*...*tn^en = 1.
+    """
+    if len(term.args) == 1 and term.args[0].exponent == 1:
+        return coeff, B.term_name(term.args[0]).index
+
+    p = find_problem_term(B, term.args[0].term)
+    nt = coeff*(p[0]*terms.IVar(p[1]))**term.args[0].exponent
+    for a in term.args[1:]:
+        p = find_problem_term(B, a.term)
+        nt *= (p[0]*terms.IVar(p[1]))**a.exponent
+
+    nt = nt.canonize()
+
+    if isinstance(nt, terms.STerm):
+        coeff, nt = nt.coeff, nt.term
+    else:
+        coeff = 1
+
+    if nt.key in B.term_names:
+        return coeff, B.term_names[nt.key].index
+
+    if all(B.implies(a.term.index, terms.NE, 0, 0) for a in nt.args):
+        # we can do FM elim.
+        urow = [0]*B.num_terms + [-1]
+        for a in nt.args:
+            urow[a.term.index] = a.exponent
+        urow[0] = 1
+
+        mat = []
+        for tc in (e for e in B.get_equalities() if e.term2.coeff != 0):
+            i, c, j = tc.term1.index, tc.term2.coeff, tc.term2.term.index
+            if B.implies(i, terms.NE, 0, 0):  # if ti != 0, then tj != 0
+                row = [0]*(B.num_terms+1)
+                row[i] = -1
+                row[j] = 1
+                row[0] = c
+                mat.append(row[:])
+
+        for i in (i for i in range(B.num_terms) if
+                  isinstance(B.term_defs[i], terms.MulTerm) and B.implies(i, terms.NE, 0, 0)):
+            row = [0]*(B.num_terms+1)
+            row[i] = -1
+            for p in (p for p in B.term_defs[i].args if p.term.index != 0):
+                row[p.term.index] = p.exponent
+            row[0] = 1
+            mat.append(row[:])
+
+        mat.append(urow)
+
+        rows_i = copy.copy(mat)
+        print rows_i
+        for i in range(1, B.num_terms):
+            rows_j = copy.copy(rows_i)
+            for j in range(i+1, B.num_terms):
+                try:
+                    r = next(r for r in rows_j if r[j] != 0 and r[-1] == 0 and r[0] == 1)
+                except StopIteration:
+                    try:
+                        r = next(r for r in rows_j if r[j] != 0 and r[-1] == 0)
+                    except StopIteration:
+                        continue
+
+                rows_j = elim_var_mul(j, r, [row for row in rows_j if row is not r])
+
+            for row in (r for r in rows_j if r[-1] != 0):
+                l = len([k for k in row if k != 0])
+                if l == 1 or row[0] == 0:
+                    #we have u = 0. What to do?
+                    return 0, 0
+                elif l == 2:
+                    #we've found a match for u: it's a constant.
+                    return coeff*row[0], 0
+                elif l == 3:
+                    #we've found a match for u, nonconstant
+                    coeff = coeff*row[0]
+                    ind = next(i for i in range(1, len(row)) if row[i] != 0)
+                    if row[ind] == 1:  # otherwise, we have u = ti**k, k!=1
+                        print coeff, ind
+                        return coeff, ind
+            try:
+                r = next(r for r in rows_i if r[i] != 0 and r[-1] == 0 and r[0] == 1)
+            except StopIteration:
+                try:
+                    r = next(r for r in rows_i if r[i] != 0 and r[-1] == 0)
+                except StopIteration:
+                    if rows_i[-1][i] != 0:  # there is a t_i in u, and nowhere else.
+                        raise NoTermException
+
+            rows_i = elim_var_mul(i, r, [row for row in rows_i if row is not r])
+        raise NoTermException
+    raise NoTermException
+
+
 def find_problem_term(B, term1):
     """
     term is a Term such that all variable occurrences are IVars.
@@ -166,7 +332,6 @@ def find_problem_term(B, term1):
                             c = fractions.Fraction(1, c)
                         if uarg[0]*c==targ[0]:
                             continue
-                    match = False  # todo: add matching modulo equality here
                     break
 
                 if match:
@@ -174,153 +339,12 @@ def find_problem_term(B, term1):
         raise NoTermException
 
     elif isinstance(term, terms.AddTerm):
-        if len(term.args) == 1:
-            return coeff*term.args[0].coeff, term.args[0].term.index
-
-        nargs = [find_problem_term(B, p.term) for p in term.args]
-        for i in range(len(nargs)):
-            nargs[i] = (term.args[i].coeff*nargs[i][0], nargs[i][1])
-
-        # Do some linear algebra
-        urow = [0]*B.num_terms + [-1]
-        for (c, i) in nargs:
-            urow[i] = c
-
-        mat = []
-        for tc in B.get_equalities():
-            i, c = tc.term1.index, tc.coeff
-            j = (B.num_terms if tc.coeff == 0 else tc.term2.term.index)
-            row = [0]*(B.num_terms+1)
-            row[i] = -1
-            row[j] = c
-            mat.append(row[:])
-
-        for i in (i for i in range(B.num_terms) if isinstance(B.term_defs[i], terms.AddTerm)):
-            row = [0]*(B.num_terms+1)
-            row[i] = -1
-            for p in B.term_defs[i].args:
-                row[p.term.index] = p.coeff
-            mat.append(row[:])
-
-        mat.append(urow)
-
-        #begin FM elimination
-        rows_i = copy.copy(mat)
-        for i in range(B.num_terms):  # check if u = c*i
-            rows_j = copy.copy(rows_i)
-            for j in range(i + 1, B.num_terms):
-                try:
-                    r = next(r for r in rows_j if r[j] != 0 and r[-1] == 0)
-                except StopIteration:
-                    continue
-                rows_j = elim_var(j, r, [row for row in rows_j if row is not r])
-
-            row = next(r for r in rows_j if r[-1] != 0)
-            l = len([k for k in row if k != 0])
-            if l == 1:
-                #we have u = 0. What to do?
-                return 0, 0
-            elif l == 2:
-                #we've found a match for u
-                ind = next(k for k in range(len(row)) if row[k] != 0)
-                coeff = -fractions.Fraction(row[ind], row[-1])*coeff
-                return coeff, ind
-            else:
-                try:
-                    r = next(r for r in rows_i if r[i] != 0 and r[-1] == 0)
-                    rows_i = elim_var(i, r, [row for row in rows_i if row is not r])
-                except StopIteration:
-                    if rows_i[-1][i] != 0:  # there is a t_i in u, and nowhere else. Can't elim.
-                        raise NoTermException
-
-        raise NoTermException
+        return add_fm_eq_elim(coeff, term, B)
 
     elif isinstance(term, terms.MulTerm):
-        #print 'at the problem place:', term
-        if len(term.args) == 1 and term.args[0].exponent == 1:
-            return coeff, B.term_name(term.args[0]).index
+        return mul_fm_eq_elim(coeff, term, B)
 
-        p = find_problem_term(B, term.args[0].term)
-        nt = coeff*(p[0]*terms.IVar(p[1]))**term.args[0].exponent
-        for a in term.args[1:]:
-            p = find_problem_term(B, a.term)
-            nt *= (p[0]*terms.IVar(p[1]))**a.exponent
-
-        nt = nt.canonize()
-
-        if isinstance(nt, terms.STerm):
-            coeff, nt = nt.coeff, nt.term
-        else:
-            coeff = 1
-
-        if nt.key in B.term_names:
-            return coeff, B.term_names[nt.key].index
-
-        if all(B.implies(a.term.index, terms.NE, 0, 0) for a in nt.args):
-            # we can do FM elim.
-            urow = [0]*B.num_terms + [-1]
-            for a in nt.args:
-                urow[a.term.index] = a.exponent
-
-            mat = []
-            for tc in (e for e in B.get_equalities() if e.coeff != 0):
-                i, c, j = tc.term1.index, tc.coeff, tc.term2.term.index
-                if B.implies(i, terms.NE, 0, 0):  # if ti != 0, then tj != 0
-                    row = [0]*(B.num_terms+1)
-                    row[i] = -1
-                    row[j] = 1
-                    row[0] = c
-                    mat.append(row[:])
-
-            for i in (i for i in range(B.num_terms) if
-                      isinstance(B.term_defs[i], terms.MulTerm) and B.implies(i, terms.NE, 0, 0)):
-                row = [0]*(B.num_terms+1)
-                row[i] = -1
-                for p in (p for p in B.term_defs[i].args if p.term.index != 0):
-                    row[p.term.index] = p.exponent
-                mat.append(row[:])
-
-            mat.append(urow)
-
-            rows_i = copy.copy(mat)
-            for i in range(1, B.num_terms):
-                rows_j = copy.copy(rows_i)
-                for j in range(i+1, B.num_terms):
-                    try:
-                        r = next(r for r in rows_j if r[j] != 0 and r[-1] == 0)
-                        rows_i = elim_var(i, r, [row for row in rows_i if row is not r])
-                    except StopIteration:
-                        continue
-                    rows_j = elim_var(j, r, [row for row in rows_j if row is not r])
-
-                for row in (r for r in rows_j if r[-1] != 0):
-                    l = len([k for k in row if k != 0])
-                    if l == 1 or row[0] == 0:
-                        #we have u = 0. What to do?
-                        return 0, 0
-                    elif l == 2:
-                        #we've found a match for u: it's a constant.
-                        return coeff*row[0], 0
-                    elif l == 3:
-                        #we've found a match for u, nonconstant
-                        coeff = coeff*row[0]
-                        ind = next(i for i in range(1, len(row)) if row[i] != 0)
-                        if row[ind] == 1:  # otherwise, we have u = ti**k, k!=1
-                            return coeff, ind
-
-                try:
-                    r = next(r for r in rows_i if r[i] != 0 and r[-1] == 0 and r[0] == 1)
-                except StopIteration:
-                    try:
-                        r = next(r for r in rows_i if r[i] != 0 and r[-1] == 0)
-                    except StopIteration:
-                        if rows_i[-1][i] != 0:  # there is a t_i in u, and nowhere else.
-                            raise NoTermException
-
-                rows_i = elim_var_mul(i, r, [row for row in rows_i if row is not r])
-            raise NoTermException
-
-        raise NoTermException
+    raise NoTermException
 
 
 def unify(B, termlist, uvars, arg_uvars, envs=None):
@@ -464,9 +488,11 @@ class FunctionModule:
         self.axioms.extend(formulas.Axiom(c) for c in clauses)
 
     def update_blackboard(self, B):
+        timer.start(timer.FUN)
         messages.announce_module('function axiom module')
         for a in self.axioms:
             messages.announce("Instantiating axiom: {}".format(a), messages.DEBUG)
             clauses = instantiate(a, B)
             for c in clauses:
                 B.assert_clause(*c)
+        timer.stop(timer.FUN)

@@ -18,6 +18,7 @@
 import polya.main.terms as terms
 import polya.main.messages as messages
 import polya.polyhedron.poly_mult_module as poly_mult_module
+import polya.util.timer as timer
 import fractions
 
 
@@ -79,7 +80,7 @@ class Product():
                 return '*'.join([str(a) for a in self.args])
         else:
             if len(self.args) == 0:
-                return '1'
+                return str(self.coeff)
             else:
                 return '{0!s}*{1}'.format(self.coeff,'*'.join([str(a) for a in self.args]))
 
@@ -313,7 +314,7 @@ def one_comparison_to_comparison(c, B):
     comp = terms.GT if c.strong else terms.GE
     if l == 0:
         assert c.strong  # comparisons 1 >= 1 should have been eliminated
-        return terms.IVar(0) < 0   # TODO: is the a better way of returning a contradiction?
+        return p.coeff*terms.IVar(0) > 0
 #        return None
     if l == 1:
         m = multiplicand_to_mulpair(p.args[0])
@@ -351,6 +352,7 @@ class FMMultiplicationModule:
         Learns sign information and equalities and inequalities from multiplicative information in
         B, and asserts them to B.
         """
+        timer.start(timer.FMMUL)
         messages.announce_module('Fourier-Motzkin multiplicative module')
         poly_mult_module.derive_info_from_definitions(B)
         eqs, comps = get_multiplicative_information(B)
@@ -364,7 +366,7 @@ class FMMultiplicationModule:
                 ij_eqs, ij_comps = i_eqs, i_comps
                 # determine all comparisons between IVar(i) and IVar(j)
                 for k in range(j + 1, B.num_terms):
-                     ij_eqs, ij_comps = elim(ij_eqs, ij_comps, k)
+                    ij_eqs, ij_comps = elim(ij_eqs, ij_comps, k)
                 assert_comparisons_to_blackboard(ij_eqs, ij_comps, B)
                 # done with IVar(j)
                 i_eqs, i_comps = elim(i_eqs, i_comps, j)
@@ -372,3 +374,4 @@ class FMMultiplicationModule:
             assert_comparisons_to_blackboard(i_eqs, i_comps, B)
             # done with IVar(i)
             eqs, comps = elim(eqs, comps, i)
+        timer.stop(timer.FMMUL)
