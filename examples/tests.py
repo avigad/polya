@@ -217,7 +217,7 @@ def test12():
 def test13():
     x = Var('x')
     B = Blackboard()
-    B.assert_comparisons(x ** 2 + 2 * x + 1 < 0, x <= 0)
+    B.assert_comparisons(x ** 2 + 2 * x + 1 < 0)
     run(B)
 
 
