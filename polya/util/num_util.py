@@ -1,4 +1,5 @@
 import random
+import fractions
 
 def primesbelow(N):
     # http://stackoverflow.com/questions/2068372/fastest-way-to-list-all-primes-below-n-in-python/3035188#3035188

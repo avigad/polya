@@ -274,7 +274,7 @@ def arithmetical_tests():
 
 #messages.set_verbosity(messages.debug)
 
-test14()
+#test14()
 
 # test4()
 # test5()
@@ -284,8 +284,8 @@ test14()
 # test9()
 # test10a()
 # test12()
-#arithmetical_tests()
-#messages.set_verbosity(messages.debug)
+arithmetical_tests()
+messages.set_verbosity(messages.debug)
 #print solve(a <= b*x/2, 0 < c, 0 < d, d < 1, (1+d/(3*(c+3)))*a >= b*x)
 # print '\n*****\n'
 # print solve_poly(a <= b*x/2, 0 < c, 0 < d, d < 1, (1+d/(3*(c+3)))*a >= b*x)

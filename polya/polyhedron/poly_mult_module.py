@@ -19,7 +19,7 @@ import polya.main.blackboard as blackboard
 import polya.main.messages as messages
 import polya.polyhedron.lrs_polyhedron_util as lrs_util
 import polya.polyhedron.poly_add_module as poly_add_module
-import polya.util.primes as primes
+import polya.util.num_util as num_util
 import polya.util.timer as timer
 
 import cdd
@@ -149,7 +149,14 @@ def process_mul_comp(m1, m2, coeff1, comp1, B):
         # we can set ej = ei and preserve the comparison.
         if ei < 0:
             comp = terms.comp_reverse(comp)
-        ei, ej, coeff = 1, 1, coeff ** fractions.Fraction(1, ei)
+        cexp = fractions.Fraction(1, ei)
+        p = (num_util.perfect_root(coeff, 1/cexp) if cexp > 0
+             else fractions.Fraction(1, num_util.perfect_root(coeff, -1/cexp)))
+        if p:
+            ei, ej, coeff = 1, 1, p
+        else:
+            ei, ej, coeff = 1, 1, coeff ** cexp
+        # ei, ej, coeff = 1, 1, coeff ** fractions.Fraction(1, ei)
         coeff = round_coeff(coeff, comp)
         comp, coeff = make_term_comparison_unabs(i, j, ei, ej, comp, coeff, B)
         return terms.comp_eval[comp](terms.IVar(i), coeff * terms.IVar(j))
@@ -323,7 +330,8 @@ def get_mul_comparisons(vertices, lin_set, num_vars, prime_of_index):
 
             const = 1
             #Don't want constant to a non-int power
-            scale = int(primes.lcmm(fractions.Fraction(c[k]).denominator for k in range(3, len(c))))
+            scale = int(num_util.lcmm(fractions.Fraction(c[k]).denominator
+                                      for k in range(3, len(c))))
             if scale != 1:
                 c = [c[0]]+[scale*v for v in c[1:]]
 
@@ -393,11 +401,11 @@ def add_of_mul_comps(m_comparisons, num_terms):
             t = -c.term2.term if c.term1.index == 0 else c.term1 - c.term2.term
             const = fractions.Fraction(c.term2.coeff)
             if const.numerator != 1:
-                fac = primes.factorization(const.numerator)
+                fac = num_util.factorization(const.numerator)
                 for i in fac:
                     t -= fac[i] * terms.IVar(index_of(i))
             if const.denominator != 1:
-                fac = primes.factorization(const.denominator)
+                fac = num_util.factorization(const.denominator)
                 for i in fac:
                     t += fac[i] * terms.IVar(index_of(i))
             a_comparisons.append((t, c.comp))

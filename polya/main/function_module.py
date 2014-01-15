@@ -17,6 +17,7 @@ import polya.main.terms as terms
 import polya.main.messages as messages
 import polya.main.formulas as formulas
 import polya.util.timer as timer
+import polya.util.num_util as num_util
 import fractions
 import copy
 # from itertools import product, ifilter
@@ -112,11 +113,11 @@ def elim_var_mul(i, pivot, rows):
     new_rows = []
     for r in rows:
         scale = -fractions.Fraction(r[i], pivot[i])
-        if pivot[0] != 1 and scale.denominator != 1:
-            # We (likely) have an irrational.
-            #todo: there are situations where we don't: pivot[0] == 4, scale == 1/2.
+        p = num_util.perfect_root(fractions.Fraction(pivot[0]), scale)
+        if p is None:
+            # We have an irrational.
             raise NoTermException
-        new_rows.append([r[0]*pivot[0]**scale] + add_list(r[1:], scale_list(scale, pivot[1:])))
+        new_rows.append([r[0]*p] + add_list(r[1:], scale_list(scale, pivot[1:])))
     return new_rows
 
 
