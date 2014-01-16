@@ -302,6 +302,8 @@ class Blackboard():
         Checks to see if the statement ti comp 0 is known by the Blackboard.
         """
         if comp in [terms.LT, terms.GT]:
+            if i in self.zero_equalities:
+                return False
             return self.zero_inequalities.get(i, terms.EQ) == comp
 
         elif comp == terms.LE:
@@ -410,6 +412,10 @@ class Blackboard():
                 new_comps = [new_comp, old_comps[1]]
             else:
                 new_comps = [old_comps[0], new_comp]
+            if new_comps[0].compare_hp(new_comps[1]) == 0:  # we have equality
+                del self.inequalities[i, j]
+                self.assert_equality(i, coeff, j)
+                return
 
         self.inequalities[i, j] = new_comps
 
@@ -445,15 +451,23 @@ class Blackboard():
         Adds the inequality "ti comp 0".
         """
         if i in self.zero_disequalities:
-            comp = terms.GT if comp in [terms.GE, terms.GT] else terms.LT
+            c = terms.GT if comp in [terms.GE, terms.GT] else terms.LT
             self.zero_disequalities.remove(i)
-        des = set(k for k in self.disequalities.get((0, i), set())
-                  if not terms.comp_eval[comp](k, 0))
-        if len(des) > 0:
-            self.disequalities[0, i] = des
+            des = set(k for k in self.disequalities.get((0, i), set())
+                      if not terms.comp_eval[c](k, 0))
+            if len(des) > 0:
+                self.disequalities[0, i] = des
 
         self.announce_zero_comparison(i, comp)
         self.tracker.update(i)
+
+        if i in self.zero_inequalities:
+            # We know that the new info is new and noncontradictory.
+            if self.zero_inequalities[i] in [terms.LE, terms.GE] and comp in [terms.LE, terms.GE]:
+                # learn equality
+                del self.zero_inequalities[i]
+                self.assert_zero_equality(i)
+                return
 
         self.zero_inequalities[i] = comp
         new_zero_ineqs = []

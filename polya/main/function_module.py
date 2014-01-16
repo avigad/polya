@@ -113,7 +113,10 @@ def elim_var_mul(i, pivot, rows):
     new_rows = []
     for r in rows:
         scale = -fractions.Fraction(r[i], pivot[i])
-        p = num_util.perfect_root(fractions.Fraction(pivot[0]), scale)
+        if scale > 0:
+            p = num_util.perfect_root(fractions.Fraction(pivot[0]), scale)
+        else:
+            p = fractions.Fraction(1, num_util.perfect_root(fractions.Fraction(pivot[0]), scale))
         if p is None:
             # We have an irrational.
             raise NoTermException

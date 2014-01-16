@@ -286,12 +286,10 @@ def arithmetical_tests():
 # test12()
 arithmetical_tests()
 messages.set_verbosity(messages.debug)
-#print solve(a <= b*x/2, 0 < c, 0 < d, d < 1, (1+d/(3*(c+3)))*a >= b*x)
+# print solve(a <= b*x/2, 0 < c, 0 < d, d < 1, (1+d/(3*(c+3)))*a >= b*x)
 # print '\n*****\n'
-# print solve_poly(a <= b*x/2, 0 < c, 0 < d, d < 1, (1+d/(3*(c+3)))*a >= b*x)
-#print solve(x*(y+z) <= 0, y+z > 0, x >= 0, x*w > 0)
+#print solve_poly(x*(y+z) <= 0, y+z > 0, x >= 0, x*w > 0)
 
-messages.set_verbosity(messages.debug)
 
 print 'Ran in', round(timeit.default_timer()-t, 3), 'seconds'
 
