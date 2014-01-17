@@ -25,7 +25,7 @@ def find_lrs_path():
 
 lrs_path = find_lrs_path()
 
-if lrs_path == None:
+if lrs_path is None:
     print 'lrs not found.'
 else:
     print 'lrs found ({0!s})!'.format(lrs_path)
@@ -43,7 +43,7 @@ def find_redund_path():
 
 redund_path = find_redund_path()
 
-if redund_path == None:
+if redund_path is None:
     print 'redund not found.'
 else:
     print 'redund found ({0!s})!'.format(redund_path)

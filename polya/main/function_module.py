@@ -334,7 +334,7 @@ def find_problem_term(B, term1):
                         c = B.equalities[p]
                         if targ[1] < uarg[1]:
                             c = fractions.Fraction(1, c)
-                        if uarg[0]*c==targ[0]:
+                        if uarg[0]*c == targ[0]:
                             continue
                     break
 

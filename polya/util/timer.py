@@ -1,16 +1,18 @@
 import timeit
 import polya.main.messages as messages
 PMUL, PADD, FMMUL, FMADD, FUN = range(5)
-mod_names = {0:"Poly mult", 1:"Poly add", 2:"FM mult", 3:"FM add", 4:"Function"}
+mod_names = {0: "Poly mult", 1: "Poly add", 2: "FM mult", 3: "FM add", 4: "Function"}
 
 runs = {}
 time_total = {}
 time_cur = {}
 
+
 def start(module):
     for k in [k for k in time_cur if time_cur[k] != 0]:
         e_stop(k)
     time_cur[module] = timeit.default_timer()
+
 
 def e_stop(module):
     t = timeit.default_timer() - time_cur[module]
@@ -19,9 +21,11 @@ def e_stop(module):
     runs[module] = runs.get(module, 0) + 1
     return t
 
+
 def stop(module):
     t = e_stop(module)
     messages.announce("Module run time: " + str(round(t, 3)), messages.DEBUG)
+
 
 def announce_times():
     for k in [k for k in time_cur if time_cur[k] != 0]:

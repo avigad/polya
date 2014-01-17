@@ -82,7 +82,7 @@ class Product():
             if len(self.args) == 0:
                 return str(self.coeff)
             else:
-                return '{0!s}*{1}'.format(self.coeff,'*'.join([str(a) for a in self.args]))
+                return '{0!s}*{1}'.format(self.coeff, '*'.join([str(a) for a in self.args]))
 
     def __repr__(self):
         return self.__str__()
@@ -130,7 +130,7 @@ def cast_to_product(term):
     elif isinstance(term, terms.MulTerm):
         args = [Multiplicand(a.term.index, a.exponent) for a in term.args if a.term.index != 0]
     else:
-        Error('Cannot cast {0!s} to a product'.format(term))
+        raise Error('Cannot cast {0!s} to a product'.format(term))
     return Product(coeff, args)
 
 

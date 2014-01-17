@@ -249,6 +249,7 @@ comp_to_sign = {terms.LE: LE, terms.LT: LT, terms.GE: GE, terms.GT: GT}
 sign_to_comp = {(-1, False): terms.LE, (-1, True): terms.LT, (1, False): terms.GE,
                 (1, True): terms.GT}
 
+
 def derive_info_from_definitions(B):
     def mulpair_sign(p):
         if p.exponent % 2 == 0:
@@ -259,11 +260,11 @@ def derive_info_from_definitions(B):
             return comp_to_sign[s] if s is not None else 0
             # return B.sign(p.term.index)
 
-    def weak_mulpair_sign(p):
-        if p.exponent % 2 == 0:
-            return 1
-        else:
-            return B.weak_sign(p.term.index)
+    # def weak_mulpair_sign(p):
+    #     if p.exponent % 2 == 0:
+    #         return 1
+    #     else:
+    #         return B.weak_sign(p.term.index)
 
     for key in (k for k in B.term_defs if isinstance(B.term_defs[k], terms.MulTerm)):
         #signs = [mulpair_sign(p) for p in B.term_defs[key].args]
@@ -306,7 +307,7 @@ def derive_info_from_definitions(B):
     #         elif s < 0:
     #             B.assert_comparison(terms.IVar(key) < 0)
     #         elif B.weak_sign(key) == 0:
-    #             s = reduce(lambda x, y: x*y, [weak_mulpair_sign(p) for p in B.term_defs[key].args])
+    #             s = reduce(lambda x, y: x*y,[weak_mulpair_sign(p) for p in B.term_defs[key].args])
     #             if s > 0:
     #                 B.assert_comparison(terms.IVar(key) >= 0)
     #             elif s < 0:
