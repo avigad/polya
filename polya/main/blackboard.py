@@ -297,13 +297,16 @@ class Blackboard():
                 return True
             return self.implies(i, terms.GT, coeff, j) or self.implies(i, terms.LT, coeff, j)
 
+
     def implies_zero_comparison(self, i, comp):
         """
         Checks to see if the statement ti comp 0 is known by the Blackboard.
         """
+
+        if i in self.zero_equalities:
+            return comp in [terms.LE, terms.GE, terms.EQ]
+
         if comp in [terms.LT, terms.GT]:
-            if i in self.zero_equalities:
-                return False
             return self.zero_inequalities.get(i, terms.EQ) == comp
 
         elif comp == terms.LE:

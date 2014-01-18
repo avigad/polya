@@ -130,8 +130,8 @@ def test8():
     x, y, z = Vars('x, y, z')
     f = Func('f')
     fm = FunctionModule(
-        [formulas.ForAll([x, y], f(x*y)==f(x)*f(y)),
-         formulas.ForAll([x], formulas.Implies(x>2, f(x)<0))]
+        [ForAll([x, y], f(x*y)==f(x)*f(y)),
+         ForAll([x], Implies(x>2, f(x)<0))]
     )
 
     C = Blackboard()
@@ -145,7 +145,7 @@ def test9():
     f = Func('f')
     fm = FunctionModule(
         [
-            formulas.ForAll([x, y], f((x*y)/2)<=(f(x)*f(y))/2)
+            ForAll([x, y], f((x*y)/2)<=(f(x)*f(y))/2)
         ]
     )
 
