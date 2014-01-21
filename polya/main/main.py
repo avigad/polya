@@ -13,15 +13,16 @@
 ####################################################################################################
 
 from __future__ import division
-#import polya.main.terms as terms
-#import polya.main.blackboard as blackboard
-#import polya.polyhedron.poly_add_module as poly_add_module
-#import polya.polyhedron.poly_mult_module as poly_mult_module
-#import polya.fourier_motzkin.fm_add_module as fm_add_module
-#import polya.fourier_motzkin.fm_mult_module as fm_mult_module
+import polya.main.terms as terms
+import polya.main.blackboard as blackboard
+import polya.polyhedron.poly_add_module as poly_add_module
+import polya.polyhedron.poly_mult_module as poly_mult_module
+import polya.polyhedron.lrs as lrs
+import polya.fourier_motzkin.fm_add_module as fm_add_module
+import polya.fourier_motzkin.fm_mult_module as fm_mult_module
 import polya.main.messages as messages
-#import polya.main.function_module as function_module
-#import polya.main.formulas as formulas
+import polya.main.function_module as function_module
+import polya.main.formulas as formulas
 
 from terms import Var, Vars, UVar, Func, Contradiction
 from formulas import ForAll, Implies, And, Or, Not
@@ -32,13 +33,40 @@ from polya.fourier_motzkin.fm_mult_module import FMMultiplicationModule
 from polya.main.function_module import FunctionModule
 from blackboard import Blackboard
 
-def run(B, poly=None, debug=None):
-    if poly:
-        pa, pm = PolyAdditionModule(), PolyMultiplicationModule()
-    else:
-        pa, pm = FMAdditionModule(), FMMultiplicationModule()
-    return run_modules(B, pa, pm)
 
+solver_options = ['fm', 'poly']
+
+if lrs.lrs_path and lrs.redund_path:
+    default_solver = 'poly'
+else:
+    default_solver = 'fm'
+
+def polya_set_solver_type(s):
+    """Set the solver to a given method in
+    solver_options
+    
+    Arguments:
+    - `s`:
+    """
+    if s in solver_options:
+        print "Setting solver type:", s
+        print
+        default_solver = s
+    else:
+        print "Error: {0!s} is not in the list of possible arithmetic solvers:"
+        print 'solver options =', solver_options
+        print
+
+
+def run(B, debug=None):
+    if default_solver == 'poly':
+        pa, pm = poly_add_module.PolyAdditionModule(), poly_mult_module.PolyMultiplicationModule()
+    elif default_solver == 'fm':
+        pa, pm = fm_add_module.FMAdditionModule(), fm_mult_module.FMMultiplicationModule()
+    else:
+        print 'Unsupported option:', default_solver
+    return run_modules(B, pa, pm)
+        
 def run_modules(B, *modules):
     try:
         id = B.identify()
