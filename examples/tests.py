@@ -247,13 +247,14 @@ def arithmetical_tests():
 
         [a > 0, a < 1, b > 0, b < 1, a+b < a*b],
 
-        [x+y >= 2, z+w >= 2, u*x**2 < u*x, u*y**2 < u*y, u*w**2 > u*w, u*z**2 > u*z],
+        #Crashes v.4.2c
+        # [x+y >= 2, z+w >= 2, u*x**2 < u*x, u*y**2 < u*y, u*w**2 > u*w, u*z**2 > u*z],
 
         [a <= b*x/2, 0 < c, 0 < d, d < 1, (1+d/(3*(c+3)))*a >= b*x],
 
         [x < 1, 1 < y, x*y > 1, u+x >= y+1, x**2*y < 2-u*x*y],
 
-        #[x < 1, 1 < y, x*y > 1, u+x >= y+1, x**2*y >= 2-u*x*y],
+        [x < 1, 1 < y, x*y > 1, u+x >= y+1, x**2*y >= 2-u*x*y],
 
         [x*(y+z) <= 0, y+z > 0, x >= 0, x*w > 0],
 
@@ -276,18 +277,18 @@ def arithmetical_tests():
 
 polya_set_solver_type('fm')
 
-test4()
-test5()
-test6()
-test7()
-test8()
-test9()
-test10a()
-test12()
+# test4()
+# test5()
+# test6()
+# test7()
+# test8()
+# test9()
+# test10a()
+# test12()
 # test13()
-test14()
-#arithmetical_tests()
-#messages.set_verbosity(messages.debug)
+# test14()
+arithmetical_tests()
+messages.set_verbosity(messages.debug)
 #print solve(a <= b*x/2, 0 < c, 0 < d, d < 1, (1+d/(3*(c+3)))*a >= b*x)
 
 # print '\n*****\n'

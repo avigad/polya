@@ -89,14 +89,20 @@ def solve(*assertions):
 def solve_poly(*assertions):
     B = Blackboard()
     B.assert_comparisons(*assertions)
-    return run(B, poly=True)
+    return run(B)
 
 class Solver:
-    def __init__(self, assertions = list(), axioms = list(), poly = False):
+    def __init__(self, assertions = list(), axioms = list()):
         self.B = Blackboard()
         modules = []
-        modules.append(PolyAdditionModule() if poly else FMAdditionModule())
-        modules.append(PolyMultiplicationModule() if poly else FMMultiplicationModule())
+        if default_solver == 'poly':
+            pa, pm = poly_add_module.PolyAdditionModule(), poly_mult_module.PolyMultiplicationModule()
+        elif default_solver == 'fm':
+            pa, pm = fm_add_module.FMAdditionModule(), fm_mult_module.FMMultiplicationModule()
+        else:
+            print 'Unsupported option:', default_solver
+        modules.append(pa)
+        modules.append(pm)
         if len(axioms) > 0:
             modules = [FunctionModule(axioms)] + modules
             self.fm = modules[0]

@@ -69,7 +69,7 @@ def output_to_matrix(str_output):
     #print lin_set
     row = next(i for i in range(3, len(arr)) if arr[i][0:3] == 'beg')+2
     mat = []
-    while arr[row] != 'end':
+    while row < len(arr) and arr[row] != 'end':
         mat.append([make_frac(val) for val in arr[row].split()])
         row += 1
     return mat, lin_set
