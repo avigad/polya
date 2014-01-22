@@ -130,6 +130,7 @@ class Solver:
             raise Exception
 
         self.B = Blackboard()
+        self.fm = None
         if len(modules) == 0:
             modules.append(CongClosureModule())
             if default_solver == 'poly':

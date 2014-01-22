@@ -232,6 +232,16 @@ def test15():
     S.check()
 
 
+def test16():
+    ceil = Func('ceil')
+    x, a, b, m = Vars('x, a, b, m')
+    S = Solver()
+    S.add_axiom(ForAll([x], ceil(x) >= x))
+    S.assert_comparisons(a < b, x > a, m >= ceil((b - a) / (x - a)))
+    S.assert_comparison(a + (b - a) / (m + 1) >= x)
+    S.check()
+
+
 def arithmetical_tests():
     x, y, u, v, w, z, r = Vars('x, y, u, v, w, z, r')
     a, b, c, d, e = Vars('a, b, c, d, e')
@@ -293,8 +303,10 @@ polya_set_solver_type('fm')
 # test10a()
 # test12()
 # test13()
-#test14()
-arithmetical_tests()
+# test14()
+test16()
+# arithmetical_tests()
+
 #messages.set_verbosity(messages.debug)
 
 # print '\n*****\n'

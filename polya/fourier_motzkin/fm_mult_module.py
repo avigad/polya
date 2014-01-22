@@ -152,7 +152,7 @@ def trivial_ineq(c):
     Assumes c is a OneComparison.
     Determines whether c is the trivial inequality 1 >= 1
     """
-    return c.term.coeff == 0 and len(c.term.args) == 0 and not c.strong
+    return c.term.coeff == 1 and len(c.term.args) == 0 and not c.strong
 
 
 def elim_eq_eq(t1, t2, v):
