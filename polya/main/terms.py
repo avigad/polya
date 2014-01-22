@@ -616,6 +616,12 @@ class STerm:
             else:
                 return STerm(self.coeff / other.coeff, self.term / other.term)
 
+    def __rdiv__(self, other):
+        if isinstance(other, numbers.Rational):
+            return STerm(1 / self.coeff, 1 / self.term)
+        else:
+            Error('Cannot divide {0!s} by {1!s}'.format(other, self))
+
     def __pow__(self, n):
         if not isinstance(n, (int, long)):
             Error('Non integer power')    # TODO: for now, we only handle integer powers

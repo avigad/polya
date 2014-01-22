@@ -242,6 +242,19 @@ def test16():
     S.check()
 
 
+def test17():
+    abs2 = Func('abs')
+    f = Func('f')
+    x, y, z, i = Vars('x, y, z, i')
+    S = Solver()
+    S.add_axiom(ForAll([x,y], abs2(x + y) <= abs2(x) + abs2(y)))
+    S.assert_comparison(i >= 0)
+    S.assert_comparison(abs2(f(y) - f(x)) < 1 / (2 * (i + 1)))
+    S.assert_comparison(abs2(f(z) - f(x)) < 1 / (2 * (i + 1)))
+    S.assert_comparison(abs2(f(z) - f(x)) >= 1 / (i + 1))
+    S.check()
+
+
 def arithmetical_tests():
     x, y, u, v, w, z, r = Vars('x, y, u, v, w, z, r')
     a, b, c, d, e = Vars('a, b, c, d, e')
@@ -304,7 +317,8 @@ polya_set_solver_type('fm')
 # test12()
 # test13()
 # test14()
-test16()
+# test16()
+test17()
 # arithmetical_tests()
 
 #messages.set_verbosity(messages.debug)
