@@ -19,6 +19,7 @@ import polya.main.blackboard as blackboard
 import polya.main.messages as messages
 import polya.util.geometry as geo
 import polya.polyhedron.lrs_polyhedron_util as lrs_util
+import polya.polyhedron.lrs as lrs
 import polya.util.timer as timer
 import itertools
 
@@ -229,7 +230,8 @@ def get_additive_information(B):
 
 class PolyAdditionModule:
     def __init__(self):
-        pass
+        if not lrs.lrs_path:
+            raise Exception('lrs is needed to instantiate a polyhedron module.')
 
     def update_blackboard(self, B):
         timer.start(timer.PADD)

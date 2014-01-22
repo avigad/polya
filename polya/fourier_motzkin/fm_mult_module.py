@@ -17,7 +17,8 @@
 
 import polya.main.terms as terms
 import polya.main.messages as messages
-import polya.polyhedron.poly_mult_module as poly_mult_module
+#import polya.polyhedron.poly_mult_module as poly_mult_module
+import polya.util.mul_util as mul_util
 import polya.util.timer as timer
 import fractions
 
@@ -276,7 +277,7 @@ def get_multiplicative_information(B):
     """
     Retrieves known multiplicative equalities and inequalities from the blackboard B.
     """
-    m_comparisons = poly_mult_module.get_multiplicative_information(B)
+    m_comparisons = mul_util.get_multiplicative_information(B)
     # Each ti in m_comparisons really represents |t_i|.
     one_equalities = [equality_to_one_equality(c) for c in m_comparisons if c.comp == terms.EQ]
     one_comparisons = [inequality_to_one_comparison(c) for c in m_comparisons if
@@ -295,11 +296,11 @@ def one_equality_to_comparison(e, B):
     l = len(e.args)
     if l == 1:
         m = multiplicand_to_mulpair(e.args[0])
-        return poly_mult_module.process_mul_comp(m, mulpair_one, e.coeff, terms.EQ, B)
+        return mul_util.process_mul_comp(m, mulpair_one, e.coeff, terms.EQ, B)
     elif l == 2:
         m1 = multiplicand_to_mulpair(e.args[0])
         m2 = multiplicand_to_mulpair(e.args[1])
-        return poly_mult_module.process_mul_comp(m1, m2, e.coeff, terms.EQ, B)
+        return mul_util.process_mul_comp(m1, m2, e.coeff, terms.EQ, B)
     else:
         return None
 
@@ -318,12 +319,12 @@ def one_comparison_to_comparison(c, B):
 #        return None
     if l == 1:
         m = multiplicand_to_mulpair(p.args[0])
-        return poly_mult_module.process_mul_comp(m, mulpair_one, p.coeff, comp, B)
+        return mul_util.process_mul_comp(m, mulpair_one, p.coeff, comp, B)
 #        return None
     elif l == 2:
         m1 = multiplicand_to_mulpair(p.args[0])
         m2 = multiplicand_to_mulpair(p.args[1])
-        return poly_mult_module.process_mul_comp(m1, m2, p.coeff, comp, B)
+        return mul_util.process_mul_comp(m1, m2, p.coeff, comp, B)
     else:
         return None
 
@@ -354,7 +355,7 @@ class FMMultiplicationModule:
         """
         timer.start(timer.FMMUL)
         messages.announce_module('Fourier-Motzkin multiplicative module')
-        poly_mult_module.derive_info_from_definitions(B)
+        mul_util.derive_info_from_definitions(B)
         eqs, comps = get_multiplicative_information(B)
         # t0 = 1; ignore
         for i in range(1, B.num_terms):

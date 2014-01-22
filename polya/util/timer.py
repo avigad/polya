@@ -1,7 +1,7 @@
 import timeit
 import polya.main.messages as messages
-PMUL, PADD, FMMUL, FMADD, FUN = range(5)
-mod_names = {0: "Poly mult", 1: "Poly add", 2: "FM mult", 3: "FM add", 4: "Function"}
+PMUL, PADD, FMMUL, FMADD, FUN, CCM = range(6)
+mod_names = {0: "Poly mult", 1: "Poly add", 2: "FM mult", 3: "FM add", 4: "Function", 5: "CCM"}
 
 runs = {}
 time_total = {}

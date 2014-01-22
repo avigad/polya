@@ -226,6 +226,11 @@ def test14():
     S = Solver([f(x)<y, y<z, z<f(x)], [ForAll([x], f(x)>0)], True)
     print S.check()
 
+def test15():
+    f = Func('f')
+    S = Solver([x==y, f(x)!=f(y)])
+    S.check()
+
 
 def arithmetical_tests():
     x, y, u, v, w, z, r = Vars('x, y, u, v, w, z, r')
@@ -266,7 +271,7 @@ def arithmetical_tests():
                 True, True, True]
 
     for i in range(len(problems)):
-        val = solve_poly(*problems[i])  # solve_poly to use polyhedrons
+        val = solve(*problems[i])  # solve_poly to use polyhedrons
         if val == expected[i]:
             print 'Test {} correct.'.format(i+1)
         else:
@@ -285,8 +290,8 @@ def arithmetical_tests():
 # test10a()
 # test12()
 arithmetical_tests()
-messages.set_verbosity(messages.debug)
-# print solve(a <= b*x/2, 0 < c, 0 < d, d < 1, (1+d/(3*(c+3)))*a >= b*x)
+#messages.set_verbosity(messages.debug)
+#print solve(a <= b*x/2, 0 < c, 0 < d, d < 1, (1+d/(3*(c+3)))*a >= b*x)
 # print '\n*****\n'
 #print solve_poly(x*(y+z) <= 0, y+z > 0, x >= 0, x*w > 0)
 
