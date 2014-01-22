@@ -39,6 +39,7 @@ from blackboard import Blackboard
 
 
 solver_options = ['fm', 'poly']
+default_solver = 'none'
 
 if lrs.lrs_path and lrs.redund_path:
     default_solver = 'poly'
@@ -56,6 +57,7 @@ def polya_set_solver_type(s):
     if s in solver_options:
         print "Setting solver type:", s
         print
+        global default_solver
         default_solver = s
     else:
         print "Error: {0!s} is not in the list of possible arithmetic solvers:"
@@ -101,26 +103,6 @@ def solve(*assertions):
     Given TermComparisons assertions, returns True if they are found to be inconsistent,
      false otherwise. Uses geometric methods if available, otherwise FM.
     """
-    B = Blackboard()
-    try:
-        B.assert_comparisons(*assertions)
-    except Contradiction as e:
-        messages.announce(e.msg, messages.ASSERTION)
-        return True
-    return run(B)
-
-
-def solve_poly(*assertions):
-    B = Blackboard()
-    try:
-        B.assert_comparisons(*assertions)
-    except Contradiction as e:
-        messages.announce(e.msg, messages.ASSERTION)
-        return True
-    return run(B)
-
-
-def solve_fm(*assertions):
     B = Blackboard()
     try:
         B.assert_comparisons(*assertions)

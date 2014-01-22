@@ -223,7 +223,7 @@ def test13():
 
 def test14():
     f = Func('f')
-    S = Solver([f(x)<y, y<z, z<f(x)], [ForAll([x], f(x)>0)], True)
+    S = Solver([f(x)<y, y<z, z<f(x)], [ForAll([x], f(x)>0)])
     print S.check()
 
 def test15():
@@ -293,7 +293,7 @@ polya_set_solver_type('fm')
 # test10a()
 # test12()
 # test13()
-# test14()
+#test14()
 arithmetical_tests()
 #messages.set_verbosity(messages.debug)
 
