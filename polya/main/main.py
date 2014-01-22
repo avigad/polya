@@ -40,8 +40,13 @@ from blackboard import Blackboard
 
 solver_options = ['fm', 'poly']
 default_solver = 'none'
+try:
+    import cdd
+    have_cdd = True
+except Exception:
+    have_cdd = False
 
-if lrs.lrs_path and lrs.redund_path:
+if lrs.lrs_path and lrs.redund_path and have_cdd:
     default_solver = 'poly'
 else:
     default_solver = 'fm'

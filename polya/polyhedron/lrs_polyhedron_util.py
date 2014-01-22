@@ -18,7 +18,10 @@ import polya.main.terms as terms
 import polya.polyhedron.lrs as lrs
 
 # where should this go?
-import cdd  # This is needed for matrix formatting. Can we get around this?
+try:
+    import cdd  # This is needed for matrix formatting. Can we get around this?
+except Exception:
+    pass
 
 
 def get_vertices(comparison_matrix):

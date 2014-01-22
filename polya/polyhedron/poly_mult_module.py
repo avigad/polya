@@ -24,7 +24,11 @@ import polya.util.num_util as num_util
 import polya.util.timer as timer
 import polya.util.mul_util as mul_util
 
-import cdd
+try:
+    import cdd
+except Exception:
+    pass
+
 import fractions
 #import math
 import itertools
