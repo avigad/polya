@@ -101,29 +101,29 @@ def solve_fm(*assertions):
 
 
 class Solver:
-    def __init__(self, assertions = list(), axioms = list(), poly = True):
+    def __init__(self, assertions=list(), axioms=list(), modules=list()):
         """
         assertions: a list of TermComparisons to be asserted to the blackboard.
         axioms: a list of Axioms
         poly: True if the Solver should try to use the polyhedron modules
         """
-        if poly and not lrs.lrs_path:
-            messages.announce("Error: lrs not found. Reverting to FM.", messages.MODULE)
-            poly = False
-
         if not isinstance(assertions, list) or not isinstance(axioms, list):
             print 'Error: assertions and axioms must be passed as lists.'
             print 'Usage: Solver([assertions=list()[, axioms=list()[, poly=True]]])'
             raise Exception
 
         self.B = Blackboard()
-        modules = [CongClosureModule()]
-        modules.append(PolyAdditionModule() if poly else FMAdditionModule())
-        modules.append(PolyMultiplicationModule() if poly else FMMultiplicationModule())
-        if len(axioms) > 0:
-            modules = [FunctionModule(axioms)] + modules
-            self.fm = modules[0]
+        if len(modules) == 0:
+            modules.append(CongClosureModule())
+            modules.append(PolyAdditionModule() if lrs.lrs_path else FMAdditionModule())
+            modules.append(PolyMultiplicationModule() if lrs.lrs_path else FMMultiplicationModule())
+            if len(axioms) > 0:
+                modules = [FunctionModule(axioms)] + modules
+                self.fm = modules[0]
         self.assert_comparisons(*assertions)
+        self.modules = modules
+
+    def set_modules(self, modules):
         self.modules = modules
 
     def check(self):
