@@ -28,7 +28,7 @@ lrs_path = find_lrs_path()
 if lrs_path is None:
     print 'lrs not found.'
 else:
-    print 'lrs found ({0!s})!'.format(lrs_path)
+    print 'lrs found! ({0!s})'.format(lrs_path)
 
 
 # look in some standard places for redund
@@ -46,7 +46,7 @@ redund_path = find_redund_path()
 if redund_path is None:
     print 'redund not found.'
 else:
-    print 'redund found ({0!s})!'.format(redund_path)
+    print 'redund found! ({0!s})'.format(redund_path)
 print
 
 
@@ -69,7 +69,7 @@ def output_to_matrix(str_output):
     #print lin_set
     row = next(i for i in range(3, len(arr)) if arr[i][0:3] == 'beg')+2
     mat = []
-    while arr[row] != 'end':
+    while row < len(arr) and arr[row] != 'end':
         mat.append([make_frac(val) for val in arr[row].split()])
         row += 1
     return mat, lin_set

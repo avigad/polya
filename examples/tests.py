@@ -35,7 +35,7 @@ def test1():
     # This example has a model if the last inequality is <. FM blows up here, poly doesn't
     # It does not have a model if the last inequality is >=. Contradiction is found.
     # "0<x<3*y", "u<v<0", "1<v^2<x", "u*(3*y)^2+1 >= x^2*v+x"
-    run(B, poly=True)
+    run(B)
 
 
 def test2():
@@ -49,7 +49,7 @@ def test2():
     B.assert_comparison(0 < w + z)
     B.assert_comparison(w + z < r - 1)
     B.assert_comparison(u + (1+x)**2 * (2*w + 2*z + 3) >= 2*v + (1+y)**2 * (2*r + 1))
-    run(B, poly=True)
+    run(B)
 
 
 def test3():
@@ -58,7 +58,7 @@ def test3():
 
     # "x+1/y<2", "y<0", "y/x>1", "-2<=x<=2", "-2<=y<=2", "x^2*y^(-1)>1-x"
     B.assert_comparisons(x+1/y<2, y<0, y/x>1, -2<=x, x<=2, -2<=y, y<=2, x**2*y**(-1)>1-x)
-    run(B, poly=False)
+    run(B)
 
 def test4():
     f = Func('f')
@@ -91,7 +91,7 @@ def test5():
     except Contradiction:
         print 'Contradiction found from axiom module'
 
-    run(B, poly=True)
+    run(B)
     # run(B)
 
 def test6():
@@ -108,7 +108,7 @@ def test6():
     B.assert_comparisons(f(x)+f(y)<z, f((x+y)/2)>4*z, z>0)
     fm.update_blackboard(B)
 
-    run(B, poly=True)
+    run(B)
     # run(B)
 
 def test7():
@@ -122,7 +122,7 @@ def test7():
     B.assert_comparisons(z>0, f(x)+f(y)-z<0, f((x+y)/2)-4*z>0)
     fm.update_blackboard(B)
 
-    run(B, poly=True)
+    run(B)
     # run(B)
 
 
@@ -152,7 +152,7 @@ def test9():
     C = Blackboard()
     C.assert_comparisons(z>0, z*f(x)*f(y)<0, 4*z*f(x*y/2)>0)
     fm.update_blackboard(C)
-    run(C, True)
+    run(C)
 
     # This example does not run successfully, despite there being a contradiction.
     # we get t6 = t1*t3*t5, t10=t3*t5, t1>0, t10>0, t6<0.
@@ -170,7 +170,7 @@ def test10():
     PolyMultiplicationModule().update_blackboard(B)
     fm.update_blackboard(B)
 
-    run(B, True)
+    run(B)
 
 def test10a():
     a, b = Vars('a, b')
@@ -182,7 +182,7 @@ def test10a():
     PolyAdditionModule().update_blackboard(B)
     fm.update_blackboard(B)
 
-    run(B, True)
+    run(B)
 
 def test11():
     u, v, w, x, y, z = Vars('u v w x y z')
@@ -197,7 +197,7 @@ def test11():
     B = Blackboard()
     B.assert_comparisons(0 < u, u < v, 1 < x, x < y, 0 < w, w < z)
     B.assert_comparison(u + x * w >= v + y**2 * z)
-    run(B, True)
+    run(B)
 
 def test12():
     exp = Func('exp')
@@ -209,7 +209,7 @@ def test12():
                                                             exp(x)>0))])
 
     fm.update_blackboard(B)
-    run(B, True)
+    run(B)
 
     # This example comes from Avigad and Friedman (2006)
 
@@ -219,7 +219,7 @@ def test13():
     B = Blackboard()
     B.assert_comparisons(x ** 2 + 2 * x + 1 < 0)
     run(B)
-
+    # This test loops!
 
 def test14():
     f = Func('f')
@@ -252,13 +252,14 @@ def arithmetical_tests():
 
         [a > 0, a < 1, b > 0, b < 1, a+b < a*b],
 
-        [x+y >= 2, z+w >= 2, u*x**2 < u*x, u*y**2 < u*y, u*w**2 > u*w, u*z**2 > u*z],
+        #Crashes v.4.2c
+        #[x+y >= 2, z+w >= 2, u*x**2 < u*x, u*y**2 < u*y, u*w**2 > u*w, u*z**2 > u*z],
 
         [a <= b*x/2, 0 < c, 0 < d, d < 1, (1+d/(3*(c+3)))*a >= b*x],
 
         [x < 1, 1 < y, x*y > 1, u+x >= y+1, x**2*y < 2-u*x*y],
 
-        #[x < 1, 1 < y, x*y > 1, u+x >= y+1, x**2*y >= 2-u*x*y],
+       # [x < 1, 1 < y, x*y > 1, u+x >= y+1, x**2*y >= 2-u*x*y],
 
         [x*(y+z) <= 0, y+z > 0, x >= 0, x*w > 0],
 
@@ -266,9 +267,11 @@ def arithmetical_tests():
 
         [0 < x, x < 1, 0 < y, y < 1, x**150*y**150 > x**150+y**150]
     ]
-    expected = [True, True, True, False, True, True, True, False, True,
+    expected = [True, True, True, False, True, True,
+                #True,
+                False, True,
                 #False,
-                True, True, True]
+                True, True, True ]
 
     for i in range(len(problems)):
         val = solve(*problems[i])  # solve_poly to use polyhedrons
@@ -279,7 +282,7 @@ def arithmetical_tests():
 
 #messages.set_verbosity(messages.debug)
 
-#test14()
+polya_set_solver_type('fm')
 
 # test4()
 # test5()
@@ -289,9 +292,11 @@ def arithmetical_tests():
 # test9()
 # test10a()
 # test12()
+# test13()
+# test14()
 arithmetical_tests()
 #messages.set_verbosity(messages.debug)
-#print solve(a <= b*x/2, 0 < c, 0 < d, d < 1, (1+d/(3*(c+3)))*a >= b*x)
+
 # print '\n*****\n'
 #print solve_poly(x*(y+z) <= 0, y+z > 0, x >= 0, x*w > 0)
 

@@ -18,6 +18,15 @@ import polya.main.messages as messages
 import polya.polyhedron.lrs as lrs
 import copy
 
+# import polya.main.blackboard as blackboard
+import polya.polyhedron.poly_add_module as poly_add_module
+import polya.polyhedron.poly_mult_module as poly_mult_module
+# import polya.polyhedron.lrs as lrs
+import polya.fourier_motzkin.fm_add_module as fm_add_module
+import polya.fourier_motzkin.fm_mult_module as fm_mult_module
+# import polya.main.messages as messages
+# import polya.main.function_module as function_module
+# import polya.main.formulas as formulas
 from terms import Var, Vars, UVar, Func, Contradiction
 from formulas import ForAll, Implies, And, Or, Not
 from polya.polyhedron.poly_mult_module import PolyMultiplicationModule
@@ -29,21 +38,42 @@ from polya.main.function_module import FunctionModule
 from blackboard import Blackboard
 
 
-def run(B, poly=True):
+solver_options = ['fm', 'poly']
+
+if lrs.lrs_path and lrs.redund_path:
+    default_solver = 'poly'
+else:
+    default_solver = 'fm'
+
+
+def polya_set_solver_type(s):
+    """Set the solver to a given method in
+    solver_options
+    
+    Arguments:
+    - `s`:
     """
-    Given a blackboard B, iteratively runs arithmetical modules until either a contradiction is
-    found or no new information is learned.
-    If poly is True, tries to use geometric methods. Otherwise, uses FM.
-    Returns True if a contradiction is found, False otherwise.
-    """
-    if not lrs.lrs_path:
-        poly = False
-    if poly:
-        pa, pm = PolyAdditionModule(), PolyMultiplicationModule()
+    if s in solver_options:
+        print "Setting solver type:", s
+        print
+        default_solver = s
     else:
-        pa, pm = FMAdditionModule(), FMMultiplicationModule()
+        print "Error: {0!s} is not in the list of possible arithmetic solvers:"
+        print 'solver options =', solver_options
+        print
+
+
+def run(B):
+    if default_solver == 'poly':
+        pa, pm = poly_add_module.PolyAdditionModule(), poly_mult_module.PolyMultiplicationModule()
+    elif default_solver == 'fm':
+        pa, pm = fm_add_module.FMAdditionModule(), fm_mult_module.FMMultiplicationModule()
+    else:
+        print 'Unsupported option:', default_solver
+        return
 
     cm = CongClosureModule()
+
     return run_modules(B, cm, pa, pm)
 
 
@@ -87,7 +117,7 @@ def solve_poly(*assertions):
     except Contradiction as e:
         messages.announce(e.msg, messages.ASSERTION)
         return True
-    return run(B, poly=True)
+    return run(B)
 
 
 def solve_fm(*assertions):
@@ -97,7 +127,7 @@ def solve_fm(*assertions):
     except Contradiction as e:
         messages.announce(e.msg, messages.ASSERTION)
         return True
-    return run(B, poly=False)
+    return run(B)
 
 
 class Solver:
@@ -115,8 +145,18 @@ class Solver:
         self.B = Blackboard()
         if len(modules) == 0:
             modules.append(CongClosureModule())
-            modules.append(PolyAdditionModule() if lrs.lrs_path else FMAdditionModule())
-            modules.append(PolyMultiplicationModule() if lrs.lrs_path else FMMultiplicationModule())
+            if default_solver == 'poly':
+                pa = poly_add_module.PolyAdditionModule()
+                pm = poly_mult_module.PolyMultiplicationModule()
+            elif default_solver == 'fm':
+                pa = fm_add_module.FMAdditionModule()
+                pm = fm_mult_module.FMMultiplicationModule()
+            else:
+                print 'Unsupported option:', default_solver
+                raise Exception
+
+            modules.extend([pa, pm])
+
             if len(axioms) > 0:
                 modules = [FunctionModule(axioms)] + modules
                 self.fm = modules[0]
