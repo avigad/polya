@@ -2,19 +2,19 @@
 from fractions import Fraction
 import pipes
 import tempfile
+import os.path
 #import timecount
-
-#Depending on how you have installed lrs,
-#you may have to change lines 48 and 71 to
-# "./lrs" and "./redund"
 
 
 import subprocess
 
 
+poly_dir = os.path.dirname(__file__)
+    
+
 # look in some standard places for lrs
 def find_lrs_path():
-    for s in ['lrs', './lrs', '/usr/bin/lrs']:
+    for s in ['lrs', './lrs', poly_dir + '/lrs', '/usr/bin/lrs']:
         try:
             subprocess.check_output([s, '_pretend_file'])
         except OSError, e:
@@ -33,7 +33,7 @@ else:
 
 # look in some standard places for redund
 def find_redund_path():
-    for s in ['redund', './redund', '/usr/bin/lrs']:
+    for s in ['redund', './redund', poly_dir + '/redund', '/usr/bin/redund']:
         try:
             subprocess.check_output([s, '_pretend_file'])
         except OSError, e:
