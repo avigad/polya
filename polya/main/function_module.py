@@ -42,6 +42,7 @@ def reduce_term(term, env):
     """
     #todo: this duplicates some functionality of Term.substitute(), but adds the check for UVars.
     #can we recover this some other way?
+    #print '    reducing', term, 'from', env
     if isinstance(term, terms.STerm):
         l = reduce_term(term.term, env)
         return terms.STerm(term.coeff*l[0].coeff, l[0].term), l[1]
@@ -336,6 +337,7 @@ def find_problem_term(B, term1):
                             c = fractions.Fraction(1, c)
                         if uarg[0]*c == targ[0]:
                             continue
+                    match = False
                     break
 
                 if match:
@@ -451,19 +453,19 @@ def instantiate(axiom, B):
                 lcoeff, lterm = find_problem_term(B, red_term)
                 lcoeff *= red_coeff
             except NoTermException:
-                sred = red.canonize()
-                lterm = B.term_name(sred.term).index
-                lcoeff = sred.coeff
+                #sred = red.canonize()
+                lterm = B.term_name(red.term).index
+                lcoeff = red.coeff
 
-            red = reduce_term(l.term2.term, env)[0]
+            red = reduce_term(l.term2.term, env)[0].canonize()
             red_coeff, red_term = red.coeff, red.term
             try:
                 rcoeff, rterm = find_problem_term(B, red.term)
                 rcoeff *= l.term2.coeff*red_coeff
             except NoTermException:
-                sred = red.canonize()
-                rterm = B.term_name(sred.term).index
-                rcoeff = sred.coeff * l.term2.coeff
+                #sred = red.canonize()
+                rterm = B.term_name(red.term).index
+                rcoeff = red.coeff * l.term2.coeff
 
             literals.append(
                 terms.comp_eval[comp](lcoeff*terms.IVar(lterm), rcoeff*terms.IVar(rterm))

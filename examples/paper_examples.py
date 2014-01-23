@@ -9,7 +9,7 @@ a, b, c, d, e = z3.Reals('a b c d e')
 def test1():
     # This example comes from Agigad and Friedman (2006)
     # Solved in ~.08 seconds
-    solve_poly(0<x, x<y, (1+x**2)/(2+y)**17 >= (1+y**2)/(2+x)**10)
+    solve(0<x, x<y, (1+x**2)/(2+y)**17 >= (1+y**2)/(2+x)**10)
 
 def z3test1():
     # solved in ~.5 seconds
@@ -29,7 +29,7 @@ def test2():
                                                             exp(x)>0))])
 
     fm.update_blackboard(B)
-    run(B, True)
+    run(B)
 
 def z3test2():
     # Not solved.
@@ -42,7 +42,7 @@ def z3test2():
 def test3():
     # From the Isabelle mailing list- Isabelle will not solve automatically.
     # solved in ~.02 seconds.
-    solve_poly(x>0, x<1, y>0, y<1, (x+y)-(x*y) <= 0)
+    solve(x>0, x<1, y>0, y<1, (x+y)-(x*y) <= 0)
 
 def z3test3():
     # Solves this one in. 0.004 sec
@@ -53,7 +53,7 @@ def z3test3():
 def test4():
     # A variant on the above.
     # Solved in ~.03 seconds.
-    solve_poly(0 < x, x < 1, 0 < y, y < 1, x**150*y**150 > x**150+y**150)
+    solve(0 < x, x < 1, 0 < y, y < 1, x**150*y**150 > x**150+y**150)
 
 def z3test4():
     # Does not finish.
@@ -63,15 +63,12 @@ def z3test4():
 
 def test5():
     # solved in .005 sec
-    try:
-        B = Blackboard()
-        f = Func('f')
-        B.assert_comparisons(x<y, f(x)>f(y))
-        fm = FunctionModule([ForAll([x, y], Implies(x<y, f(x)<f(y)))])
-        fm.update_blackboard(B)
-        run(B, True)
-    except Exception as e:
-        print e
+
+    S = Solver()
+    f = Func('f')
+    S.assert_comparisons(x<y, f(x)>f(y))
+    S.add_axiom(ForAll([x, y], Implies(x<y, f(x)<f(y))))
+    S.check()
 
 def z3test5():
     # solved in .005 sec, but sometimes much longer??
@@ -93,7 +90,7 @@ def test6():
     B.assert_comparisons(z>0, f(x)+f(y)-z<0, f((x+y)/2)-4*z>0)
     fm.update_blackboard(B)
 
-    run(B, True)
+    run(B)
 
 def z3test6():
     # solved in .007 sec
@@ -116,7 +113,7 @@ def test7():
     C.assert_comparisons(x>1, y>2, f(x*y)>0)
     fm.update_blackboard(C)
 
-    run(C, True)
+    run(C)
 
 def z3test7():
     #times out
@@ -132,14 +129,12 @@ def test8():
     # a b c d e
     # u v w x y
     f = Func('f')
-    B = Blackboard()
-    B.assert_comparisons(f(y, v, w+x)<0, u>0, v>0, u==w, v==x, u==y)
+    S = Solver()
+    S.assert_comparisons(f(y, v, w+x)<0, u>0, v>0, u==w, v==x, u==y)
 
-    fm = FunctionModule([ForAll([x, y], f(x, y, x+y)>0)])
-    PolyAdditionModule().update_blackboard(B)
-    fm.update_blackboard(B)
+    S.add_axiom(ForAll([x, y], f(x, y, x+y)>0))
+    S.check()
 
-    run(B, True)
 
 def z3test8():
     f = z3.Function('f', z3.RealSort(), z3.RealSort(), z3.RealSort(), z3.RealSort())
@@ -149,8 +144,83 @@ def z3test8():
 
     print s.check()
 
+
+def test9a():
+    # solved in .08 sec
+    ceil = Func('ceil')
+    x, a, b, m = Vars('x, a, b, m')
+    S = Solver()
+    S.add_axiom(ForAll([x], ceil(x) >= x))
+    S.assert_comparisons(a < b, x > a, m >= ceil((b - a) / (x - a)))
+    S.assert_comparison(a + (b - a) / (m + 1) >= x)
+    S.check()
+
+def z3test9a():
+    # not solved
+    ceil = z3.Function('ceil', z3.RealSort(), z3.RealSort())
+    s = z3.Solver()
+    x = z3.Real('x')
+    s.add(z3.ForAll([x], ceil(x) >= x))
+    m = z3.Real('m')
+    s.add(a<b, x>a, m>=ceil((b-a)/x-a))
+    s.add(a+(b-a)/(m+1)>= x)
+    print s.check()
+
+
+def test9():
+    # solved in .08 sec
+    ceil = Func('ceil')
+    f = Func('f')
+    x, a, b, m = Vars('x, a, b, m')
+    S = Solver()
+    S.add_axiom(ForAll([x], ceil(x) >= x))
+    S.add_axiom(ForAll([m], f(m) < a + (b - a) / (m + 1)))
+    S.assert_comparisons(a < b, x > a, m >= ceil((b - a) / (x - a)))
+    S.assert_comparison(f(m) >= x)
+    S.check()
+
+def z3test9():
+    # not solved
+    ceil = z3.Function('ceil', z3.RealSort(), z3.RealSort())
+    f = z3.Function('f', z3.RealSort(), z3.RealSort())
+    s = z3.Solver()
+    x = z3.Real('x')
+    m = z3.Real('m')
+    s.add(z3.ForAll([x], ceil(x) >= x))
+    s.add(z3.ForAll([m], f(m) < a+ (b-a)/(m+1)))
+    s.add(a<b, x>a, m>=ceil((b-a)/x-a))
+    s.add(f(m)>=x)
+    print s.check()
+
+
+def test10():
+    abs2 = Func('abs')
+    f = Func('f')
+    x, y, z, i = Vars('x, y, z, i')
+    S = Solver()
+    S.add_axiom(ForAll([x,y], abs2(x + y) <= abs2(x) + abs2(y)))
+    S.add_axiom(ForAll([x], abs2(x) == abs2(-1*x)))
+    S.assert_comparison(i >= 0)
+    S.assert_comparison(abs2(f(x) - f(y)) < 1 / (2 * (i + 1)))
+    S.assert_comparison(abs2(f(y) - f(z)) < 1 / (2 * (i + 1)))
+    S.assert_comparison(abs2(f(x) - f(z)) >= 1 / (i + 1))
+    S.check()
+
+def z3test10():
+    abs2 = z3.Function('abs', z3.RealSort(), z3.RealSort())
+    f = z3.Function('f', z3.RealSort(), z3.RealSort())
+    x, y, z, i = z3.Reals('x y z i')
+    S = z3.Solver()
+    S.add(z3.ForAll([x,y], abs2(x + y) <= abs2(x) + abs2(y)))
+    S.add(i >= 0, abs2(f(y) - f(x)) < 1 / (2 * (i + 1)), abs2(f(z) - f(x)) < 1 / (2 * (i + 1)))
+    S.add(abs2(f(z) - f(x)) >= 1 / (i + 1))
+    print S.check()
+
 t = timeit.default_timer()
-z3test8()
+
+test10()
+#z3test10()
+
 
 
 
