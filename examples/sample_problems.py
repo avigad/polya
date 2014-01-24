@@ -1,6 +1,6 @@
 ####################################################################################################
 #
-# examples.py
+# sample_problems.py
 #
 # Authors:
 # Jeremy Avigad
@@ -26,7 +26,8 @@ def negate_comparison(c):
 
 class Example:
 
-    def __init__(self, hyps = [], conc = None, ax = [], modules = None):
+    def __init__(self, name = 'Polya sample problem', hyps = [], conc = None, ax = [], modules = None):
+	self.name = name
         self.hyps = hyps
         self.conc = conc
         self.ax = ax
