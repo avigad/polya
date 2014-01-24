@@ -28,7 +28,7 @@ import polya.fourier_motzkin.fm_mult_module as fm_mult_module
 # import polya.main.function_module as function_module
 # import polya.main.formulas as formulas
 from terms import Var, Vars, UVar, Func, Contradiction
-from formulas import ForAll, Implies, And, Or, Not
+from formulas import Forall, Implies, And, Or, Not
 from polya.polyhedron.poly_mult_module import PolyMultiplicationModule
 from polya.polyhedron.poly_add_module import PolyAdditionModule
 from polya.fourier_motzkin.fm_add_module import FMAdditionModule
@@ -99,7 +99,7 @@ def run_modules(B, *modules):
 
         return False
     except Contradiction as e:
-        messages.announce(e.msg, messages.ASSERTION)
+        messages.announce(e.msg+"\n", messages.ASSERTION)
         return True
 
 
@@ -112,7 +112,7 @@ def solve(*assertions):
     try:
         B.assert_comparisons(*assertions)
     except Contradiction as e:
-        messages.announce(e.msg, messages.ASSERTION)
+        messages.announce(e.msg+"\n", messages.ASSERTION)
         return True
     return run(B)
 
