@@ -209,13 +209,14 @@ class Implies(Formula):
     def __repr__(self):
         return str(self)
 
-class ForAll:
+
+class Forall:
     """
     Represents a universal quantifier over vars
     Vars are terms.Vars
     """
     def __init__(self, vars, formula):
-        self.vars = set(v.key for v in vars)
+        self.vars = set(v.key for v in vars) if isinstance(vars, list) else set(vars.key)
         self.formula = cnf(formula)
 
     def to_cnf(self):
@@ -242,6 +243,14 @@ class ForAll:
 
         return [[process_tc(c) for c in clause] for clause in self.formula]
 
+    def __getitem__(self, item):
+        if isinstance(item, terms.Var):
+            return lambda f: Forall([item], f)
+        else:
+            return lambda f: Forall(item, f)
+
+    def __call__(self, *args, **kwargs):
+        return Forall(*args)
 
 
 def cnf(formula):
@@ -250,7 +259,7 @@ def cnf(formula):
     Specifically, returns a list of lists of TermComparisons.
     Each list denotes the disjunction of its contents; the overall list represents the conjunction.
     """
-    if isinstance(formula, ForAll):
+    if isinstance(formula, Forall):
         return formula.to_cnf()
     elif isinstance(formula, terms.TermComparison):
         return [[formula.canonize()]]

@@ -66,7 +66,7 @@ def test4():
 
     B = Blackboard()
 
-    fm = FunctionModule([ForAll([x, y], Implies(x<y, f(x)<f(y)))])
+    fm = FunctionModule([Forall([x, y], Implies(x<y, f(x)<f(y)))])
 
     B.assert_comparison(a<b)
     B.assert_comparison(f(a) > f(b))
@@ -82,7 +82,7 @@ def test5():
 
     B = Blackboard()
 
-    fm = FunctionModule([ForAll([x, y], Implies(x<y, f(x)<f(y)))])
+    fm = FunctionModule([Forall([x, y], Implies(x<y, f(x)<f(y)))])
 
     B.assert_comparisons(0<r, s>1, 0<x, x<y, w>z, z+f(x)>w+f(s*(y+r)))
 
@@ -102,7 +102,7 @@ def test6():
     B = Blackboard()
 
     fm = FunctionModule(
-        [ForAll([x, y], (f(x)+f(y))/2 >= f((x+y)/2))]
+        [Forall([x, y], (f(x)+f(y))/2 >= f((x+y)/2))]
     )
 
     B.assert_comparisons(f(x)+f(y)<z, f((x+y)/2)>4*z, z>0)
@@ -115,7 +115,7 @@ def test7():
     x, y, z = Vars('x, y, z')
     f = Func('f')
     fm = FunctionModule(
-        [ForAll([x, y], (f(x)+f(y))/2 >= f((x+y)/2))]
+        [Forall([x, y], (f(x)+f(y))/2 >= f((x+y)/2))]
     )
 
     B = Blackboard()
@@ -130,8 +130,8 @@ def test8():
     x, y, z = Vars('x, y, z')
     f = Func('f')
     fm = FunctionModule(
-        [ForAll([x, y], f(x*y)==f(x)*f(y)),
-         ForAll([x], Implies(x>2, f(x)<0))]
+        [Forall([x, y], f(x*y)==f(x)*f(y)),
+         Forall([x], Implies(x>2, f(x)<0))]
     )
 
     C = Blackboard()
@@ -145,7 +145,7 @@ def test9():
     f = Func('f')
     fm = FunctionModule(
         [
-            ForAll([x, y], f((x*y)/2)<=(f(x)*f(y))/2)
+            Forall([x, y], f((x*y)/2)<=(f(x)*f(y))/2)
         ]
     )
 
@@ -165,7 +165,7 @@ def test10():
     B = Blackboard()
     B.assert_comparisons(f(a, b, c*d)<0, a>0, b>0, a==c, b==d)
 
-    fm = FunctionModule([ForAll([x, y], f(x, y, x*y)>0)])
+    fm = FunctionModule([Forall([x, y], f(x, y, x*y)>0)])
     PolyAdditionModule().update_blackboard(B)
     PolyMultiplicationModule().update_blackboard(B)
     fm.update_blackboard(B)
@@ -175,14 +175,13 @@ def test10():
 def test10a():
     a, b = Vars('a, b')
     f, g, h = Func('f'), Func('g'), Func('h')
-    B = Blackboard()
-    B.assert_comparisons(f(e, b, c+d)<0, a>0, b>0, a==c, b==d, a==e)
+    S = Solver()
+    #B = Blackboard()
+    S.assert_comparisons(f(e, b, c+d)<0, a>0, b>0, a==c, b==d, a==e)
 
-    fm = FunctionModule([ForAll([x, y], f(x, y, x+y)>0)])
-    PolyAdditionModule().update_blackboard(B)
-    fm.update_blackboard(B)
+    S.add_axiom(Forall([x, y], f(x, y, x+y)>0))
+    S.check()
 
-    run(B)
 
 def test11():
     u, v, w, x, y, z = Vars('u v w x y z')
@@ -205,7 +204,7 @@ def test12():
     B = Blackboard()
     B.assert_comparisons(0<x, x<y, (1+x**2)/(2+exp(y))>=(2+y**2)/(1+exp(x)))
 
-    fm = FunctionModule([ForAll([x, y], And(Implies(x<y, exp(x)<exp(y)),
+    fm = FunctionModule([Forall([x, y], And(Implies(x<y, exp(x)<exp(y)),
                                                             exp(x)>0))])
 
     fm.update_blackboard(B)
@@ -223,7 +222,7 @@ def test13():
 
 def test14():
     f = Func('f')
-    S = Solver([f(x)<y, y<z, z<f(x)], [ForAll([x], f(x)>0)])
+    S = Solver([f(x)<y, y<z, z<f(x)], [Forall([x], f(x)>0)])
     print S.check()
 
 def test15():
@@ -236,7 +235,7 @@ def test16a():
     ceil = Func('ceil')
     x, a, b, m = Vars('x, a, b, m')
     S = Solver()
-    S.add_axiom(ForAll([x], ceil(x) >= x))
+    S.add_axiom(Forall([x], ceil(x) >= x))
     S.assert_comparisons(a < b, x > a, m >= ceil((b - a) / (x - a)))
     S.assert_comparison(a + (b - a) / (m + 1) >= x)
     S.check()
@@ -247,8 +246,8 @@ def test16():
     f = Func('f')
     x, a, b, m = Vars('x, a, b, m')
     S = Solver()
-    S.add_axiom(ForAll([x], ceil(x) >= x))
-    S.add_axiom(ForAll([m], f(m) < a + (b - a) / (m + 1)))
+    S.add_axiom(Forall([x], ceil(x) >= x))
+    S.add_axiom(Forall([m], f(m) < a + (b - a) / (m + 1)))
     S.assert_comparisons(a < b, x > a, m >= ceil((b - a) / (x - a)))
     S.assert_comparison(f(m) >= x)
     S.check()
@@ -259,7 +258,7 @@ def test17():
     f = Func('f')
     x, y, z, i = Vars('x, y, z, i')
     S = Solver()
-    S.add_axiom(ForAll([x,y], abs2(x + y) <= abs2(x) + abs2(y)))
+    S.add_axiom(Forall([x,y], abs2(x + y) <= abs2(x) + abs2(y)))
     S.assert_comparison(i >= 0)
     S.assert_comparison(abs2(f(y) - f(x)) < 1 / (2 * (i + 1)))
     S.assert_comparison(abs2(f(z) - f(y)) < 1 / (2 * (i + 1)))
@@ -319,18 +318,18 @@ def arithmetical_tests():
 
 polya_set_solver_type('fm')
 
-test4()
-test5()
-test6()
-test7()
-test8()
-test9()
+# test4()
+# test5()
+# test6()
+# test7()
+# test8()
+# test9()
 test10a()
-test12()
-# test13()
-test14()
-test16()
-test17()
+# test12()
+# # test13()
+# test14()
+# test16()
+# test17()
 # arithmetical_tests()
 
 #messages.set_verbosity(messages.debug)

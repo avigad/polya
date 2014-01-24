@@ -25,7 +25,7 @@ def test2():
     B = Blackboard()
     B.assert_comparisons(0<x, x<y, (1+x**2)/(2+exp(y))>=(2+y**2)/(1+exp(x)))
 
-    fm = FunctionModule([ForAll([x, y], And(Implies(x<y, exp(x)<exp(y)),
+    fm = FunctionModule([Forall([x, y], And(Implies(x<y, exp(x)<exp(y)),
                                                             exp(x)>0))])
 
     fm.update_blackboard(B)
@@ -67,7 +67,7 @@ def test5():
     S = Solver()
     f = Func('f')
     S.assert_comparisons(x<y, f(x)>f(y))
-    S.add_axiom(ForAll([x, y], Implies(x<y, f(x)<f(y))))
+    S.add_axiom(Forall([x, y], Implies(x<y, f(x)<f(y))))
     S.check()
 
 def z3test5():
@@ -83,7 +83,7 @@ def test6():
     # solved in .04 sec
     f = Func('f')
     fm = FunctionModule(
-        [ForAll([x, y], (f(x)+f(y))/2 >= f((x+y)/2))]
+        [Forall([x, y], (f(x)+f(y))/2 >= f((x+y)/2))]
     )
 
     B = Blackboard()
@@ -105,8 +105,8 @@ def test7():
     # solved in .02 sec
     f = Func('f')
     fm = FunctionModule(
-        [ForAll([x, y], f(x*y)==f(x)*f(y)),
-         ForAll([x], Implies(x>2, f(x)<0))]
+        [Forall([x, y], f(x*y)==f(x)*f(y)),
+         Forall([x], Implies(x>2, f(x)<0))]
     )
 
     C = Blackboard()
@@ -132,7 +132,7 @@ def test8():
     S = Solver()
     S.assert_comparisons(f(y, v, w+x)<0, u>0, v>0, u==w, v==x, u==y)
 
-    S.add_axiom(ForAll([x, y], f(x, y, x+y)>0))
+    S.add_axiom(Forall([x, y], f(x, y, x+y)>0))
     S.check()
 
 
@@ -150,7 +150,7 @@ def test9a():
     ceil = Func('ceil')
     x, a, b, m = Vars('x, a, b, m')
     S = Solver()
-    S.add_axiom(ForAll([x], ceil(x) >= x))
+    S.add_axiom(Forall([x], ceil(x) >= x))
     S.assert_comparisons(a < b, x > a, m >= ceil((b - a) / (x - a)))
     S.assert_comparison(a + (b - a) / (m + 1) >= x)
     S.check()
@@ -173,8 +173,8 @@ def test9():
     f = Func('f')
     x, a, b, m = Vars('x, a, b, m')
     S = Solver()
-    S.add_axiom(ForAll([x], ceil(x) >= x))
-    S.add_axiom(ForAll([m], f(m) < a + (b - a) / (m + 1)))
+    S.add_axiom(Forall([x], ceil(x) >= x))
+    S.add_axiom(Forall([m], f(m) < a + (b - a) / (m + 1)))
     S.assert_comparisons(a < b, x > a, m >= ceil((b - a) / (x - a)))
     S.assert_comparison(f(m) >= x)
     S.check()
@@ -198,8 +198,8 @@ def test10():
     f = Func('f')
     x, y, z, i = Vars('x, y, z, i')
     S = Solver()
-    S.add_axiom(ForAll([x,y], abs2(x + y) <= abs2(x) + abs2(y)))
-    S.add_axiom(ForAll([x], abs2(x) == abs2(-1*x)))
+    S.add_axiom(Forall([x,y], abs2(x + y) <= abs2(x) + abs2(y)))
+    S.add_axiom(Forall([x], abs2(x) == abs2(-1*x)))
     S.assert_comparison(i >= 0)
     S.assert_comparison(abs2(f(x) - f(y)) < 1 / (2 * (i + 1)))
     S.assert_comparison(abs2(f(y) - f(z)) < 1 / (2 * (i + 1)))
