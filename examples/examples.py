@@ -33,20 +33,27 @@ class Example:
         self.modules = modules
 
     def test(self):
+
         S = Solver()
+
         for a in self.ax:
-            print 'Axiom: {0!s}'.format(h)
-            S.add_axiom(a)
+            print 'Axiom: {0!s}'.format(a)
         for h in self.hyps:
             print 'Hypothesis: {0!s}'.format(h)
-            S.assert_comparison(h)
         if self.conc:
-            S.assert_comparison(negate_comparison(self.conc))
             print 'Conclusion: {0!s}'.format(self.conc)
         else:
             print 'Conclusion: False'
-        # TODO: handle modules
         print
+
+        for a in self.ax:
+            S.add_axiom(a)
+        for h in self.hyps:
+            S.assert_comparison(h)
+        if self.conc:
+            S.assert_comparison(negate_comparison(self.conc))
+        # TODO: handle modules
+
         S.check()
         print
 
@@ -89,9 +96,9 @@ examples[1] = Example(
 
 
 if __name__ == '__main__':
-    if len(sys.argv) == 0:
-        print "Use 'python examples 6 9 10' to run those examples."
-        print "Use 'python examples all' to run them all."
+    if len(sys.argv) == 1:
+        print "Use 'python examples.py 6 9 10' to run those examples."
+        print "Use 'python examples.py all' to run them all."
     elif sys.argv[1] == 'all':
         for i in examples:
             examples[i].test()
