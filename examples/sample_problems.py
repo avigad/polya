@@ -22,18 +22,17 @@ import timeit
 
 class Example:
 
-    def __init__(self, name = 'Polya sample problem', hyps = [], conc = None, ax = [],
-                 modules = [], omit = False):
-        self.name = name
+    def __init__(self, hyps = [], conc = None, axioms = [],
+                 modules = [], omit = False, comment = None):
         self.hyps = hyps
         self.conc = conc
-        self.ax = ax
+        self.axioms = axioms
         self.modules = modules
+        self.comment = comment
         self.omit = omit    # flag to omit from 'test_all'
 
     def show(self):
-        print 'Problem: {0}'.format(self.name)
-        for a in self.ax:
+        for a in self.axioms:
             print 'Axiom: {0!s}'.format(a)
         for h in self.hyps:
             print 'Hypothesis: {0!s}'.format(h)
@@ -41,13 +40,15 @@ class Example:
             print 'Conclusion: {0!s}'.format(self.conc)
         else:
             print 'Conclusion: False'
+        if self.comment:
+            print 'Comment: {0}'.format(self.comment)
         if self.omit:
             print "(Omitted from 'test_all')"
         print
 
     def test(self):
         self.show()
-        S = Solver(assertions=self.hyps, axioms=self.ax, modules=self.modules)
+        S = Solver(assertions=self.hyps, axioms=self.axioms, modules=self.modules)
         t = timeit.default_timer()
         if self.conc:
             if S.prove(self.conc):
@@ -96,28 +97,28 @@ examples.append(Example(
 ))
 
 examples.append(Example(
-    ax = [Forall([x, y], Implies(x<y, f(x)<f(y)))],
+    axioms = [Forall([x, y], Implies(x<y, f(x)<f(y)))],
     hyps = [a < b],
     conc = f(a) < f(b)
 ))
 
 examples.append(Example(
-    ax = [Forall([x, y], Implies(x<y, f(x)<f(y)))],
+    axioms = [Forall([x, y], Implies(x<y, f(x)<f(y)))],
     hyps = [0 < r, s > 1, 0 < x, x < y, w > z, z + f(x) > w + f(s * (y + r))]
 ))
 
 examples.append(Example(
-    ax = [Forall([x, y], (f(x) + f(y)) / 2 >= f((x + y) / 2))],
+    axioms = [Forall([x, y], (f(x) + f(y)) / 2 >= f((x + y) / 2))],
     hyps = [f(x) + f(y) < z, f((x + y) / 2) > 4 * z, z > 0]
 ))
 
 examples.append(Example(
-    ax = [Forall([x, y], (f(x) + f(y)) / 2 >= f((x + y) / 2))],
+    axioms = [Forall([x, y], (f(x) + f(y)) / 2 >= f((x + y) / 2))],
     hyps = [z > 0, f(x) + f(y) - z < 0, f((x + y)/2) - 4 * z > 0]
 ))
 
 examples.append(Example(
-    ax = [Forall([x, y], f(x * y) == f(x) * f(y)), Forall([x], Implies(x > 2, f(x) < 0))],
+    axioms = [Forall([x, y], f(x * y) == f(x) * f(y)), Forall([x], Implies(x > 2, f(x) < 0))],
     hyps = [x > 1, y > 2, f(x * y) > 0]
 ))
 
@@ -127,17 +128,17 @@ examples.append(Example(
 # if we add z>0,
 
 examples.append(Example(
-    ax = [Forall([x, y], f((x * y) / 2) <= (f(x) * f(y)) / 2)],
+    axioms = [Forall([x, y], f((x * y) / 2) <= (f(x) * f(y)) / 2)],
     hyps = [z > 0, z * f(x) * f(y) < 0, 4 * z * f(x * y / 2) > 0]
 ))
 
 examples.append(Example(
-    ax = [Forall([x, y], f(x, y, x*y)>0)],
+    axioms = [Forall([x, y], f(x, y, x*y)>0)],
     hyps = [f(a, b, c * d) < 0, a > 0, b > 0, a == c, b == d]
 ))
 
 examples.append(Example(
-    ax = [Forall([x, y], f(x, y, x + y) > 0)],
+    axioms = [Forall([x, y], f(x, y, x + y) > 0)],
     hyps = [f(e, b, c + d) < 0, a > 0, b > 0, a == c, b == d, a == e]
 ))
 
@@ -146,21 +147,21 @@ examples.append(Example(
     conc = u + x * w < v + y**2 * z
 ))
 
-# This example comes from Avigad and Friedman (2006)
 examples.append(Example(
-    ax = [Forall([x, y], And(Implies(x < y, exp(x) < exp(y)), exp(x) > 0))],
+    axioms = [Forall([x, y], And(Implies(x < y, exp(x) < exp(y)), exp(x) > 0))],
     hyps = [0 < x, x < y],
-    conc = (1 + x**2) / (2 + exp(y)) < (2 + y**2) / (1 + exp(x))
+    conc = (1 + x**2) / (2 + exp(y)) < (2 + y**2) / (1 + exp(x)),
+    comment = 'From Avigad and Friedman (2006).'
 ))
 
-# An interesting example: the method does not terminate.
 examples.append(Example(
     hyps = [x ** 2 + 2 * x + 1 < 0],
+    comment = 'An example where the method does not terminate.',
     omit = True
 ))
 
 examples.append(Example(
-    ax = [Forall([x], f(x) > 0)],
+    axioms = [Forall([x], f(x) > 0)],
     hyps = [f(x) < y, y < z, z < f(x)]
 ))
 
@@ -170,21 +171,21 @@ examples.append(Example(
 ))
 
 examples.append(Example(
-    ax = [Forall([x], ceil(x) >= x)],
+    axioms = [Forall([x], ceil(x) >= x)],
     hyps = [a < b, x > a, m >= ceil((b - a) / (x - a))],
     conc = a + (b - a) / (m + 1) < x
 ))
 
 # in the paper
 examples.append(Example(
-    ax = [Forall([x], ceil(x) >= x), Forall([m], f(m) < a + (b - a) / (m + 1))],
+    axioms = [Forall([x], ceil(x) >= x), Forall([m], f(m) < a + (b - a) / (m + 1))],
     hyps = [a < b, x > a, m >= ceil((b - a) / (x - a))],
     conc = f(m) < x
 ))
 
 # in the paper
 examples.append(Example(
-    ax = [i >= 0, Forall([x,y], abs2(x + y) <= abs2(x) + abs2(y))],
+    axioms = [i >= 0, Forall([x,y], abs2(x + y) <= abs2(x) + abs2(y))],
     hyps = [abs2(f(y) - f(x)) < 1 / (2 * (i + 1)), abs2(f(z) - f(y)) < 1 / (2 * (i + 1))],
     conc = abs2(f(z) - f(x)) < 1 / (i + 1)
 ))

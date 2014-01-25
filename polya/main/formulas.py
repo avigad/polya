@@ -216,6 +216,7 @@ class Forall:
     Vars are terms.Vars
     """
     def __init__(self, vars, formula):
+        self.vars_display = vars
         self.vars = set(v.key for v in vars) if isinstance(vars, list) else set(vars.key)
         self.formula = cnf(formula)
 
@@ -242,6 +243,12 @@ class Forall:
             return terms.TermComparison(replace_vars(tc.term1), tc.comp, replace_vars(tc.term2))
 
         return [[process_tc(c) for c in clause] for clause in self.formula]
+
+    def __str__(self):
+        return "Forall({0!s}, {1!s})".format(self.vars_display, self.formula)
+
+    def __repr__(self):
+        return str(self)
 
     def __getitem__(self, item):
         if isinstance(item, terms.Var):
