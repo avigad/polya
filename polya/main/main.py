@@ -7,14 +7,15 @@
 # Rob Lewis
 # Cody Roux
 #
-# Contains the main module for running the Polya inequality prover.
-#
+# Contains the main module for running the Polya inequality prover, with some prepackaged
+# solving methods.
 #
 ####################################################################################################
 
 from __future__ import division
 import polya.main.terms as terms
 import polya.main.messages as messages
+import polya.main.configure as configure
 import polya.polyhedron.lrs as lrs
 import copy
 
@@ -38,82 +39,13 @@ from polya.main.function_module import FunctionModule
 from blackboard import Blackboard
 
 
-####################################################################################################
-#
-# System configuration
-#
-####################################################################################################
-
-messages.announce('', messages.INFO)
-messages.announce('Welcome to Polya.', messages.INFO)
-
-solver_options = ['fm', 'poly']
-default_solver = 'none'
-
-messages.announce('Looking for components...', messages.INFO
-)
-# look for cdd
-try:
-    import cdd
-    have_cdd = True
-    messages.announce('cdd found.', messages.INFO)
-except Exception:
-    have_cdd = False
-    messages.announce('cdd not found.', messages.INFO)
-
-# look for lrs
-lrs_path = lrs.find_lrs_path()
-if lrs_path is None:
-    messages.announce('lrs not found.', messages.INFO)
-else:
-    messages.announce('lrs found (path: {0!s}).'.format(lrs_path), messages.INFO)
-
-# look for redund
-redund_path = lrs.find_redund_path()
-if redund_path is None:
-    messages.announce('redund not found.', messages.INFO)
-else:
-    messages.announce('redund found (path: {0!s}).'.format(redund_path), messages.INFO)
-
-messages.announce('', messages.INFO
-)
-if lrs_path and redund_path and have_cdd:
-    default_solver = 'poly'
-else:
-    default_solver = 'fm'
-
-
-def polya_set_solver_type(s):
-    """Set the solver to a given method in
-    solver_options
-    
-    Arguments:
-    - `s`:
-    """
-    if s in solver_options:
-        messages.announce('Setting solver type: {0!s}'.format(s), messages.INFO)
-        global default_solver
-        default_solver = s
-    else:
-        messages.announce('Error: {0!s} is not in the list of possible arithmetic '
-                               'solvers'.format(s), messages.INFO)
-        messages.announce('solver options = {0!s}'.format(solver_options))
-
-
-####################################################################################################
-#
-# Prepackaged solving methods.
-#
-####################################################################################################
-
-
 def run(B):
-    if default_solver == 'poly':
+    if configure.default_solver == 'poly':
         pa, pm = poly_add_module.PolyAdditionModule(), poly_mult_module.PolyMultiplicationModule()
-    elif default_solver == 'fm':
+    elif configure.default_solver == 'fm':
         pa, pm = fm_add_module.FMAdditionModule(), fm_mult_module.FMMultiplicationModule()
     else:
-        messages.announce('Unsupported option: {0}'.format(default_solver), messages.INFO)
+        messages.announce('Unsupported option: {0}'.format(configure.default_solver), messages.INFO)
         return
 
     cm = CongClosureModule()
@@ -171,14 +103,15 @@ class Solver:
         self.fm = None
         if len(modules) == 0:
             modules.append(CongClosureModule())
-            if default_solver == 'poly':
+            if configure.default_solver == 'poly':
                 pa = poly_add_module.PolyAdditionModule()
                 pm = poly_mult_module.PolyMultiplicationModule()
-            elif default_solver == 'fm':
+            elif configure.default_solver == 'fm':
                 pa = fm_add_module.FMAdditionModule()
                 pm = fm_mult_module.FMMultiplicationModule()
             else:
-                print 'Unsupported option:', default_solver
+                messages.announce('Unsupported option: {0}'.format(configure.default_solver),
+                                  messages.INFO)
                 raise Exception
 
             modules.extend([pa, pm])

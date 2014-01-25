@@ -9,9 +9,7 @@ import polya.main.messages as messages
 
 import subprocess
 
-
 poly_dir = os.path.dirname(__file__)
-    
 
 # look in some standard places for lrs
 def find_lrs_path():
@@ -23,6 +21,7 @@ def find_lrs_path():
         else:
             return s
 
+lrs_path = find_lrs_path()
 
 # look in some standard places for redund
 def find_redund_path():
@@ -33,6 +32,8 @@ def find_redund_path():
             pass
         else:
             return s
+
+redund_path = find_redund_path()
 
 
 def make_frac(string):
