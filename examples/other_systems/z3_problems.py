@@ -6,20 +6,20 @@ u, v, w, x, y, z = Vars('u v w x y z')
 a, b, c, d, e = z3.Reals('a b c d e')
 
 
+# This example comes from Agigad and Friedman (2006)
+# Solved in ~.08 seconds
 def test1():
-    # This example comes from Agigad and Friedman (2006)
-    # Solved in ~.08 seconds
     solve(0<x, x<y, (1+x**2)/(2+y)**17 >= (1+y**2)/(2+x)**10)
 
+# solved in ~.5 seconds
 def z3test1():
-    # solved in ~.5 seconds
     s = z3.Solver()
     s.add(0<a, a<b, (1+a**2)/(2+b)**17 >= (1+b**2)/(2+a)**10)
     print s.check()
 
+# This example comes from Avigad and Friedman (2006)
+# solved in ~.1 seconds
 def test2():
-    # This example comes from Avigad and Friedman (2006)
-    # solved in ~.1 seconds
     exp = Func('exp')
 
     B = Blackboard()
@@ -31,47 +31,46 @@ def test2():
     fm.update_blackboard(B)
     run(B)
 
+# Not solved.
 def z3test2():
-    # Not solved.
     s = z3.Solver()
     exp = z3.Function('exp', z3.RealSort(), z3.RealSort())
     s.add(0<a, a<b, (1+a**2)/(2+exp(b))>=(2+b**2)/(1+exp(a)))
     s.add(z3.ForAll([a, b], z3.And(z3.Implies(a<b, exp(a)<exp(b)), exp(a)>0)))
     print s.check()
 
+# From the Isabelle mailing list- Isabelle will not solve automatically.
+# solved in ~.02 seconds.
 def test3():
-    # From the Isabelle mailing list- Isabelle will not solve automatically.
-    # solved in ~.02 seconds.
     solve(x>0, x<1, y>0, y<1, (x+y)-(x*y) <= 0)
 
+# Solves this one in. 0.004 sec
 def z3test3():
-    # Solves this one in. 0.004 sec
     s = z3.Solver()
     s.add(a>0, a<1, b>0, b<1, (a+b)-(a*b) <= 0)
     print s.check()
 
+# A variant on the above.
+# Solved in ~.03 seconds.
 def test4():
-    # A variant on the above.
-    # Solved in ~.03 seconds.
     solve(0 < x, x < 1, 0 < y, y < 1, x**150*y**150 > x**150+y**150)
 
+# Does not finish.
 def z3test4():
-    # Does not finish.
     s = z3.Solver()
     s.add(a>0, a<1, b>0, b<1, (a**150 +b) < (a**150*b**150))
     print s.check()
 
+# solved in .005 sec
 def test5():
-    # solved in .005 sec
-
     S = Solver()
     f = Func('f')
     S.assert_comparisons(x<y, f(x)>f(y))
     S.add_axiom(Forall([x, y], Implies(x<y, f(x)<f(y))))
     S.check()
 
+# solved in .005 sec, but sometimes much longer??
 def z3test5():
-    # solved in .005 sec, but sometimes much longer??
     s = z3.Solver()
     f = z3.Function('exp', z3.RealSort(), z3.RealSort())
     s.add(a<b)
@@ -79,8 +78,8 @@ def z3test5():
     s.add(z3.ForAll([a, b], z3.Implies(a<b, f(a)<f(b))))
     print s.check()
 
+# solved in .04 sec
 def test6():
-    # solved in .04 sec
     f = Func('f')
     fm = FunctionModule(
         [Forall([x, y], (f(x)+f(y))/2 >= f((x+y)/2))]
@@ -92,8 +91,8 @@ def test6():
 
     run(B)
 
+# solved in .007 sec
 def z3test6():
-    # solved in .007 sec
     f = z3.Function('f', z3.RealSort(), z3.RealSort())
     s = z3.Solver()
     s.add(z3.ForAll([a, b], (f(a)+f(b))/2 >= f((a+b)/2)))
@@ -101,8 +100,8 @@ def z3test6():
 
     print s.check()
 
+# solved in .02 sec
 def test7():
-    # solved in .02 sec
     f = Func('f')
     fm = FunctionModule(
         [Forall([x, y], f(x*y)==f(x)*f(y)),
@@ -115,8 +114,8 @@ def test7():
 
     run(C)
 
+#times out
 def z3test7():
-    #times out
     f = z3.Function('f', z3.RealSort(), z3.RealSort())
     s = z3.Solver()
     s.add(z3.ForAll([a, b], f(a*b) == f(a)*f(b)))
@@ -125,9 +124,9 @@ def z3test7():
 
     print s.check()
 
+# a b c d e
+# u v w x y
 def test8():
-    # a b c d e
-    # u v w x y
     f = Func('f')
     S = Solver()
     S.assert_comparisons(f(y, v, w+x)<0, u>0, v>0, u==w, v==x, u==y)
@@ -145,8 +144,8 @@ def z3test8():
     print s.check()
 
 
+# solved in .08 sec
 def test9a():
-    # solved in .08 sec
     ceil = Func('ceil')
     x, a, b, m = Vars('x, a, b, m')
     S = Solver()
@@ -155,8 +154,8 @@ def test9a():
     S.assert_comparison(a + (b - a) / (m + 1) >= x)
     S.check()
 
+# not solved
 def z3test9a():
-    # not solved
     ceil = z3.Function('ceil', z3.RealSort(), z3.RealSort())
     s = z3.Solver()
     x = z3.Real('x')
@@ -167,8 +166,8 @@ def z3test9a():
     print s.check()
 
 
+# solved in .08 sec
 def test9():
-    # solved in .08 sec
     ceil = Func('ceil')
     f = Func('f')
     x, a, b, m = Vars('x, a, b, m')
@@ -179,8 +178,8 @@ def test9():
     S.assert_comparison(f(m) >= x)
     S.check()
 
+# not solved
 def z3test9():
-    # not solved
     ceil = z3.Function('ceil', z3.RealSort(), z3.RealSort())
     f = z3.Function('f', z3.RealSort(), z3.RealSort())
     s = z3.Solver()
