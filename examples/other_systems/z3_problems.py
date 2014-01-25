@@ -1,118 +1,86 @@
-####################################################################################################
-#
-# tests.py
-#
-# Authors:
-# Jeremy Avigad
-# Rob Lewis
-#
-# Contains tests for Polya.
-#
-# TODO:
-#
-####################################################################################################
-
 from polya import *
+import z3
 import timeit
-import polya.util.timer as timer
 
-t = timeit.default_timer()
-
-x, y, u, v, w, z, r = Vars('x, y, u, v, w, z, r')
-a, b, c, d, e = Vars('a, b, c, d, e')
-n, k, p = Vars('n, k, p')
+u, v, w, x, y, z = Vars('u v w x y z')
+a, b, c, d, e = z3.Reals('a b c d e')
 
 
 def test1():
-    B = Blackboard()
-    B.assert_comparison(0 < x)
-    B.assert_comparison(x < 3*y)
-    B.assert_comparison(u < v)
-    B.assert_comparison(v < 0)
-    B.assert_comparison(1 < v**2)
-    B.assert_comparison(v**2 < x)
-    B.assert_comparison(u*(3*y)**2 + 1 >= x**2 * v + x)
-    # This example has a model if the last inequality is <. FM blows up here, poly doesn't
-    # It does not have a model if the last inequality is >=. Contradiction is found.
-    # "0<x<3*y", "u<v<0", "1<v^2<x", "u*(3*y)^2+1 >= x^2*v+x"
-    run(B)
+    # This example comes from Agigad and Friedman (2006)
+    # Solved in ~.08 seconds
+    solve(0<x, x<y, (1+x**2)/(2+y)**17 >= (1+y**2)/(2+x)**10)
 
+def z3test1():
+    # solved in ~.5 seconds
+    s = z3.Solver()
+    s.add(0<a, a<b, (1+a**2)/(2+b)**17 >= (1+b**2)/(2+a)**10)
+    print s.check()
 
 def test2():
-    messages.set_verbosity(messages.normal)
-    B = Blackboard()
+    # This example comes from Avigad and Friedman (2006)
+    # solved in ~.1 seconds
+    exp = Func('exp')
 
-    B.assert_comparison(0 < x)
-    B.assert_comparison(x < y)
-    B.assert_comparison(0 < u)
-    B.assert_comparison(u < v)
-    B.assert_comparison(0 < w + z)
-    B.assert_comparison(w + z < r - 1)
-    B.assert_comparison(u + (1+x)**2 * (2*w + 2*z + 3) >= 2*v + (1+y)**2 * (2*r + 1))
+    B = Blackboard()
+    B.assert_comparisons(0<x, x<y, (1+x**2)/(2+exp(y))>=(2+y**2)/(1+exp(x)))
+
+    fm = FunctionModule([Forall([x, y], And(Implies(x<y, exp(x)<exp(y)),
+                                                            exp(x)>0))])
+
+    fm.update_blackboard(B)
     run(B)
 
+def z3test2():
+    # Not solved.
+    s = z3.Solver()
+    exp = z3.Function('exp', z3.RealSort(), z3.RealSort())
+    s.add(0<a, a<b, (1+a**2)/(2+exp(b))>=(2+b**2)/(1+exp(a)))
+    s.add(z3.ForAll([a, b], z3.And(z3.Implies(a<b, exp(a)<exp(b)), exp(a)>0)))
+    print s.check()
 
 def test3():
-    messages.set_verbosity(messages.normal)
-    B = Blackboard()
+    # From the Isabelle mailing list- Isabelle will not solve automatically.
+    # solved in ~.02 seconds.
+    solve(x>0, x<1, y>0, y<1, (x+y)-(x*y) <= 0)
 
-    # "x+1/y<2", "y<0", "y/x>1", "-2<=x<=2", "-2<=y<=2", "x^2*y^(-1)>1-x"
-    B.assert_comparisons(x+1/y<2, y<0, y/x>1, -2<=x, x<=2, -2<=y, y<=2, x**2*y**(-1)>1-x)
-    run(B)
+def z3test3():
+    # Solves this one in. 0.004 sec
+    s = z3.Solver()
+    s.add(a>0, a<1, b>0, b<1, (a+b)-(a*b) <= 0)
+    print s.check()
 
 def test4():
-    f = Func('f')
-    a, b, c = Vars('a, b, c')
+    # A variant on the above.
+    # Solved in ~.03 seconds.
+    solve(0 < x, x < 1, 0 < y, y < 1, x**150*y**150 > x**150+y**150)
 
-    B = Blackboard()
-
-    fm = FunctionModule([Forall([x, y], Implies(x<y, f(x)<f(y)))])
-
-    B.assert_comparison(a<b)
-    B.assert_comparison(f(a) > f(b))
-    try:
-        fm.update_blackboard(B)
-    except Contradiction:
-        print 'Contradiction found from axiom module'
+def z3test4():
+    # Does not finish.
+    s = z3.Solver()
+    s.add(a>0, a<1, b>0, b<1, (a**150 +b) < (a**150*b**150))
+    print s.check()
 
 def test5():
+    # solved in .005 sec
 
+    S = Solver()
     f = Func('f')
-    x, y, z, w, r, s = Vars('x, y, z, w, r, s')
+    S.assert_comparisons(x<y, f(x)>f(y))
+    S.add_axiom(Forall([x, y], Implies(x<y, f(x)<f(y))))
+    S.check()
 
-    B = Blackboard()
-
-    fm = FunctionModule([Forall([x, y], Implies(x<y, f(x)<f(y)))])
-
-    B.assert_comparisons(0<r, s>1, 0<x, x<y, w>z, z+f(x)>w+f(s*(y+r)))
-
-    try:
-        fm.update_blackboard(B)
-    except Contradiction:
-        print 'Contradiction found from axiom module'
-
-    run(B)
-    # run(B)
+def z3test5():
+    # solved in .005 sec, but sometimes much longer??
+    s = z3.Solver()
+    f = z3.Function('exp', z3.RealSort(), z3.RealSort())
+    s.add(a<b)
+    s.add(f(a)>f(b))
+    s.add(z3.ForAll([a, b], z3.Implies(a<b, f(a)<f(b))))
+    print s.check()
 
 def test6():
-    f = Func('f')
-    x, y, z, w, r, s = Vars('x, y, z, w, r, s')
-    u, v = UVar(1), UVar(2)
-
-    B = Blackboard()
-
-    fm = FunctionModule(
-        [Forall([x, y], (f(x)+f(y))/2 >= f((x+y)/2))]
-    )
-
-    B.assert_comparisons(f(x)+f(y)<z, f((x+y)/2)>4*z, z>0)
-    fm.update_blackboard(B)
-
-    run(B)
-    # run(B)
-
-def test7():
-    x, y, z = Vars('x, y, z')
+    # solved in .04 sec
     f = Func('f')
     fm = FunctionModule(
         [Forall([x, y], (f(x)+f(y))/2 >= f((x+y)/2))]
@@ -123,11 +91,18 @@ def test7():
     fm.update_blackboard(B)
 
     run(B)
-    # run(B)
 
+def z3test6():
+    # solved in .007 sec
+    f = z3.Function('f', z3.RealSort(), z3.RealSort())
+    s = z3.Solver()
+    s.add(z3.ForAll([a, b], (f(a)+f(b))/2 >= f((a+b)/2)))
+    s.add(c>0, f(a)+f(b)-c<0, f((a+b)/2)-4*c>0)
 
-def test8():
-    x, y, z = Vars('x, y, z')
+    print s.check()
+
+def test7():
+    # solved in .02 sec
     f = Func('f')
     fm = FunctionModule(
         [Forall([x, y], f(x*y)==f(x)*f(y)),
@@ -140,98 +115,38 @@ def test8():
 
     run(C)
 
-def test9():
-    x, y, z = Vars('x, y, z')
+def z3test7():
+    #times out
+    f = z3.Function('f', z3.RealSort(), z3.RealSort())
+    s = z3.Solver()
+    s.add(z3.ForAll([a, b], f(a*b) == f(a)*f(b)))
+    s.add(z3.ForAll([a], z3.Implies(a>2, f(a)<0)))
+    s.add(a>1, b>2, f(a*b)>0)
+
+    print s.check()
+
+def test8():
+    # a b c d e
+    # u v w x y
     f = Func('f')
-    fm = FunctionModule(
-        [
-            Forall([x, y], f((x*y)/2)<=(f(x)*f(y))/2)
-        ]
-    )
-
-    C = Blackboard()
-    C.assert_comparisons(z>0, z*f(x)*f(y)<0, 4*z*f(x*y/2)>0)
-    fm.update_blackboard(C)
-    run(C)
-
-    # This example does not run successfully, despite there being a contradiction.
-    # we get t6 = t1*t3*t5, t10=t3*t5, t1>0, t10>0, t6<0.
-    # but because the signs of t1 and t3 are unknown, the mul routine cannot find that contradiction
-    # if we add z>0,
-
-def test10():
-    a, b = Vars('a, b')
-    f, g, h = Func('f'), Func('g'), Func('h')
-    B = Blackboard()
-    B.assert_comparisons(f(a, b, c*d)<0, a>0, b>0, a==c, b==d)
-
-    fm = FunctionModule([Forall([x, y], f(x, y, x*y)>0)])
-    PolyAdditionModule().update_blackboard(B)
-    PolyMultiplicationModule().update_blackboard(B)
-    fm.update_blackboard(B)
-
-    run(B)
-
-def test10a():
-    a, b = Vars('a, b')
-    f, g, h = Func('f'), Func('g'), Func('h')
     S = Solver()
-    #B = Blackboard()
-    S.assert_comparisons(f(e, b, c+d)<0, a>0, b>0, a==c, b==d, a==e)
+    S.assert_comparisons(f(y, v, w+x)<0, u>0, v>0, u==w, v==x, u==y)
 
     S.add_axiom(Forall([x, y], f(x, y, x+y)>0))
     S.check()
 
 
-def test11():
-    u, v, w, x, y, z = Vars('u v w x y z')
-    # B = Blackboard()
-    # B.assert_comparisons(0 < u, u < v, 1 < x, x < y, 0 < w, w < z)
-    # B.assert_comparison(u + x * w >= v + y**2 * z)
-    # run(B)
-    # print
-    # print "**********"
-    print
-    # messages.set_verbosity(messages.debug)
-    B = Blackboard()
-    B.assert_comparisons(0 < u, u < v, 1 < x, x < y, 0 < w, w < z)
-    B.assert_comparison(u + x * w >= v + y**2 * z)
-    run(B)
+def z3test8():
+    f = z3.Function('f', z3.RealSort(), z3.RealSort(), z3.RealSort(), z3.RealSort())
+    s = z3.Solver()
+    s.add(z3.ForAll([a, b], f(a, b, a+b) > 0))
+    s.add(f(e, b, c + d)<0, a>0, b>0, a == c, b == d, a == e)
 
-def test12():
-    exp = Func('exp')
-
-    B = Blackboard()
-    B.assert_comparisons(0<x, x<y, (1+x**2)/(2+exp(y))>=(2+y**2)/(1+exp(x)))
-
-    fm = FunctionModule([Forall([x, y], And(Implies(x<y, exp(x)<exp(y)),
-                                                            exp(x)>0))])
-
-    fm.update_blackboard(B)
-    run(B)
-
-    # This example comes from Avigad and Friedman (2006)
+    print s.check()
 
 
-def test13():
-    x = Var('x')
-    B = Blackboard()
-    B.assert_comparisons(x ** 2 + 2 * x + 1 < 0)
-    run(B)
-    # This test loops!
-
-def test14():
-    f = Func('f')
-    S = Solver([f(x)<y, y<z, z<f(x)], [Forall([x], f(x)>0)])
-    print S.check()
-
-def test15():
-    f = Func('f')
-    S = Solver([x==y, f(x)!=f(y)])
-    S.check()
-
-
-def test16a():
+def test9a():
+    # solved in .08 sec
     ceil = Func('ceil')
     x, a, b, m = Vars('x, a, b, m')
     S = Solver()
@@ -240,8 +155,20 @@ def test16a():
     S.assert_comparison(a + (b - a) / (m + 1) >= x)
     S.check()
 
+def z3test9a():
+    # not solved
+    ceil = z3.Function('ceil', z3.RealSort(), z3.RealSort())
+    s = z3.Solver()
+    x = z3.Real('x')
+    s.add(z3.ForAll([x], ceil(x) >= x))
+    m = z3.Real('m')
+    s.add(a<b, x>a, m>=ceil((b-a)/x-a))
+    s.add(a+(b-a)/(m+1)>= x)
+    print s.check()
 
-def test16():
+
+def test9():
+    # solved in .08 sec
     ceil = Func('ceil')
     f = Func('f')
     x, a, b, m = Vars('x, a, b, m')
@@ -252,92 +179,49 @@ def test16():
     S.assert_comparison(f(m) >= x)
     S.check()
 
+def z3test9():
+    # not solved
+    ceil = z3.Function('ceil', z3.RealSort(), z3.RealSort())
+    f = z3.Function('f', z3.RealSort(), z3.RealSort())
+    s = z3.Solver()
+    x = z3.Real('x')
+    m = z3.Real('m')
+    s.add(z3.ForAll([x], ceil(x) >= x))
+    s.add(z3.ForAll([m], f(m) < a+ (b-a)/(m+1)))
+    s.add(a<b, x>a, m>=ceil((b-a)/x-a))
+    s.add(f(m)>=x)
+    print s.check()
 
-def test17():
+
+def test10():
     abs2 = Func('abs')
     f = Func('f')
     x, y, z, i = Vars('x, y, z, i')
     S = Solver()
     S.add_axiom(Forall([x,y], abs2(x + y) <= abs2(x) + abs2(y)))
+    S.add_axiom(Forall([x], abs2(x) == abs2(-1*x)))
     S.assert_comparison(i >= 0)
-    S.assert_comparison(abs2(f(y) - f(x)) < 1 / (2 * (i + 1)))
-    S.assert_comparison(abs2(f(z) - f(y)) < 1 / (2 * (i + 1)))
-    S.assert_comparison(abs2(f(z) - f(x)) >= 1 / (i + 1))
+    S.assert_comparison(abs2(f(x) - f(y)) < 1 / (2 * (i + 1)))
+    S.assert_comparison(abs2(f(y) - f(z)) < 1 / (2 * (i + 1)))
+    S.assert_comparison(abs2(f(x) - f(z)) >= 1 / (i + 1))
     S.check()
 
+def z3test10():
+    abs2 = z3.Function('abs', z3.RealSort(), z3.RealSort())
+    f = z3.Function('f', z3.RealSort(), z3.RealSort())
+    x, y, z, i = z3.Reals('x y z i')
+    S = z3.Solver()
+    S.add(z3.ForAll([x,y], abs2(x + y) <= abs2(x) + abs2(y)))
+    S.add(i >= 0, abs2(f(y) - f(x)) < 1 / (2 * (i + 1)), abs2(f(z) - f(x)) < 1 / (2 * (i + 1)))
+    S.add(abs2(f(z) - f(x)) >= 1 / (i + 1))
+    print S.check()
 
-def arithmetical_tests():
-    x, y, u, v, w, z, r = Vars('x, y, u, v, w, z, r')
-    a, b, c, d, e = Vars('a, b, c, d, e')
+t = timeit.default_timer()
 
-    messages.set_verbosity(messages.quiet)
-
-    problems = [
-        [x+1/y < 2, y < 0, y/x > 1, -2 <= x, x <= 2, -2 <= y, y <= 2, x**2/y > (1-x)],
-
-        [0 < x, x < y, 0 < u, u < v, 0 < w+z, w+z < r-1,
-          u + (1+x)**2 * (2*w + 2*z + 3) >= 2*v + (1+y)**2 * (2*r + 1)],
-
-        [0 < x, x < 3*y, u < v, v < 0, 1 < v**2, v**2 < x, u*(3*y)**2+1 >= x**2*v + x],
-
-        [0 < x, x < 3*y, u < v, v < 0, 1 < v**2, v**2 < x, u*(3*y)**2+1 < x**2*v + x],
-
-        [1 < x, 1 < y, 1 < z, 1 >= x*(1+z*y)],
-
-        [a > 0, a < 1, b > 0, b < 1, a+b < a*b],
-
-        #Crashes v.4.2c
-        #[x+y >= 2, z+w >= 2, u*x**2 < u*x, u*y**2 < u*y, u*w**2 > u*w, u*z**2 > u*z],
-
-        [a <= b*x/2, 0 < c, 0 < d, d < 1, (1+d/(3*(c+3)))*a >= b*x],
-
-        [x < 1, 1 < y, x*y > 1, u+x >= y+1, x**2*y < 2-u*x*y],
-
-       # [x < 1, 1 < y, x*y > 1, u+x >= y+1, x**2*y >= 2-u*x*y],
-
-        [x*(y+z) <= 0, y+z > 0, x >= 0, x*w > 0],
-
-        [a**21 > 0, a**3 < 1, b**55 > 0, b < 1, a+b < a*b],
-
-        [0 < x, x < 1, 0 < y, y < 1, x**150*y**150 > x**150+y**150]
-    ]
-    expected = [True, True, True, False, True, True,
-                #True,
-                False, True,
-                #False,
-                True, True, True ]
-
-    for i in range(len(problems)):
-        val = solve(*problems[i])  # solve_poly to use polyhedrons
-        if val == expected[i]:
-            print 'Test {} correct.'.format(i+1)
-        else:
-            print 'Test {} incorrect.'.format(i+1)
-
-#messages.set_verbosity(messages.debug)
-
-polya_set_solver_type('fm')
-
-# test4()
-# test5()
-# test6()
-# test7()
-# test8()
-# test9()
-test10a()
-# test12()
-# # test13()
-# test14()
-# test16()
-# test17()
-# arithmetical_tests()
-
-#messages.set_verbosity(messages.debug)
-
-# print '\n*****\n'
-#print solve_poly(x*(y+z) <= 0, y+z > 0, x >= 0, x*w > 0)
+test10()
+#z3test10()
 
 
-print 'Ran in', round(timeit.default_timer()-t, 3), 'seconds'
 
-timer.announce_times()
+
+print round(timeit.default_timer() - t, 3)
