@@ -3,6 +3,7 @@ from fractions import Fraction
 import pipes
 import tempfile
 import os.path
+import polya.main.messages as messages
 #import timecount
 
 
@@ -23,14 +24,6 @@ def find_lrs_path():
             return s
 
 
-lrs_path = find_lrs_path()
-
-if lrs_path is None:
-    print 'lrs not found.'
-else:
-    print 'lrs found! ({0!s})'.format(lrs_path)
-
-
 # look in some standard places for redund
 def find_redund_path():
     for s in ['redund', './redund', poly_dir + '/redund', '/usr/bin/redund']:
@@ -40,14 +33,6 @@ def find_redund_path():
             pass
         else:
             return s
-
-redund_path = find_redund_path()
-
-if redund_path is None:
-    print 'redund not found.'
-else:
-    print 'redund found! ({0!s})'.format(redund_path)
-print
 
 
 def make_frac(string):

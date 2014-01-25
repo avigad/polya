@@ -7,7 +7,7 @@
 # Rob Lewis
 # Cody Roux
 #
-# Contains the main module for running the Polya solver engine.
+# Contains the main module for running the Polya inequality prover.
 #
 #
 ####################################################################################################
@@ -38,15 +38,46 @@ from polya.main.function_module import FunctionModule
 from blackboard import Blackboard
 
 
+####################################################################################################
+#
+# System configuration
+#
+####################################################################################################
+
+messages.announce('', messages.INFO)
+messages.announce('Welcome to Polya.', messages.INFO)
+
 solver_options = ['fm', 'poly']
 default_solver = 'none'
+
+messages.announce('Looking for components...', messages.INFO
+)
+# look for cdd
 try:
     import cdd
     have_cdd = True
+    messages.announce('cdd found.', messages.INFO)
 except Exception:
     have_cdd = False
+    messages.announce('cdd not found.', messages.INFO)
 
-if lrs.lrs_path and lrs.redund_path and have_cdd:
+# look for lrs
+lrs_path = lrs.find_lrs_path()
+if lrs_path is None:
+    messages.announce('lrs not found.', messages.INFO)
+else:
+    messages.announce('lrs found (path: {0!s}).'.format(lrs_path), messages.INFO)
+
+# look for redund
+redund_path = lrs.find_redund_path()
+if redund_path is None:
+    messages.announce('redund not found.', messages.INFO)
+else:
+    messages.announce('redund found (path: {0!s}).'.format(redund_path), messages.INFO)
+
+messages.announce('', messages.INFO
+)
+if lrs_path and redund_path and have_cdd:
     default_solver = 'poly'
 else:
     default_solver = 'fm'
@@ -60,14 +91,20 @@ def polya_set_solver_type(s):
     - `s`:
     """
     if s in solver_options:
-        print "Setting solver type:", s
-        print
+        messages.announce('Setting solver type: {0!s}'.format(s), messages.INFO)
         global default_solver
         default_solver = s
     else:
-        print "Error: {0!s} is not in the list of possible arithmetic solvers:"
-        print 'solver options =', solver_options
-        print
+        messages.announce('Error: {0!s} is not in the list of possible arithmetic '
+                               'solvers'.format(s), messages.INFO)
+        messages.announce('solver options = {0!s}'.format(solver_options))
+
+
+####################################################################################################
+#
+# Prepackaged solving methods.
+#
+####################################################################################################
 
 
 def run(B):
@@ -76,7 +113,7 @@ def run(B):
     elif default_solver == 'fm':
         pa, pm = fm_add_module.FMAdditionModule(), fm_mult_module.FMMultiplicationModule()
     else:
-        print 'Unsupported option:', default_solver
+        messages.announce('Unsupported option: {0}'.format(default_solver), messages.INFO)
         return
 
     cm = CongClosureModule()
@@ -99,7 +136,7 @@ def run_modules(B, *modules):
 
         return False
     except Contradiction as e:
-        messages.announce(e.msg+"\n", messages.ASSERTION)
+        messages.announce(e.msg+'\n', messages.ASSERTION)
         return True
 
 
@@ -112,7 +149,7 @@ def solve(*assertions):
     try:
         B.assert_comparisons(*assertions)
     except Contradiction as e:
-        messages.announce(e.msg+"\n", messages.ASSERTION)
+        messages.announce(e.msg+'\n', messages.ASSERTION)
         return True
     return run(B)
 
@@ -125,8 +162,9 @@ class Solver:
         poly: True if the Solver should try to use the polyhedron modules
         """
         if not isinstance(assertions, list) or not isinstance(axioms, list):
-            print 'Error: assertions and axioms must be passed as lists.'
-            print 'Usage: Solver([assertions=list()[, axioms=list()[, poly=True]]])'
+            messages.announce('Error: assertions and axioms must be passed as lists.', messages.INFO)
+            messages.announce('Usage: Solver([assertions=list()[, axioms=list()[, poly=True]]])',
+                              messages.INFO)
             raise Exception
 
         self.B = Blackboard()
