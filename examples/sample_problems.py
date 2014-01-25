@@ -18,6 +18,8 @@
 from polya import *
 import sys
 import timeit
+# TODO: get rid of this
+import polya.main.configure as configure
 
 
 class Example:
@@ -71,8 +73,9 @@ class Example:
 ####################################################################################################
 
 
-a, b, c, d, e, i, m = Vars('a, b, c, d, e, i, m')
+a, b, c, d, e, i, K, m, n = Vars('a, b, c, d, e, i, K, m, n')
 r, s, t, u, v, w, x, y, z = Vars('r, s, t, u, v, w, x, y, z')
+eps = Var('eps')
 
 f = Func('f')
 exp = Func('exp')
@@ -240,6 +243,50 @@ examples.append(Example(
     hyps = [0 < x, x < 1, 0 < y, y < 1, x**150 * y**150 > x**150 + y**150]
 ))
 
+# from the paper draft
+
+examples.append(Example(
+    hyps = [0 < u, u < v, v < 1, 2 <= x, x <= y],
+    conc = 2 * u**2 * x < v * y**2
+))
+
+examples.append(Example(
+    hyps = [x > 1],
+    conc = 1 + y**2 * x >= 1 + y**2
+))
+
+examples.append(Example(
+    hyps = [x > 1, z== y**2],
+    conc = 1 + z * x >= 1 + z
+))
+
+examples.append(Example(
+    hyps = [x > 1],
+    conc = (1 + y**2) * x >= 1 + y**2
+))
+
+examples.append(Example(
+    hyps = [0 < x, x < 1],
+    conc = 1 / (1 - x) > 1 / (1 - x**2)
+))
+
+examples.append(Example(
+    axioms = [Forall([x, y], Implies(x >= y, f(x) >= f(y)))],
+    hyps = [u < v, x <= y],
+    conc = u + f(x) < v + f(y)
+))
+
+examples.append(Example(
+    axioms = [Forall([x], f(x) <= 1)],
+    hyps = [u < v, 0 < w],
+    conc = u + w * f(x) < v + w
+))
+
+examples.append(Example(
+    hyps = [n <= (K / 2) * x, 0 < c, 0 <= n, 0 < eps, eps < 1],
+    conc = (1 + eps / (3 * (c + 3))) * n < K * x
+))
+
 
 ####################################################################################################
 #
@@ -249,6 +296,7 @@ examples.append(Example(
 
 
 if __name__ == '__main__':
+#    configure.polya_set_solver_type('fm')
     if len(sys.argv) == 1:
         print "Use 'python sample_problems.py list' to list the examples."
         print "Use 'python sample_problems.py 6 9 10' to run those examples."
