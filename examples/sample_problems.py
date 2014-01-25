@@ -166,8 +166,7 @@ examples.append(Example(
 ))
 
 examples.append(Example(
-    hyps = [[x == y, f(x) != f(y)]],
-    omit = True
+    hyps = [x == y, f(x) != f(y)]
 ))
 
 examples.append(Example(
