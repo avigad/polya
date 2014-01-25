@@ -193,7 +193,6 @@ class Solver:
         except Contradiction as e:
             messages.announce(e.msg, messages.ASSERTION)
 
-
     def add_axiom(self, a):
         """
         Adds an axiom to the solver, and instantiates a FunctionModule if necessary.

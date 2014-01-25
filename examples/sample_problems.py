@@ -9,34 +9,27 @@
 #
 # Examples for Polya.
 #
-# TODO: add timing
-# TODO: add names to the examples?
 #
 ####################################################################################################
 
 
 from polya import *
-import polya.main.terms as terms
 import sys
-
-
-def negate_comparison(c):
-    return terms.TermComparison(c.term1, terms.comp_negate(c.comp), c.term2)
+import timeit
 
 
 class Example:
 
-    def __init__(self, name = 'Polya sample problem', hyps = [], conc = None, ax = [], modules = None):
-	self.name = name
+    def __init__(self, name = 'Polya sample problem', hyps = [], conc = None, ax = [],
+                 modules = []):
+        self.name = name
         self.hyps = hyps
         self.conc = conc
         self.ax = ax
         self.modules = modules
 
-    def test(self):
-
-        S = Solver()
-
+    def show(self):
+        print 'Problem: {0}'.format(self.name)
         for a in self.ax:
             print 'Axiom: {0!s}'.format(a)
         for h in self.hyps:
@@ -47,16 +40,24 @@ class Example:
             print 'Conclusion: False'
         print
 
-        for a in self.ax:
-            S.add_axiom(a)
-        for h in self.hyps:
-            S.assert_comparison(h)
+    def test(self):
+        self.show()
+        S = Solver(assertions=self.hyps, axioms=self.ax, modules=self.modules)
+        t = timeit.default_timer()
         if self.conc:
-            S.assert_comparison(negate_comparison(self.conc))
-        # TODO: handle modules
-
-        S.check()
+            if S.prove(self.conc):
+                print 'Conclusion is valid.'
+            else:
+                print 'Failed.'
+        else:
+            if S.check():
+                print 'Refuted hypotheses.'
+            else:
+                print 'Failed.'
+        print 'Ran in', round(timeit.default_timer()-t, 3), 'seconds'
         print
+
+
 
 
 ####################################################################################################
@@ -66,19 +67,21 @@ class Example:
 ####################################################################################################
 
 
+i = 0  # temporary counter
+
 r, s, t, u, v, w, x, y, z = Vars('r, s, t, u, v, w, x, y, z')
 
-examples = {}
+examples = []
 
-examples[0] = Example(
+examples.append(Example(
     hyps = [0 < x, x < 3*y, u < v, v < 0, 1 < v**2, v**2 < x],
     conc = u*(3*y)**2 + 1 < x**2 * v + x
-)
+))
 
-examples[1] = Example(
+examples.append(Example(
     hyps = [0 < x, x < y, 0 < u, u < v, 0 < w + z, w + z < r - 1],
     conc = u + (1+x)**2 * (2*w + 2*z + 3) < 2*v + (1+y)**2 * (2*r + 1)
-)
+))
 
 
 ####################################################################################################
@@ -98,10 +101,14 @@ examples[1] = Example(
 
 if __name__ == '__main__':
     if len(sys.argv) == 1:
+        print "Use 'python examples.py list' to list the examples."
         print "Use 'python examples.py 6 9 10' to run those examples."
-        print "Use 'python examples.py all' to run them all."
-    elif sys.argv[1] == 'all':
-        for i in examples:
+        print "Use 'python examples.py test_all' to run them all."
+    elif sys.argv[1] == 'list':
+        for i in range(len(examples)):
+            examples[i].show()
+    elif sys.argv[1] == 'test_all':
+        for i in range(len(examples)):
             examples[i].test()
     else:
         for i in range(1, len(sys.argv)):
