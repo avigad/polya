@@ -11,4 +11,4 @@ For instructions on setting up and using Polya, see INSTALL.md. There are tutori
 
     examples/examples.py
     
-and additional information in the folder "docs". 
+and additional information in the folder "doc". 

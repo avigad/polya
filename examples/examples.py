@@ -1,14 +1,13 @@
 ####################################################################################################
 #
-# tests.py
+# examples.py
 #
 # Authors:
 # Jeremy Avigad
 # Rob Lewis
+# Cody Roux
 #
-# Contains tests for Polya.
-#
-# TODO:
+# Examples that illustrate how to use Polya.
 #
 ####################################################################################################
 
