@@ -252,11 +252,12 @@ examples.append(Example(
 
 examples.append(Example(
     hyps = [x > 1],
-    conc = 1 + y**2 * x >= 1 + y**2
+    conc = 1 + y**2 * x >= 1 + y**2,
+    comment = 'Polya fails on this one, but see the next problem. Splitting on sign of y will work.'
 ))
 
 examples.append(Example(
-    hyps = [x > 1, z== y**2],
+    hyps = [x > 1, z == y**2],
     conc = 1 + z * x >= 1 + z
 ))
 
