@@ -236,13 +236,26 @@ class Atom(Term):
             return self
 
 
+def make_arg(a):
+    """If a is a rational, create an appropriate STerm.
+    return a otherwise.
+    
+    Arguments:
+    - `a`:
+    """
+    if isinstance(a, fractions.Rational):
+        return STerm(a, One())
+    else:
+        return a
+
+
 class AppTerm(Term):
 
     def __init__(self, func_name, args, key):
         Term.__init__(self)
         self.func_name = func_name
-        self.args = args
-        self.key = key + tuple([a.key for a in args])
+        self.args = map(make_arg, args)
+        self.key = key + tuple([a.key for a in self.args])
 
 
 ####################################################################################################

@@ -79,7 +79,7 @@ def solve(*assertions):
     """
     B = Blackboard()
     try:
-        B.assert_comparisons(*assertions)
+        B.assume(*assertions)
     except Contradiction as e:
         messages.announce(e.msg+'\n', messages.ASSERTION)
         return True
@@ -119,7 +119,7 @@ class Solver:
             if len(axioms) > 0:
                 modules = [FunctionModule(axioms)] + modules
                 self.fm = modules[0]
-        self.assert_comparisons(*assertions)
+        self.assume(*assertions)
         self.modules = modules
 
     def set_modules(self, modules):
@@ -146,7 +146,7 @@ class Solver:
             return True
         return run_modules(B, *self.modules)
 
-    def assert_comparison(self, c):
+    def _assert_comparison(self, c):
         """
         Adds a single comparison to the Solver's blackboard.
         """
@@ -155,12 +155,12 @@ class Solver:
         except Contradiction as e:
             messages.announce(e.msg, messages.ASSERTION)
 
-    def assert_comparisons(self, *c):
+    def assume(self, *c):
         """
         Adds multiple comparisons to the Solver's blackboard.
         """
         try:
-            self.B.assert_comparisons(*c)
+            self.B.assume(*c)
         except Contradiction as e:
             messages.announce(e.msg, messages.ASSERTION)
 
