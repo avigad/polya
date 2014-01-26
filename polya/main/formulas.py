@@ -116,17 +116,17 @@ class And(Formula):
     Represents a conjunction of formulas.
     """
 
-    def __init__(self, f1, f2):
+    def __init__(self, *conjuncts):
         """
         conjuncts is a list of Formulas
         """
-        if any(not (isinstance(c, (Formula, terms.TermComparison))) for c in [f1, f2]):
+        if any(not (isinstance(c, (Formula, terms.TermComparison))) for c in conjuncts):
             raise AxiomException('Badly formed And')
-        self.f1, self.f2 = f1, f2
+        self.conjuncts = conjuncts
         Formula.__init__(self)
 
     def __str__(self):
-        return "And({0!s}, {1!s})".format(self.f1, self.f2)
+        return "And({0!s})".format(', '.join(str(s) for s in self.conjuncts))
 
     def __repr__(self):
         return str(self)
@@ -137,17 +137,17 @@ class Or(Formula):
     Represents a disjunction of formulas.
     """
 
-    def __init__(self, f1, f2):
+    def __init__(self, *disjuncts):
         """
         disjuncts is a list of Formulas
         """
-        if any(not (isinstance(c, (Formula, terms.TermComparison))) for c in [f1, f2]):
+        if any(not (isinstance(c, (Formula, terms.TermComparison))) for c in disjuncts):
             raise AxiomException('Badly formed Or')
-        self.f1, self.f2 = f1, f2
+        self.disjuncts = disjuncts
         Formula.__init__(self)
 
     def __str__(self):
-        return "Or({0!s}, {1!s})".format(self.f1, self.f2)
+        return "Or({0!s})".format(', '.join(str(s) for s in self.disjuncts))
 
     def __repr__(self):
         return str(self)
@@ -174,10 +174,10 @@ class Not(Formula):
                                         self.formula.term2)
 
         elif isinstance(self.formula, And):
-            return Or(Not(self.formula.f1), Not(self.formula.f2))
+            return Or(*[Not(a) for a in self.formula.conjuncts])
 
         elif isinstance(self.formula, Or):
-            return And(Not(self.formula.f1), Not(self.formula.f2))
+            return And(*[Not(a) for a in self.formula.disjuncts])
 
         elif isinstance(self.formula, Not):
             return self.formula
@@ -199,7 +199,7 @@ class Implies(Formula):
 
     def __init__(self, hyp, con):
         if any(not isinstance(c, (Formula, terms.TermComparison)) for c in [hyp, con]):
-            raise AxiomException('Badly formed Not')
+            raise AxiomException('Badly formed Implies')
         self.hyp, self.con = hyp, con
         Formula.__init__(self)
 
@@ -216,12 +216,13 @@ class Forall:
     Vars are terms.Vars
     """
     def __init__(self, vars, formula):
-        self.vars_display = vars
-        self.vars = set(v.key for v in vars) if isinstance(vars, list) else set(vars.key)
-        self.formula = cnf(formula)
+        self.vars = vars
+        #self.vars = set(v.key for v in vars) if isinstance(vars, list) else set(vars.key)
+        self.formula = formula
 
     def to_cnf(self):
-        map = dict(zip(list(self.vars), range(len(self.vars))))
+        vars = set(v.key for v in self.vars) if isinstance(self.vars, list) else set(self.vars.key)
+        map = dict(zip(list(vars), range(len(vars))))
 
         def replace_vars(t):
             if isinstance(t, terms.STerm):
@@ -242,22 +243,22 @@ class Forall:
         def process_tc(tc):
             return terms.TermComparison(replace_vars(tc.term1), tc.comp, replace_vars(tc.term2))
 
-        return [[process_tc(c) for c in clause] for clause in self.formula]
+        return [[process_tc(c) for c in clause] for clause in cnf(self.formula)]
 
     def __str__(self):
-        return "Forall({0!s}, {1!s})".format(self.vars_display, self.formula)
+        return "Forall({0!s}, {1!s})".format(self.vars, self.formula)
 
     def __repr__(self):
         return str(self)
 
-    def __getitem__(self, item):
-        if isinstance(item, terms.Var):
-            return lambda f: Forall([item], f)
-        else:
-            return lambda f: Forall(item, f)
-
-    def __call__(self, *args, **kwargs):
-        return Forall(*args)
+    # def __getitem__(self, item):
+    #     if isinstance(item, terms.Var):
+    #         return lambda f: Forall([item], f)
+    #     else:
+    #         return lambda f: Forall(item, f)
+    #
+    # def __call__(self, *args, **kwargs):
+    #     return Forall(*args)
 
 
 def cnf(formula):
@@ -266,6 +267,13 @@ def cnf(formula):
     Specifically, returns a list of lists of TermComparisons.
     Each list denotes the disjunction of its contents; the overall list represents the conjunction.
     """
+    def distribute_or(c1, c2):
+        rlist = []
+        for c in c1:
+            for d in c2:
+                rlist.append(c + d)
+        return rlist
+
     if isinstance(formula, Forall):
         return formula.to_cnf()
     elif isinstance(formula, terms.TermComparison):
@@ -275,15 +283,10 @@ def cnf(formula):
     elif isinstance(formula, Implies):
         return cnf(Or(Not(formula.hyp), formula.con))
     elif isinstance(formula, And):
-        return cnf(formula.f1) + cnf(formula.f2)
+        return reduce(lambda a, b: a+b, (cnf(a) for a in formula.conjuncts))
     elif isinstance(formula, Or):
-        c1, c2 = cnf(formula.f1), cnf(formula.f2)
-        rlist = []
-        for c in c1:
-            for d in c2:
-                rlist.append(c + d)
-        return rlist
-
+        disjuncts = [cnf(d) for d in formula.disjuncts]
+        return reduce(distribute_or, disjuncts)
 
 ####################################################################################################
 #
@@ -300,3 +303,10 @@ if __name__ == '__main__':
 
     print ax
     print cnf(ax)
+
+    ax = Or(And(u<v, v<w, w>=x), Implies(u>3*x, w+v<2), u<5*v)
+    print ax
+    print cnf(ax)
+
+    print Forall([u, v, w], ax)
+    print Forall([u, v, w], ax).to_cnf()
