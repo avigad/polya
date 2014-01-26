@@ -71,7 +71,7 @@ class Axiom:
         self.literals = [l.canonize() for l in literals]
 
         # todo: user should be able to specify triggers if they would like to.
-        triggers=list()
+        triggers = list()
         if len(triggers) == 0:
             for c in self.literals:
                 triggers.extend(find_func_subterms(c.term1))

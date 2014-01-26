@@ -16,18 +16,14 @@ from __future__ import division
 import polya.main.terms as terms
 import polya.main.messages as messages
 import polya.main.configure as configure
-import polya.polyhedron.lrs as lrs
+#import polya.polyhedron.lrs as lrs
 import copy
 
-# import polya.main.blackboard as blackboard
 import polya.polyhedron.poly_add_module as poly_add_module
 import polya.polyhedron.poly_mult_module as poly_mult_module
-# import polya.polyhedron.lrs as lrs
 import polya.fourier_motzkin.fm_add_module as fm_add_module
 import polya.fourier_motzkin.fm_mult_module as fm_mult_module
-# import polya.main.messages as messages
-# import polya.main.function_module as function_module
-# import polya.main.formulas as formulas
+
 from terms import Var, Vars, UVar, Func, Contradiction
 from formulas import Forall, Implies, And, Or, Not
 from polya.polyhedron.poly_mult_module import PolyMultiplicationModule
@@ -94,7 +90,8 @@ class Solver:
         poly: True if the Solver should try to use the polyhedron modules
         """
         if not isinstance(assertions, list) or not isinstance(axioms, list):
-            messages.announce('Error: assertions and axioms must be passed as lists.', messages.INFO)
+            messages.announce('Error: assertions and axioms must be passed as lists.',
+                              messages.INFO)
             messages.announce('Usage: Solver([assertions=list()[, axioms=list()[, poly=True]]])',
                               messages.INFO)
             raise Exception
@@ -155,14 +152,21 @@ class Solver:
         except Contradiction as e:
             messages.announce(e.msg, messages.ASSERTION)
 
-    def assume(self, *c):
+    def add(self, *c):
         """
         Adds multiple comparisons to the Solver's blackboard.
         """
-        try:
-            self.B.assume(*c)
-        except Contradiction as e:
-            messages.announce(e.msg, messages.ASSERTION)
+        if isinstance(c[0], Forall):
+            for a in c:
+                self.add_axiom(a)
+        else:
+            try:
+                self.B.add(*c)
+            except Contradiction as e:
+                messages.announce(e.msg, messages.ASSERTION)
+
+    def assume(self, *c):
+        self.add(*c)
 
     def add_axiom(self, a):
         """

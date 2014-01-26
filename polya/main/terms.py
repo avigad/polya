@@ -666,7 +666,6 @@ class STerm:
         return TermComparison(self, NE, other)
 
 
-
 ####################################################################################################
 #
 # MulPair
@@ -864,7 +863,7 @@ class Clause:
                 return False
         for key in self.zero_comparisons:
             if key not in other.zero_comparisons or \
-                            self.zero_comparisons[key] != other.zero_comparisons[key]:
+                    self.zero_comparisons[key] != other.zero_comparisons[key]:
                 return False
         return True
 

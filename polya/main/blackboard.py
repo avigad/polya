@@ -33,8 +33,6 @@
 #  * All non-redundant disequalities between t_i and t_j are stored in disequalities. Anything that
 #    is implied by known equality or inequality information is removed from this table.
 #
-# TODO: General utility functions for substitution, etc. should be defined in terms.py.
-# TODO: With these, we should define functions here that expand definitions.
 #
 ####################################################################################################
 
@@ -92,6 +90,7 @@ class Tracker:
         for k in self.updates:
             self.updates[k].add(key)
 
+
 class Blackboard():
 
     def __init__(self):
@@ -124,13 +123,16 @@ class Blackboard():
                 return True, self.term_names[t.key]
         return False, -1
 
+    def expand_term(self, ti):
+        return ti.substitute({terms.IVar(i).key: self.terms[i] for i in range(self.num_terms)})
+
     def term_name(self, ti):
         """
         Assumes t is a canonized term without IVars. Returns an IVar that represents t, if
         there is one. If not, recursively creates indices representing t and all its subterms, as
         needed.
         """
-        t = ti.substitute({terms.IVar(i).key: self.terms[i] for i in range(self.num_terms)})
+        t = self.expand_term(ti)
         if isinstance(t, terms.IVar):
             return t
         if t.key in self.term_names:
@@ -297,7 +299,6 @@ class Blackboard():
                 return True
             return self.implies(i, terms.GT, coeff, j) or self.implies(i, terms.LT, coeff, j)
 
-
     def implies_zero_comparison(self, i, comp):
         """
         Checks to see if the statement ti comp 0 is known by the Blackboard.
@@ -366,9 +367,15 @@ class Blackboard():
         else:
             raise Error('Unrecognized comparison: {0!s}'.format())
 
-    def assume(self, *comparisons):
+    def add(self, *comparisons):
         for c in comparisons:
             self.assert_comparison(c)
+
+    def assume(self, *comparisons):
+        self.add(*comparisons)
+
+    def assert_comparisons(self, *comparisons):
+        self.add(*comparisons)
 
     def assert_inequality(self, i, comp, coeff, j):
         """
