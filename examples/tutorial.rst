@@ -16,28 +16,28 @@ A basic example
 We will need to import the polya python package, which
 should be in your python path
 
-.. code-block::
+.. code-block:: python
 
    from polya import *
 
 Then declare the variables which you wish to use to express your
 inequality:
 
-.. code-block::
+.. code-block:: python
 
    x = Vars('x')
 
 You can also declare several variables at once, by separating the
 names with a space:
 
-.. code-block::
+.. code-block:: python
 
    y, z = Vars('y z')
 
 Then, to prove inequalities, create a ``Solver`` object, and add
 inequalities using the variables and the usual Python operations.
 
-.. code-block::
+.. code-block:: python
 
    s = Solver()
    s.assume(x > 0)
@@ -47,7 +47,7 @@ inequalities using the variables and the usual Python operations.
 We can check that the inequalities assumed up to this point are
 inconsistent:
 
-.. code-block::
+.. code-block:: python
 
    s.check()
 
@@ -75,7 +75,7 @@ False
 You can also add hypotheses to the solver, and ask it to attempt to
 prove a new assume.
 
-.. code-block::
+.. code-block:: python
 
    s = Solver()
    s.assume(x > 0, y > x)
@@ -90,7 +90,7 @@ Arithmetic
 Of course, Polya is capable of proving inequalities involving sums and
 products:
 
-.. code-block::
+.. code-block:: python
 
    s = Solver()
    s.assume(x > 0, x < 1, y > 0, z > 0, y + z <= x)
@@ -105,7 +105,7 @@ More generally, it is possible to declare function symbols, and add
 axioms involving them to the set of assumptions.
 
 
-.. code-block::
+.. code-block:: python
 
    f = Func('f')
 
@@ -118,7 +118,7 @@ axioms involving them to the set of assumptions.
 Axioms take the form of a universal statement, followed a
 formula built using the usual propositional connectives.
 
-.. code-block::
+.. code-block:: python
 
 
    s = Solver()
@@ -137,7 +137,7 @@ Polya works by maintaining inequality information using a central
 structure, the **Blackboard**. It is possible to work directly with
 blackboards:
 
-.. code-block::
+.. code-block:: python
 
    b = Blackboard()
    b.assume(0 < x)

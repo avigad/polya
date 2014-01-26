@@ -351,30 +351,30 @@ Python package.</p>
 <h1>A basic example</h1>
 <p>We will need to import the polya python package, which
 should be in your python path</p>
-<pre class="code literal-block">
-from polya import *
+<pre class="code python literal-block">
+<span class="keyword namespace">from</span> <span class="name namespace">polya</span> <span class="keyword namespace">import</span> <span class="operator">*</span>
 </pre>
 <p>Then declare the variables which you wish to use to express your
 inequality:</p>
-<pre class="code literal-block">
-x = Vars('x')
+<pre class="code python literal-block">
+<span class="name">x</span> <span class="operator">=</span> <span class="name">Vars</span><span class="punctuation">(</span><span class="literal string">'x'</span><span class="punctuation">)</span>
 </pre>
 <p>You can also declare several variables at once, by separating the
 names with a space:</p>
-<pre class="code literal-block">
-y, z = Vars('y z')
+<pre class="code python literal-block">
+<span class="name">y</span><span class="punctuation">,</span> <span class="name">z</span> <span class="operator">=</span> <span class="name">Vars</span><span class="punctuation">(</span><span class="literal string">'y z'</span><span class="punctuation">)</span>
 </pre>
 <p>Then, to prove inequalities, create a <tt class="docutils literal">Solver</tt> object, and add
 inequalities using the variables and the usual Python operations.</p>
-<pre class="code literal-block">
-s = Solver()
-s.assume(x &gt; 0)
-s.assume(y &gt; x, y &lt;= 0)
+<pre class="code python literal-block">
+<span class="name">s</span> <span class="operator">=</span> <span class="name">Solver</span><span class="punctuation">()</span>
+<span class="name">s</span><span class="operator">.</span><span class="name">assume</span><span class="punctuation">(</span><span class="name">x</span> <span class="operator">&gt;</span> <span class="literal number integer">0</span><span class="punctuation">)</span>
+<span class="name">s</span><span class="operator">.</span><span class="name">assume</span><span class="punctuation">(</span><span class="name">y</span> <span class="operator">&gt;</span> <span class="name">x</span><span class="punctuation">,</span> <span class="name">y</span> <span class="operator">&lt;=</span> <span class="literal number integer">0</span><span class="punctuation">)</span>
 </pre>
 <p>We can check that the inequalities assumed up to this point are
 inconsistent:</p>
-<pre class="code literal-block">
-s.check()
+<pre class="code python literal-block">
+<span class="name">s</span><span class="operator">.</span><span class="name">check</span><span class="punctuation">()</span>
 </pre>
 <p>The output should look something like this:</p>
 <pre class="doctest-block">
@@ -399,10 +399,10 @@ False
 </pre>
 <p>You can also add hypotheses to the solver, and ask it to attempt to
 prove a new assume.</p>
-<pre class="code literal-block">
-s = Solver()
-s.assume(x &gt; 0, y &gt; x)
-s.prove(y &gt;= 0)
+<pre class="code python literal-block">
+<span class="name">s</span> <span class="operator">=</span> <span class="name">Solver</span><span class="punctuation">()</span>
+<span class="name">s</span><span class="operator">.</span><span class="name">assume</span><span class="punctuation">(</span><span class="name">x</span> <span class="operator">&gt;</span> <span class="literal number integer">0</span><span class="punctuation">,</span> <span class="name">y</span> <span class="operator">&gt;</span> <span class="name">x</span><span class="punctuation">)</span>
+<span class="name">s</span><span class="operator">.</span><span class="name">prove</span><span class="punctuation">(</span><span class="name">y</span> <span class="operator">&gt;=</span> <span class="literal number integer">0</span><span class="punctuation">)</span>
 </pre>
 <p>Which should produce a similar result (though prove returns <tt class="docutils literal">True</tt>
 if the proposition is provable).</p>
@@ -411,35 +411,35 @@ if the proposition is provable).</p>
 <h1>Arithmetic</h1>
 <p>Of course, Polya is capable of proving inequalities involving sums and
 products:</p>
-<pre class="code literal-block">
-s = Solver()
-s.assume(x &gt; 0, x &lt; 1, y &gt; 0, z &gt; 0, y + z &lt;= x)
-s.prove(z**2 &lt;= 1)
+<pre class="code python literal-block">
+<span class="name">s</span> <span class="operator">=</span> <span class="name">Solver</span><span class="punctuation">()</span>
+<span class="name">s</span><span class="operator">.</span><span class="name">assume</span><span class="punctuation">(</span><span class="name">x</span> <span class="operator">&gt;</span> <span class="literal number integer">0</span><span class="punctuation">,</span> <span class="name">x</span> <span class="operator">&lt;</span> <span class="literal number integer">1</span><span class="punctuation">,</span> <span class="name">y</span> <span class="operator">&gt;</span> <span class="literal number integer">0</span><span class="punctuation">,</span> <span class="name">z</span> <span class="operator">&gt;</span> <span class="literal number integer">0</span><span class="punctuation">,</span> <span class="name">y</span> <span class="operator">+</span> <span class="name">z</span> <span class="operator">&lt;=</span> <span class="name">x</span><span class="punctuation">)</span>
+<span class="name">s</span><span class="operator">.</span><span class="name">prove</span><span class="punctuation">(</span><span class="name">z</span><span class="operator">**</span><span class="literal number integer">2</span> <span class="operator">&lt;=</span> <span class="literal number integer">1</span><span class="punctuation">)</span>
 </pre>
 </div>
 <div class="section" id="function-symbols-and-axioms">
 <h1>Function symbols and axioms</h1>
 <p>More generally, it is possible to declare function symbols, and add
 axioms involving them to the set of assumptions.</p>
-<pre class="code literal-block">
-f = Func('f')
+<pre class="code python literal-block">
+<span class="name">f</span> <span class="operator">=</span> <span class="name">Func</span><span class="punctuation">(</span><span class="literal string">'f'</span><span class="punctuation">)</span>
 
-s = Solver()
+<span class="name">s</span> <span class="operator">=</span> <span class="name">Solver</span><span class="punctuation">()</span>
 
-s.add_axiom(Forall(x, f(x) &gt; 0))
+<span class="name">s</span><span class="operator">.</span><span class="name">add_axiom</span><span class="punctuation">(</span><span class="name">Forall</span><span class="punctuation">(</span><span class="name">x</span><span class="punctuation">,</span> <span class="name">f</span><span class="punctuation">(</span><span class="name">x</span><span class="punctuation">)</span> <span class="operator">&gt;</span> <span class="literal number integer">0</span><span class="punctuation">))</span>
 
-s.prove(f(3) &gt;= 0)
+<span class="name">s</span><span class="operator">.</span><span class="name">prove</span><span class="punctuation">(</span><span class="name">f</span><span class="punctuation">(</span><span class="literal number integer">3</span><span class="punctuation">)</span> <span class="operator">&gt;=</span> <span class="literal number integer">0</span><span class="punctuation">)</span>
 </pre>
 <p>Axioms take the form of a universal statement, followed a
 formula built using the usual propositional connectives.</p>
-<pre class="code literal-block">
-s = Solver()
+<pre class="code python literal-block">
+<span class="name">s</span> <span class="operator">=</span> <span class="name">Solver</span><span class="punctuation">()</span>
 
-s.add_axiom(Forall([x, y], Implies(x &gt; y, f(x) &gt; f(y))))
+<span class="name">s</span><span class="operator">.</span><span class="name">add_axiom</span><span class="punctuation">(</span><span class="name">Forall</span><span class="punctuation">([</span><span class="name">x</span><span class="punctuation">,</span> <span class="name">y</span><span class="punctuation">],</span> <span class="name">Implies</span><span class="punctuation">(</span><span class="name">x</span> <span class="operator">&gt;</span> <span class="name">y</span><span class="punctuation">,</span> <span class="name">f</span><span class="punctuation">(</span><span class="name">x</span><span class="punctuation">)</span> <span class="operator">&gt;</span> <span class="name">f</span><span class="punctuation">(</span><span class="name">y</span><span class="punctuation">))))</span>
 
-s.assume(x &gt; 1)
+<span class="name">s</span><span class="operator">.</span><span class="name">assume</span><span class="punctuation">(</span><span class="name">x</span> <span class="operator">&gt;</span> <span class="literal number integer">1</span><span class="punctuation">)</span>
 
-s.prove(f(x**2) &gt; f(x))
+<span class="name">s</span><span class="operator">.</span><span class="name">prove</span><span class="punctuation">(</span><span class="name">f</span><span class="punctuation">(</span><span class="name">x</span><span class="operator">**</span><span class="literal number integer">2</span><span class="punctuation">)</span> <span class="operator">&gt;</span> <span class="name">f</span><span class="punctuation">(</span><span class="name">x</span><span class="punctuation">))</span>
 </pre>
 </div>
 <div class="section" id="the-blackboard">
@@ -447,17 +447,17 @@ s.prove(f(x**2) &gt; f(x))
 <p>Polya works by maintaining inequality information using a central
 structure, the <strong>Blackboard</strong>. It is possible to work directly with
 blackboards:</p>
-<pre class="code literal-block">
-b = Blackboard()
-b.assume(0 &lt; x)
-b.assume(x &lt; 3*y)
-b.assume(u &lt; v)
-b.assume(v &lt; 0)
-b.assume(1 &lt; v**2)
-b.assume(v**2 &lt; x)
-b.assume(u*(3*y)**2 + 1 &gt;= x**2 * v + x)
+<pre class="code python literal-block">
+<span class="name">b</span> <span class="operator">=</span> <span class="name">Blackboard</span><span class="punctuation">()</span>
+<span class="name">b</span><span class="operator">.</span><span class="name">assume</span><span class="punctuation">(</span><span class="literal number integer">0</span> <span class="operator">&lt;</span> <span class="name">x</span><span class="punctuation">)</span>
+<span class="name">b</span><span class="operator">.</span><span class="name">assume</span><span class="punctuation">(</span><span class="name">x</span> <span class="operator">&lt;</span> <span class="literal number integer">3</span><span class="operator">*</span><span class="name">y</span><span class="punctuation">)</span>
+<span class="name">b</span><span class="operator">.</span><span class="name">assume</span><span class="punctuation">(</span><span class="name">u</span> <span class="operator">&lt;</span> <span class="name">v</span><span class="punctuation">)</span>
+<span class="name">b</span><span class="operator">.</span><span class="name">assume</span><span class="punctuation">(</span><span class="name">v</span> <span class="operator">&lt;</span> <span class="literal number integer">0</span><span class="punctuation">)</span>
+<span class="name">b</span><span class="operator">.</span><span class="name">assume</span><span class="punctuation">(</span><span class="literal number integer">1</span> <span class="operator">&lt;</span> <span class="name">v</span><span class="operator">**</span><span class="literal number integer">2</span><span class="punctuation">)</span>
+<span class="name">b</span><span class="operator">.</span><span class="name">assume</span><span class="punctuation">(</span><span class="name">v</span><span class="operator">**</span><span class="literal number integer">2</span> <span class="operator">&lt;</span> <span class="name">x</span><span class="punctuation">)</span>
+<span class="name">b</span><span class="operator">.</span><span class="name">assume</span><span class="punctuation">(</span><span class="name">u</span><span class="operator">*</span><span class="punctuation">(</span><span class="literal number integer">3</span><span class="operator">*</span><span class="name">y</span><span class="punctuation">)</span><span class="operator">**</span><span class="literal number integer">2</span> <span class="operator">+</span> <span class="literal number integer">1</span> <span class="operator">&gt;=</span> <span class="name">x</span><span class="operator">**</span><span class="literal number integer">2</span> <span class="operator">*</span> <span class="name">v</span> <span class="operator">+</span> <span class="name">x</span><span class="punctuation">)</span>
 
-run(b)
+<span class="name">run</span><span class="punctuation">(</span><span class="name">b</span><span class="punctuation">)</span>
 </pre>
 <p>Running a blackboard calls the additive and the multiplicative
 solvers, respectively and the axiom instantiation, if necessary.</p>

@@ -1,0 +1,86 @@
+% Here are the problems from the paper in (modified) TPTP format
+% which can in particular serve as input for MetiTarski
+
+
+fof('ineq_3', conjecture, (
+              ![X,Y,U,V] : 
+              ((0 < U & U < V & V < 1 & 2 <= X & X <= Y)
+              => 2*U^2*X < V*Y^2))
+).
+
+fof('ineq_4', conjecture, (
+              ![X,Y] :
+              (X > 1 => (1 + Y^2)*X > 1 + Y^2)
+)).
+
+fof('ineq_5', conjecture, (
+              ![X] :
+              (0 < X & X < 1 
+              => 1/(1-X) < 1/(1-X^2))
+)).
+
+fof('f_non_decr', axiom, (
+                  ![X,Y] :
+                  (X <= Y => f(X) <= f(Y))
+)).
+
+fof('ineq_6', conjecture, (
+              ![X,Y,U,V] :
+              ((U < V & X <= Y)
+              => U + f(X) <= V + f(Y) )
+)).
+
+fof('f_leq_1', axiom, (
+               ![X] : 
+               (f(X) <= 1)
+)).
+
+fof('ineq_7', conjecture, (
+              ![X,U,V,W] :
+              ((U < V & 0 < W)
+              => U + W*f(X) < V + W)
+)).
+
+fof('ineq_8', conjecture, (
+              ![X,Y,U,V] : 
+              ((0 < X & X < Y & U < V)
+              => 2*U + exp(1+X+X^4) < 2*V + exp(1+Y+Y^4))
+)).
+
+fof('ineq_9', conjecture, (
+              ![N,X,K,EPS,C]:
+              ((N < (K/2)*X & 0 < C & 0 < EPS & EPS < 1)
+              => (1 + EPS/(3*(C + 3)))*N < K * X)
+)).
+
+ fof('ineq_10', conjecture, (
+                ![X,Y] : 
+                ((0 < X & X < Y)
+                => (1+X^2)/(2+Y)^17 < (1+Y^2)/(2+X)^10)
+ )).
+
+ fof('ineq_11', conjecture, (         
+                 ![X,Y] : 
+                ((0 < X & X < Y)
+                => (1+X^2)/(2+exp(Y)) >= (1+Y^2)/(2+exp(X)))
+ )).
+
+ fof('ineq_12', conjecture, (
+                  ![X,Y] : 
+                 ((0 < X & X < 1 & 0 < Y & Y < 1)
+                 => (X+Y) - X*Y > 0)
+ )).
+
+ fof('ineq_13', conjecture, (
+                  ![X,Y] : 
+                 ((0 < X & X < 1 & 0 < Y & Y < 1)
+                 => (X^100+Y^100) - X^100*Y^100 > 0)
+ )).
+
+ fof('ineq_14', conjecture, (
+                ![X] :
+                (X^2 + 2*X + 1 >= 0)
+ )).
+
+include('Axioms/general.ax').
+include('Axioms/exp-general.ax').
