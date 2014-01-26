@@ -24,13 +24,13 @@ n, k, p = Vars('n, k, p')
 
 def test1():
     B = Blackboard()
-    B.assert_comparison(0 < x)
-    B.assert_comparison(x < 3*y)
-    B.assert_comparison(u < v)
-    B.assert_comparison(v < 0)
-    B.assert_comparison(1 < v**2)
-    B.assert_comparison(v**2 < x)
-    B.assert_comparison(u*(3*y)**2 + 1 >= x**2 * v + x)
+    B.assume(0 < x)
+    B.assume(x < 3*y)
+    B.assume(u < v)
+    B.assume(v < 0)
+    B.assume(1 < v**2)
+    B.assume(v**2 < x)
+    B.assume(u*(3*y)**2 + 1 >= x**2 * v + x)
     # This example has a model if the last inequality is <. FM blows up here, poly doesn't
     # It does not have a model if the last inequality is >=. Contradiction is found.
     # "0<x<3*y", "u<v<0", "1<v^2<x", "u*(3*y)^2+1 >= x^2*v+x"
@@ -41,13 +41,13 @@ def test2():
     messages.set_verbosity(messages.normal)
     B = Blackboard()
 
-    B.assert_comparison(0 < x)
-    B.assert_comparison(x < y)
-    B.assert_comparison(0 < u)
-    B.assert_comparison(u < v)
-    B.assert_comparison(0 < w + z)
-    B.assert_comparison(w + z < r - 1)
-    B.assert_comparison(u + (1+x)**2 * (2*w + 2*z + 3) >= 2*v + (1+y)**2 * (2*r + 1))
+    B.assume(0 < x)
+    B.assume(x < y)
+    B.assume(0 < u)
+    B.assume(u < v)
+    B.assume(0 < w + z)
+    B.assume(w + z < r - 1)
+    B.assume(u + (1+x)**2 * (2*w + 2*z + 3) >= 2*v + (1+y)**2 * (2*r + 1))
     run(B)
 
 
@@ -56,7 +56,7 @@ def test3():
     B = Blackboard()
 
     # "x+1/y<2", "y<0", "y/x>1", "-2<=x<=2", "-2<=y<=2", "x^2*y^(-1)>1-x"
-    B.assert_comparisons(x+1/y<2, y<0, y/x>1, -2<=x, x<=2, -2<=y, y<=2, x**2*y**(-1)>1-x)
+    B.assume(x+1/y<2, y<0, y/x>1, -2<=x, x<=2, -2<=y, y<=2, x**2*y**(-1)>1-x)
     run(B)
 
 def test4():
@@ -67,8 +67,8 @@ def test4():
 
     fm = FunctionModule([Forall([x, y], Implies(x<y, f(x)<f(y)))])
 
-    B.assert_comparison(a<b)
-    B.assert_comparison(f(a) > f(b))
+    B.assume(a<b)
+    B.assume(f(a) > f(b))
     try:
         fm.update_blackboard(B)
     except Contradiction:
@@ -83,7 +83,7 @@ def test5():
 
     fm = FunctionModule([Forall([x, y], Implies(x<y, f(x)<f(y)))])
 
-    B.assert_comparisons(0<r, s>1, 0<x, x<y, w>z, z+f(x)>w+f(s*(y+r)))
+    B.assume(0<r, s>1, 0<x, x<y, w>z, z+f(x)>w+f(s*(y+r)))
 
     try:
         fm.update_blackboard(B)
@@ -104,7 +104,7 @@ def test6():
         [Forall([x, y], (f(x)+f(y))/2 >= f((x+y)/2))]
     )
 
-    B.assert_comparisons(f(x)+f(y)<z, f((x+y)/2)>4*z, z>0)
+    B.assume(f(x)+f(y)<z, f((x+y)/2)>4*z, z>0)
     fm.update_blackboard(B)
 
     run(B)
@@ -118,7 +118,7 @@ def test7():
     )
 
     B = Blackboard()
-    B.assert_comparisons(z>0, f(x)+f(y)-z<0, f((x+y)/2)-4*z>0)
+    B.assume(z>0, f(x)+f(y)-z<0, f((x+y)/2)-4*z>0)
     fm.update_blackboard(B)
 
     run(B)
@@ -134,7 +134,7 @@ def test8():
     )
 
     C = Blackboard()
-    C.assert_comparisons(x>1, y>2, f(x*y)>0)
+    C.assume(x>1, y>2, f(x*y)>0)
     fm.update_blackboard(C)
 
     run(C)
@@ -149,7 +149,7 @@ def test9():
     )
 
     C = Blackboard()
-    C.assert_comparisons(z>0, z*f(x)*f(y)<0, 4*z*f(x*y/2)>0)
+    C.assume(z>0, z*f(x)*f(y)<0, 4*z*f(x*y/2)>0)
     fm.update_blackboard(C)
     run(C)
 
@@ -162,7 +162,7 @@ def test10():
     a, b = Vars('a, b')
     f, g, h = Func('f'), Func('g'), Func('h')
     B = Blackboard()
-    B.assert_comparisons(f(a, b, c*d)<0, a>0, b>0, a==c, b==d)
+    B.assume(f(a, b, c*d)<0, a>0, b>0, a==c, b==d)
 
     fm = FunctionModule([Forall([x, y], f(x, y, x*y)>0)])
     PolyAdditionModule().update_blackboard(B)
@@ -176,7 +176,7 @@ def test10a():
     f, g, h = Func('f'), Func('g'), Func('h')
     S = Solver()
     #B = Blackboard()
-    S.assert_comparisons(f(e, b, c+d)<0, a>0, b>0, a==c, b==d, a==e)
+    S.assume(f(e, b, c+d)<0, a>0, b>0, a==c, b==d, a==e)
 
     S.add_axiom(Forall([x, y], f(x, y, x+y)>0))
     S.check()
@@ -185,23 +185,23 @@ def test10a():
 def test11():
     u, v, w, x, y, z = Vars('u v w x y z')
     # B = Blackboard()
-    # B.assert_comparisons(0 < u, u < v, 1 < x, x < y, 0 < w, w < z)
-    # B.assert_comparison(u + x * w >= v + y**2 * z)
+    # B.assume(0 < u, u < v, 1 < x, x < y, 0 < w, w < z)
+    # B.assume(u + x * w >= v + y**2 * z)
     # run(B)
     # print
     # print "**********"
     print
     # messages.set_verbosity(messages.debug)
     B = Blackboard()
-    B.assert_comparisons(0 < u, u < v, 1 < x, x < y, 0 < w, w < z)
-    B.assert_comparison(u + x * w >= v + y**2 * z)
+    B.assume(0 < u, u < v, 1 < x, x < y, 0 < w, w < z)
+    B.assume(u + x * w >= v + y**2 * z)
     run(B)
 
 def test12():
     exp = Func('exp')
 
     B = Blackboard()
-    B.assert_comparisons(0<x, x<y, (1+x**2)/(2+exp(y))>=(2+y**2)/(1+exp(x)))
+    B.assume(0<x, x<y, (1+x**2)/(2+exp(y))>=(2+y**2)/(1+exp(x)))
 
     fm = FunctionModule([Forall([x, y], And(Implies(x<y, exp(x)<exp(y)),
                                                             exp(x)>0))])
@@ -215,7 +215,7 @@ def test12():
 def test13():
     x = Var('x')
     B = Blackboard()
-    B.assert_comparisons(x ** 2 + 2 * x + 1 < 0)
+    B.assume(x ** 2 + 2 * x + 1 < 0)
     run(B)
     # This test loops!
 
@@ -235,8 +235,8 @@ def test16a():
     x, a, b, m = Vars('x, a, b, m')
     S = Solver()
     S.add_axiom(Forall([x], ceil(x) >= x))
-    S.assert_comparisons(a < b, x > a, m >= ceil((b - a) / (x - a)))
-    S.assert_comparison(a + (b - a) / (m + 1) >= x)
+    S.assume(a < b, x > a, m >= ceil((b - a) / (x - a)))
+    S.assume(a + (b - a) / (m + 1) >= x)
     S.check()
 
 
@@ -247,8 +247,8 @@ def test16():
     S = Solver()
     S.add_axiom(Forall([x], ceil(x) >= x))
     S.add_axiom(Forall([m], f(m) < a + (b - a) / (m + 1)))
-    S.assert_comparisons(a < b, x > a, m >= ceil((b - a) / (x - a)))
-    S.assert_comparison(f(m) >= x)
+    S.assume(a < b, x > a, m >= ceil((b - a) / (x - a)))
+    S.assume(f(m) >= x)
     S.check()
 
 
@@ -258,10 +258,10 @@ def test17():
     x, y, z, i = Vars('x, y, z, i')
     S = Solver()
     S.add_axiom(Forall([x,y], abs2(x + y) <= abs2(x) + abs2(y)))
-    S.assert_comparison(i >= 0)
-    S.assert_comparison(abs2(f(y) - f(x)) < 1 / (2 * (i + 1)))
-    S.assert_comparison(abs2(f(z) - f(y)) < 1 / (2 * (i + 1)))
-    S.assert_comparison(abs2(f(z) - f(x)) >= 1 / (i + 1))
+    S.assume(i >= 0)
+    S.assume(abs2(f(y) - f(x)) < 1 / (2 * (i + 1)))
+    S.assume(abs2(f(z) - f(y)) < 1 / (2 * (i + 1)))
+    S.assume(abs2(f(z) - f(x)) >= 1 / (i + 1))
     S.check()
 
 
@@ -315,7 +315,7 @@ def arithmetical_tests():
 
 #messages.set_verbosity(messages.debug)
 
-polya_set_solver_type('fm')
+# polya_set_solver_type('fm')
 
 # test4()
 # test5()
