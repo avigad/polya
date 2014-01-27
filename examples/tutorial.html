@@ -459,8 +459,65 @@ blackboards:</p>
 
 <span class="name">run</span><span class="punctuation">(</span><span class="name">b</span><span class="punctuation">)</span>
 </pre>
-<p>Running a blackboard calls the additive and the multiplicative
-solvers, respectively and the axiom instantiation, if necessary.</p>
+<p>Running a blackboard calls a number of <strong>update modules</strong>, which each
+succesively add inequality information to the blackboard in turn until
+no more facts are learned.</p>
+<p>In this case the <strong>default modules</strong> are called, which are the
+additive, multiplicative and congruence modules respectively.</p>
+<p>There are several types of <strong>module interfaces</strong>, which can be
+instantiated by concrete modules and called on a given blackboard. The
+different types of modules are as follows:</p>
+<ol class="upperalpha">
+<li><p class="first">The <strong>additive module interface</strong> learns all possible facts which
+are only expressible in terms of the additive properties of the
+known facts, i.e. inequalities of the form a1*x1+...+an*xn &lt; t,
+where &lt; may also be &lt;=, &gt;, &gt;=, or =.</p>
+<p>There are two possible implementations of this module. The first,
+simpler one is based on Fourier-Motzkin elimination and can be
+instantiated by</p>
+<pre class="code python literal-block">
+<span class="name">ma</span> <span class="operator">=</span> <span class="name">FMAdditionModule</span><span class="punctuation">()</span>
+</pre>
+<p>The second is based on a geometric method, and can only be used if
+CDD and LRS are correctly configured on your machine.</p>
+<pre class="code python literal-block">
+<span class="name">ma</span> <span class="operator">=</span> <span class="name">PolyAdditionModule</span><span class="punctuation">()</span>
+</pre>
+<p>Either module can then be explicitely used to learn new facts about
+a given blackboard <tt class="docutils literal">b</tt></p>
+<pre class="code python literal-block">
+<span class="name">ma</span><span class="operator">.</span><span class="name">update_blackboard</span><span class="punctuation">(</span><span class="name">b</span><span class="punctuation">)</span>
+</pre>
+</li>
+<li><p class="first">The <strong>multiplicative module interface</strong> works in a similar way to
+the additive module interface, but on the purely multiplicative
+fragment of the problem. Essentially, the concrete implementations
+work in a very similar manner to the additive modules by taking
+logarithms of the known facts. Again there are two flavors</p>
+<pre class="code python literal-block">
+<span class="name">mm1</span> <span class="operator">=</span> <span class="name">FMMultiplicationModule</span><span class="punctuation">()</span>
+<span class="name">mm2</span> <span class="operator">=</span> <span class="name">PolyMultiplicationModule</span><span class="punctuation">()</span>
+</pre>
+</li>
+<li><p class="first">The <strong>congruence module interface</strong>. This module simply learns all
+possible equalities using the usual rules for equality
+(reflexivity, symmetry, transitivity and the congruence rules). At
+the moment it has a single possible instance</p>
+<pre class="code python literal-block">
+<span class="name">mc</span> <span class="operator">=</span> <span class="name">CongClosureModule</span><span class="punctuation">()</span>
+</pre>
+</li>
+<li><p class="first">The <strong>axiom instanciation interface</strong>. This module takes as
+arguments the set of universally quantified formulas which serve as
+axioms, and performs instanciations of the axioms according to a
+certain heuristic for a given blackboard.</p>
+<pre class="code python literal-block">
+<span class="name">fm</span> <span class="operator">=</span> <span class="name">FunctionModule</span><span class="punctuation">([</span><span class="name">Forall</span><span class="punctuation">([</span><span class="name">x</span><span class="punctuation">,</span> <span class="name">y</span><span class="punctuation">],</span> <span class="name">Implies</span><span class="punctuation">(</span><span class="name">x</span><span class="operator">&lt;</span><span class="name">y</span><span class="punctuation">,</span>
+<span class="name">f</span><span class="punctuation">(</span><span class="name">x</span><span class="punctuation">)</span> <span class="operator">&lt;</span> <span class="name">f</span><span class="punctuation">(</span><span class="name">y</span><span class="punctuation">)))])</span>
+<span class="name">fm</span><span class="operator">.</span><span class="name">update_blackboard</span><span class="punctuation">(</span><span class="name">b</span><span class="punctuation">)</span>
+</pre>
+</li>
+</ol>
 </div>
 </div>
 </body>

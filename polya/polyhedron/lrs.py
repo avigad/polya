@@ -16,7 +16,7 @@ def find_lrs_path():
     for s in ['lrs', './lrs', poly_dir + '/lrs', '/usr/bin/lrs']:
         try:
             subprocess.check_output([s, '_pretend_file'])
-        except OSError, e:
+        except (OSError, subprocess.CalledProcessError), e:
             pass
         else:
             return s

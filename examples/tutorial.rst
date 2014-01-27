@@ -150,5 +150,71 @@ blackboards:
 
    run(b)
 
-Running a blackboard calls the additive and the multiplicative
-solvers, respectively and the axiom instantiation, if necessary.
+Running a blackboard calls a number of **update modules**, which each
+successively add inequality information to the blackboard in turn until
+no more facts are learned.
+
+In this case the **default modules** are called, which are the
+additive, multiplicative and congruence modules respectively.
+
+There are several types of **module interfaces**, which can be
+instantiated by concrete modules and called on a given blackboard. The
+different types of modules are as follows:
+
+A) The **additive module interface** learns all possible facts which
+   are only expressible in terms of the additive properties of the
+   known facts, i.e. inequalities of the form a1*x1+...+an*xn < t,
+   where < may also be <=, >, >=, or =.
+   
+   There are two possible implementations of this module. The first,
+   simpler one is based on Fourier-Motzkin elimination and can be
+   instantiated by
+
+   .. code-block:: python
+        
+                   ma = FMAdditionModule()
+
+   The second is based on a geometric method, and can only be used if
+   CDD and LRS are correctly configured on your machine.
+
+   .. code-block:: python
+        
+                   ma = PolyAdditionModule()
+
+   Either module can then be explicitly used to learn new facts about
+   a given blackboard ``b``
+
+   .. code-block:: python
+
+                   ma.update_blackboard(b)
+
+B) The **multiplicative module interface** works in a similar way to
+   the additive module interface, but on the purely multiplicative
+   fragment of the problem. Essentially, the concrete implementations
+   work in a very similar manner to the additive modules by taking
+   logarithms of the known facts. Again there are two flavors
+
+   .. code-block:: python
+
+                   mm1 = FMMultiplicationModule()
+                   mm2 = PolyMultiplicationModule()
+
+C) The **congruence module interface**. This module simply learns all
+   possible equalities using the usual rules for equality
+   (reflexivity, symmetry, transitivity and the congruence rules). At
+   the moment it has a single possible instance
+
+   .. code-block:: python
+
+                   mc = CongClosureModule()
+
+D) The **axiom instantiation interface**. This module takes as
+   arguments the set of universally quantified formulas which serve as
+   axioms, and performs instantiations of the axioms according to a
+   certain heuristic for a given blackboard.
+
+   .. code-block:: python
+
+                   fm = FunctionModule([Forall([x, y], Implies(x<y,
+                   f(x) < f(y)))])
+                   fm.update_blackboard(b)
