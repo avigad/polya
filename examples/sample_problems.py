@@ -212,10 +212,9 @@ examples.append(Example(
     hyps = [0 < x, x < 3*y, u < v, v < 0, 1 < v**2, v**2 < x, u * (3*y)**2 + 1 >= x**2 * v + x]
 ))
 
-# not valid
+
 examples.append(Example(
-    hyps = [0 < x, x < 3*y, u < v, v < 0, 1 < v**2, v**2 < x, u* (3*y)**2 + 1 < x**2 * v + x],
-    comment = 'This is not valid, so the intended response is Fail.'
+    hyps = [0 < x, x < 3*y, u < v, v < 0, 1 < v**2, v**2 < x, u* (3*y)**2 + 1 < x**2 * v + x]
 ))
 
 examples.append(Example(
@@ -226,10 +225,8 @@ examples.append(Example(
     hyps = [a > 0, a < 1, b > 0, b < 1, a+b < a * b]
 ))
 
-# not valid
 examples.append(Example(
-    hyps = [a <= b * x / 2, 0 < c, 0 < d, d < 1, (1+d / (3*(c + 3))) * a >= b * x],
-    comment = 'This is not valid, so the intended response is Fail.'
+    hyps = [a <= b * x / 2, 0 < c, 0 < d, d < 1, (1+d / (3*(c + 3))) * a >= b * x]
 ))
 
 examples.append(Example(
@@ -315,6 +312,7 @@ if __name__ == '__main__':
     elif sys.argv[1] == 'test_all':
         for i in range(len(examples)):
             if not examples[i].omit:
+                print 'Example #{0!s}'.format(i)
                 examples[i].test()
         # TODO: import this?
         # timer.announce_times()
