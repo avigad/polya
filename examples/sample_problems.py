@@ -24,12 +24,11 @@ import polya.main.configure as configure
 
 class Example:
 
-    def __init__(self, hyps=None, conc=None, axioms=None,
-                 modules=None, omit=False, comment=None):
+    def __init__(self, hyps = None, conc = None, axioms = None,
+                 modules = None, omit = False, comment = None):
         self.hyps = hyps if hyps else list()
         self.conc = conc
         self.axioms = axioms if axioms else list()
-        #print 'modules:', modules
         self.modules = modules if modules else list()
         self.comment = comment
         self.omit = omit    # flag to omit from 'test_all'
@@ -51,8 +50,7 @@ class Example:
 
     def test(self):
         self.show()
-        print 'Modules:', self.modules
-        S = Solver(self.hyps, self.axioms, self.modules)
+        S = Solver(assertions=self.hyps, axioms=self.axioms, modules=self.modules)
         t = timeit.default_timer()
         if self.conc:
             if S.prove(self.conc):
@@ -135,7 +133,7 @@ examples.append(Example(
 examples.append(Example(
     axioms = [Forall([x, y], f((x * y) / 2) <= (f(x) * f(y)) / 2)],
     hyps = [z > 0, z * f(x) * f(y) < 0, 4 * z * f(x * y / 2) > 0],
-    comment = 'Polya fails to refute these hypotheses without case-splitting on the sign of f(x)'
+    comment = 'Polya does not find the contradiction here; it needs to case split on f(x).'
 ))
 
 examples.append(Example(
@@ -212,9 +210,10 @@ examples.append(Example(
     hyps = [0 < x, x < 3*y, u < v, v < 0, 1 < v**2, v**2 < x, u * (3*y)**2 + 1 >= x**2 * v + x]
 ))
 
-
+# not valid
 examples.append(Example(
-    hyps = [0 < x, x < 3*y, u < v, v < 0, 1 < v**2, v**2 < x, u* (3*y)**2 + 1 < x**2 * v + x]
+    hyps = [0 < x, x < 3*y, u < v, v < 0, 1 < v**2, v**2 < x, u* (3*y)**2 + 1 < x**2 * v + x],
+    comment='The hypotheses are consistent, so Polya correctly fails to find a contradiction.'
 ))
 
 examples.append(Example(
@@ -225,8 +224,10 @@ examples.append(Example(
     hyps = [a > 0, a < 1, b > 0, b < 1, a+b < a * b]
 ))
 
+# not valid
 examples.append(Example(
-    hyps = [a <= b * x / 2, 0 < c, 0 < d, d < 1, (1+d / (3*(c + 3))) * a >= b * x]
+    hyps = [a <= b * x / 2, 0 < c, 0 < d, d < 1, (1+d / (3*(c + 3))) * a >= b * x],
+    comment='The hypotheses are consistent, so Polya correctly fails to find a contradiction.'
 ))
 
 examples.append(Example(
@@ -312,7 +313,7 @@ if __name__ == '__main__':
     elif sys.argv[1] == 'test_all':
         for i in range(len(examples)):
             if not examples[i].omit:
-                print 'Example #{0!s}'.format(i)
+                print 'Example {0!s}'.format(i)
                 examples[i].test()
         # TODO: import this?
         # timer.announce_times()
