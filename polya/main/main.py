@@ -15,8 +15,7 @@
 from __future__ import division
 import polya.main.terms as terms
 import polya.main.messages as messages
-import polya.main.configure as configure
-#import polya.polyhedron.lrs as lrs
+import polya.polyhedron.lrs as lrs
 import copy
 
 import polya.polyhedron.poly_add_module as poly_add_module
@@ -35,17 +34,83 @@ from polya.main.function_module import FunctionModule
 from blackboard import Blackboard
 
 
+####################################################################################################
+#
+# System configuration
+#
+####################################################################################################
+
+solver_options = ['fm', 'poly']
+default_solver = 'none'
+
+try:
+    import cdd
+    have_cdd = True
+except Exception:
+    have_cdd = False
+
+if lrs.lrs_path and lrs.redund_path and have_cdd:
+    default_solver = 'poly'
+else:
+    default_solver = 'fm'
+
+
+def show_configuration():
+    """
+    Tell the user what components are present.
+    """
+    messages.announce('', messages.INFO)
+    messages.announce('The Polya inequality prover.', messages.INFO)
+    messages.announce('Looking for components...', messages.INFO)
+    if lrs.lrs_path is None:
+        messages.announce('lrs not found.', messages.INFO)
+    else:
+        messages.announce('lrs found (path: {0!s}).'.format(lrs.lrs_path), messages.INFO)
+    if lrs.redund_path is None:
+        messages.announce('redund not found.', messages.INFO)
+    else:
+        messages.announce('redund found (path: {0!s}).'.format(lrs.redund_path), messages.INFO)
+    if have_cdd:
+        messages.announce('cdd found.', messages.INFO)
+    else:
+        messages.announce('cdd not found.', messages.INFO)
+    messages.announce('', messages.INFO)
+
+
+def set_solver_type(s):
+    """
+    Set the solver to a given method, s, in solver_options.
+    """
+    if s in solver_options:
+        messages.announce('Setting solver type: {0!s}'.format(s), messages.INFO)
+        global default_solver
+        default_solver = s
+    else:
+        messages.announce('Error: {0!s} is not in the list of possible arithmetic '
+                               'solvers'.format(s), messages.INFO)
+        messages.announce('solver options = {0!s}'.format(solver_options))
+
+
+####################################################################################################
+#
+# Prepackaged solving methods
+#
+####################################################################################################
+
 def run(B):
-    if configure.default_solver == 'poly':
+    """
+    Given a blackboard B, runs the default modules  until either a contradiction is
+    found or no new information is learned.
+    Returns True if a contradiction is found, False otherwise.
+    """
+    if default_solver == 'poly':
         pa, pm = poly_add_module.PolyAdditionModule(), poly_mult_module.PolyMultiplicationModule()
-    elif configure.default_solver == 'fm':
+    elif default_solver == 'fm':
         pa, pm = fm_add_module.FMAdditionModule(), fm_mult_module.FMMultiplicationModule()
     else:
-        messages.announce('Unsupported option: {0}'.format(configure.default_solver), messages.INFO)
+        messages.announce('Unsupported option: {0}'.format(default_solver), messages.INFO)
         return
-
     cm = CongClosureModule()
-
     return run_modules(B, cm, pa, pm)
 
 
@@ -100,14 +165,14 @@ class Solver:
         self.fm = None
         if len(modules) == 0:
             modules.append(CongClosureModule())
-            if configure.default_solver == 'poly':
+            if default_solver == 'poly':
                 pa = poly_add_module.PolyAdditionModule()
                 pm = poly_mult_module.PolyMultiplicationModule()
-            elif configure.default_solver == 'fm':
+            elif default_solver == 'fm':
                 pa = fm_add_module.FMAdditionModule()
                 pm = fm_mult_module.FMMultiplicationModule()
             else:
-                messages.announce('Unsupported option: {0}'.format(configure.default_solver),
+                messages.announce('Unsupported option: {0}'.format(default_solver),
                                   messages.INFO)
                 raise Exception
 
