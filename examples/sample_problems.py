@@ -300,26 +300,36 @@ examples.append(Example(
 
 
 if __name__ == '__main__':
-#    configure.polya_set_solver_type('fm')
-    #messages.set_verbosity(messages.quiet)
+
+    # handle switches
+    if '-v' in sys.argv:
+        messages.set_verbosity(messages.normal)
+        sys.argv.remove('-v')
+    else:
+        messages.set_verbosity(messages.quiet)
+    if '-fm' in sys.argv:
+        set_solver_type('fm')
+        sys.argv.remove('-fm')
+
+    # perform command
     if len(sys.argv) == 1:
         print "Use 'python sample_problems.py list' to list the examples."
         print "Use 'python sample_problems.py 6 9 10' to run those examples."
         print "Use 'python sample_problems.py test_all' to run them all."
-    elif sys.argv[1] == 'list':
-        for i in range(len(examples)):
-            print 'Example #{0!s}'.format(i)
-            examples[i].show()
-    elif sys.argv[1] == 'test_all':
-        for i in range(len(examples)):
-            if not examples[i].omit:
-                print 'Example {0!s}'.format(i)
-                examples[i].test()
-        # TODO: import this?
-        # timer.announce_times()
     else:
-        for i in range(1, len(sys.argv)):
-            try:
-                examples[int(sys.argv[i])].test()
-            except ValueError:
-                print 'No example {0}.'.format(sys.argv[i])
+        show_configuration()
+        if sys.argv[1] == 'list':
+            for i in range(len(examples)):
+                print 'Example #{0!s}'.format(i)
+                examples[i].show()
+        elif sys.argv[1] == 'test_all':
+            for i in range(len(examples)):
+                if not examples[i].omit:
+                    print 'Example {0!s}'.format(i)
+                    examples[i].test()
+        else:
+            for i in range(1, len(sys.argv)):
+                try:
+                    examples[int(sys.argv[i])].test()
+                except ValueError:
+                    print 'No example {0}.'.format(sys.argv[i])
