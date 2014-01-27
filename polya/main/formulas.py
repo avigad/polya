@@ -28,6 +28,7 @@ class AxiomException(Exception):
     def __init__(self, msg):
         self.msg = msg
 
+
 class Axiom:
     """
     literals is a list of term_comparisons. The axiom represents their disjunction.
@@ -299,12 +300,12 @@ if __name__ == '__main__':
 
     u, v, w, x = terms.Vars('u, v, w, x')
 
-    ax = Or(Implies(u<v, w==x),And(u!=v, x>3*w))
+    ax = Or(Implies(u < v, w == x), And(u != v, x > 3*w))
 
     print ax
     print cnf(ax)
 
-    ax = Or(And(u<v, v<w, w>=x), Implies(u>3*x, w+v<2), u<5*v)
+    ax = Or(And(u < v, v < w, w >= x), Implies(u > 3*x, w+v < 2), u < 5*v)
     print ax
     print cnf(ax)
 

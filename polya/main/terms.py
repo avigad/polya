@@ -906,7 +906,7 @@ class Clause:
         """
         if i in self.zero_comparisons:
             self.zero_comparisons[i] = [c for c in self.zero_comparisons[i]
-                                     if not B.implies(i, comp_negate(c), 0, 0)]
+                                        if not B.implies(i, comp_negate(c), 0, 0)]
             if any(B.implies(i, c, 0, 0) for c in self.zero_comparisons[i]):
                 self.satisfied = True
                 return

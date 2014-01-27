@@ -56,8 +56,8 @@ def run_modules(B, *modules):
     Returns True if a contradiction is found, False otherwise.
     """
     try:
-        id = B.identify()
-        while len(B.get_new_info(id)) > 0:
+        mid = B.identify()
+        while len(B.get_new_info(mid)) > 0:
             for m in modules:
                 messages.announce(B.info_dump(), messages.DEBUG)
                 m.update_blackboard(B)
@@ -99,7 +99,7 @@ class Solver:
         self.B = Blackboard()
         self.fm = None
         if len(modules) == 0:
-            modules.append(CongClosureModule())
+            modules = [CongClosureModule()]
             if configure.default_solver == 'poly':
                 pa = poly_add_module.PolyAdditionModule()
                 pm = poly_mult_module.PolyMultiplicationModule()

@@ -301,7 +301,7 @@ examples.append(Example(
 
 if __name__ == '__main__':
 #    configure.polya_set_solver_type('fm')
-    messages.set_verbosity(messages.quiet)
+    #messages.set_verbosity(messages.quiet)
     if len(sys.argv) == 1:
         print "Use 'python sample_problems.py list' to list the examples."
         print "Use 'python sample_problems.py 6 9 10' to run those examples."

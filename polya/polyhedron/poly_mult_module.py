@@ -26,8 +26,8 @@ import polya.util.mul_util as mul_util
 
 try:
     import cdd
-except Exception:
-    pass
+except ImportError:
+    cdd = None
 
 import fractions
 #import math

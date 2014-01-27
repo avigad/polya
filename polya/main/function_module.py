@@ -353,7 +353,7 @@ def find_problem_term(B, term1):
     raise NoTermException
 
 
-def unify(B, termlist, uvars, arg_uvars, envs=[]):
+def unify(B, termlist, uvars, arg_uvars, envs=list()):
     """
     Takes Terms s1...sn involving uvars u1...um
     arg_uvars is a subset of uvars: those that occur alone as function arguments in s1...sn.

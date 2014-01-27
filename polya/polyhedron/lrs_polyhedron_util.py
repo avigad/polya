@@ -20,8 +20,9 @@ import polya.polyhedron.lrs as lrs
 # where should this go?
 try:
     import cdd  # This is needed for matrix formatting. Can we get around this?
-except Exception:
-    pass
+except ImportError:
+    cdd = None
+    #pass
 
 
 def get_vertices(comparison_matrix):
