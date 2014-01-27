@@ -187,8 +187,8 @@ examples.append(Example(
 
 # in the paper
 examples.append(Example(
-    axioms = [i >= 0, Forall([x,y], abs2(x + y) <= abs2(x) + abs2(y))],
-    hyps = [abs2(f(y) - f(x)) < 1 / (2 * (i + 1)), abs2(f(z) - f(y)) < 1 / (2 * (i + 1))],
+    axioms = [Forall([x,y], abs2(x + y) <= abs2(x) + abs2(y))],
+    hyps = [i >= 0, abs2(f(y) - f(x)) < 1 / (2 * (i + 1)), abs2(f(z) - f(y)) < 1 / (2 * (i + 1))],
     conc = abs2(f(z) - f(x)) < 1 / (i + 1)
 ))
 
