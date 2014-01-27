@@ -48,5 +48,22 @@ def announce_module(module):
 
 
 def announce(message, level):
+    """
+    Display message, if an appropriate level.
+    """
     if level in verbosity:
         print message
+
+
+def visible(level):
+    """
+    Determine whether messages at this level should be displayed.
+    """
+    return level in verbosity
+
+
+def announce_strong(message):
+    """
+    Display message, no matter what the level is.
+    """
+    print message

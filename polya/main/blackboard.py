@@ -161,8 +161,10 @@ class Blackboard():
             self.terms[i] = t
             self.term_names[t.key] = i
             self.num_terms += 1
-            messages.announce('Defining t{0!s} := {1!s}'.format(i, new_def), messages.DEF)
-            messages.announce('  := {1!s}'.format(i, t), messages.DEF_FULL)
+            if messages.visible(messages.DEF):
+                messages.announce_strong('Defining t{0!s} := {1!s}'.format(i, new_def))
+            if messages.visible(messages.DEF_FULL):
+                messages.announce_strong('  := {1!s}'.format(i, t))
             for j in self.zero_inequalities:
                 hp = geometry.halfplane_of_comp(self.zero_inequalities[j], 0)
                 self.inequalities[j, i] = [hp]
@@ -223,7 +225,7 @@ class Blackboard():
                 #self.clauses.remove(c)
 
         if empty is not None:
-            messages.announce("Contradiction from clause.", messages.DEBUG)
+            messages.announce('Contradiction from clause.', messages.DEBUG)
             self.raise_contradiction(100, terms.EQ, 100, 100)
         else:  # do these separately, so that learning from one won't recurse to the others.
             for c in unit:
@@ -617,38 +619,40 @@ class Blackboard():
         if c.satisfied:
             return
 
-        messages.announce('Asserting clause: {0!s}'.format(s), messages.ASSERTION)
+        if messages.visible(messages.ASSERTION):
+            messages.announce_strong('Asserting clause: {0!s}'.format(s))
         l = len(c)
         if l > 1:
             self.clauses.add(c)
         elif l == 1:
             self.assert_comparison(c.first())
         else:
-            messages.announce("Contradiction from clause.", messages.DEBUG)
+            messages.announce('Contradiction from clause.', messages.DEBUG)
             self.raise_contradiction(0, terms.EQ, 0, 0)
 
     def announce_comparison(self, i, comp, coeff, j):
         """
         Reports a successful assertion to the user.
         """
-        messages.announce(
-            'Asserting {0!s}'.format(terms.TermComparison(terms.IVar(i), comp,
-                                                          coeff * terms.IVar(j))),
-            messages.ASSERTION)
-        messages.announce(
-            '  := {0!s}'.format(terms.TermComparison(self.terms[i], comp, coeff * self.terms[j])),
-            messages.ASSERTION_FULL)
+        if messages.visible(messages.ASSERTION):
+            messages.announce_strong(
+                'Asserting {0!s}'.format(terms.TermComparison(terms.IVar(i), comp,
+                                                              coeff * terms.IVar(j))))
+        if messages.visible(messages.ASSERTION_FULL):
+            messages.announce_strong(
+                '  := {0!s}'.format(terms.TermComparison(self.terms[i], comp,
+                                                         coeff * self.terms[j])))
 
     def announce_zero_comparison(self, i, comp):
         """
         Reports a successful assertion to the user.
         """
-        messages.announce(
-            'Asserting {0!s}'.format(terms.TermComparison(terms.IVar(i), comp, terms.zero)),
-            messages.ASSERTION)
-        messages.announce(
-            '  := {0!s}'.format(terms.TermComparison(self.terms[i], comp, terms.zero)),
-            messages.ASSERTION_FULL)
+        if messages.visible(messages.ASSERTION):
+            messages.announce_strong(
+                'Asserting {0!s}'.format(terms.TermComparison(terms.IVar(i), comp, terms.zero)))
+        if messages.visible(messages.ASSERTION_FULL):
+            messages.announce_strong(
+                '  := {0!s}'.format(terms.TermComparison(self.terms[i], comp, terms.zero)))
 
     def raise_contradiction(self, i, comp, coeff, j):
         """

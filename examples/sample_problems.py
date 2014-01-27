@@ -323,10 +323,12 @@ if __name__ == '__main__':
                 print 'Example #{0!s}'.format(i)
                 examples[i].show()
         elif sys.argv[1] == 'test_all':
+            t = timeit.default_timer()
             for i in range(len(examples)):
                 if not examples[i].omit:
                     print 'Example {0!s}'.format(i)
                     examples[i].test()
+            print 'Total:', round(timeit.default_timer()-t, 3), 'seconds'
         else:
             for i in range(1, len(sys.argv)):
                 try:
