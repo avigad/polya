@@ -181,10 +181,12 @@ def perfect_root(p, q):
     k = q.denominator
     l = q.numerator
     #It suffices to determine if n and d are perfect k roots
+    #print 'perfect_root:', p, q, n, d, k, l
     r_n = perfect_root_int(n, k)
     r_d = perfect_root_int(d, k)
     if r_n and r_d:
-        return fractions.Fraction(r_n ** l, r_d ** l)
+#        return fractions.Fraction(r_n ** l, r_d ** l)
+        return fractions.Fraction(r_n)**l / fractions.Fraction(r_d) ** l
     else:
         return None
 

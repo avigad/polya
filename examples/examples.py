@@ -279,7 +279,7 @@ def arithmetical_tests():
 
         [0 < x, x < 3*y, u < v, v < 0, 1 < v**2, v**2 < x, u*(3*y)**2+1 >= x**2*v + x],
 
-        [0 < x, x < 3*y, u < v, v < 0, 1 < v**2, v**2 < x, u*(3*y)**2+1 < x**2*v + x],
+        [0 < x, x < 3*y, u < v, v < 0, 1 < v**2, v**2 < x, u*(3*y)**2+1 < x**2*v + x], #f
 
         [1 < x, 1 < y, 1 < z, 1 >= x*(1+z*y)],
 
@@ -288,7 +288,7 @@ def arithmetical_tests():
         #Crashes v.4.2c
         #[x+y >= 2, z+w >= 2, u*x**2 < u*x, u*y**2 < u*y, u*w**2 > u*w, u*z**2 > u*z],
 
-        [a <= b*x/2, 0 < c, 0 < d, d < 1, (1+d/(3*(c+3)))*a >= b*x],
+        [a <= b*x/2, 0 < c, 0 < d, d < 1, (1+d/(3*(c+3)))*a >= b*x], #f
 
         [x < 1, 1 < y, x*y > 1, u+x >= y+1, x**2*y < 2-u*x*y],
 

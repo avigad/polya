@@ -24,12 +24,13 @@ import polya.main.configure as configure
 
 class Example:
 
-    def __init__(self, hyps = [], conc = None, axioms = [],
-                 modules = [], omit = False, comment = None):
-        self.hyps = hyps
+    def __init__(self, hyps=None, conc=None, axioms=None,
+                 modules=None, omit=False, comment=None):
+        self.hyps = hyps if hyps else list()
         self.conc = conc
-        self.axioms = axioms
-        self.modules = modules
+        self.axioms = axioms if axioms else list()
+        #print 'modules:', modules
+        self.modules = modules if modules else list()
         self.comment = comment
         self.omit = omit    # flag to omit from 'test_all'
 
@@ -50,7 +51,8 @@ class Example:
 
     def test(self):
         self.show()
-        S = Solver(assertions=self.hyps, axioms=self.axioms, modules=self.modules)
+        print 'Modules:', self.modules
+        S = Solver(self.hyps, self.axioms, self.modules)
         t = timeit.default_timer()
         if self.conc:
             if S.prove(self.conc):
@@ -132,7 +134,8 @@ examples.append(Example(
 
 examples.append(Example(
     axioms = [Forall([x, y], f((x * y) / 2) <= (f(x) * f(y)) / 2)],
-    hyps = [z > 0, z * f(x) * f(y) < 0, 4 * z * f(x * y / 2) > 0]
+    hyps = [z > 0, z * f(x) * f(y) < 0, 4 * z * f(x * y / 2) > 0],
+    comment = 'Polya fails to refute these hypotheses without case-splitting on the sign of f(x)'
 ))
 
 examples.append(Example(
@@ -211,7 +214,8 @@ examples.append(Example(
 
 # not valid
 examples.append(Example(
-    hyps = [0 < x, x < 3*y, u < v, v < 0, 1 < v**2, v**2 < x, u* (3*y)**2 + 1 < x**2 * v + x]
+    hyps = [0 < x, x < 3*y, u < v, v < 0, 1 < v**2, v**2 < x, u* (3*y)**2 + 1 < x**2 * v + x],
+    comment = 'This is not valid, so the intended response is Fail.'
 ))
 
 examples.append(Example(
@@ -224,7 +228,8 @@ examples.append(Example(
 
 # not valid
 examples.append(Example(
-    hyps = [a <= b * x / 2, 0 < c, 0 < d, d < 1, (1+d / (3*(c + 3))) * a >= b * x]
+    hyps = [a <= b * x / 2, 0 < c, 0 < d, d < 1, (1+d / (3*(c + 3))) * a >= b * x],
+    comment = 'This is not valid, so the intended response is Fail.'
 ))
 
 examples.append(Example(
@@ -298,6 +303,7 @@ examples.append(Example(
 
 if __name__ == '__main__':
 #    configure.polya_set_solver_type('fm')
+    messages.set_verbosity(messages.quiet)
     if len(sys.argv) == 1:
         print "Use 'python sample_problems.py list' to list the examples."
         print "Use 'python sample_problems.py 6 9 10' to run those examples."
