@@ -19,7 +19,7 @@ from polya import *
 import sys
 import timeit
 # TODO: get rid of this
-import polya.main.configure as configure
+#import polya.main.configure as configure
 
 
 class Example:
