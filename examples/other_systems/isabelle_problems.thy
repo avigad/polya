@@ -76,10 +76,19 @@ by (smt exp_le_cancel_iff power_less_imp_less_base)
 
 (* Z3 does fine here *)
 lemma "(ALL (x::real) y. f(x + y) = f(x) + f(y)) ==> f(a + b) > (2::real) ==> f(c + d) > 2 ==>
-    f(a + c + b + d) > 4"
+    f(a + b + c + d) > 4"
 by smt
 
 (* but sledgehammer fails here *)
+lemma "(ALL (x::real) y. f (x + y) = f x * f y) ==> f a > (2::real) ==> f b > 2 ==>
+    f(a + b) > 4"
+  apply simp
+  apply (subgoal_tac "4 = 2 * 2")
+  apply (erule ssubst)
+  apply (rule mult_strict_mono)
+by auto
+
+(* and all the more so here *)
 lemma "(ALL (x::real) y. f(x + y) = f(x) * f(y)) ==> f(a + b) > (2::real) ==> f(c + d) > 2 ==>
     f(a + b + c + d) > 4"
   apply (drule_tac x = "a + b" in spec)
