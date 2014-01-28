@@ -748,7 +748,7 @@ class TermComparison():
         if not isinstance(other, TermComparison):
             return False
         else:
-            return self.term1.key == other.key
+            return self.key == other.key
 
     def canonize(self):
         """
@@ -827,7 +827,7 @@ class Clause:
 
     def __str__(self):
         cstrs = []
-        for key in self.zero_comparisons:
+        for key in sorted(self.zero_comparisons.keys()):
             for c in self.zero_comparisons[key]:
                 cstrs.append(str(comp_eval[c](IVar(key), 0)))
 
@@ -840,16 +840,18 @@ class Clause:
         return str(self)
 
     def __eq__(self, other):
-        if not isinstance(other, Clause):
-            return False
-        for key in self.comparisons:
-            if key not in other.comparisons or self.comparisons[key] != other.comparisons[key]:
-                return False
-        for key in self.zero_comparisons:
-            if key not in other.zero_comparisons or \
-                    self.zero_comparisons[key] != other.zero_comparisons[key]:
-                return False
-        return True
+        #todo: make this better, and normal form for clauses
+        # if not isinstance(other, Clause):
+        #     return False
+        # for key in self.comparisons:
+        #     if key not in other.comparisons or self.comparisons[key] != other.comparisons[key]:
+        #         return False
+        # for key in self.zero_comparisons:
+        #     if key not in other.zero_comparisons or \
+        #             self.zero_comparisons[key] != other.zero_comparisons[key]:
+        #         return False
+        # return True
+        return str(self) == str(other)
 
     def __hash__(self):
         return hash(str(self))
