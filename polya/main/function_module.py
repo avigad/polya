@@ -7,9 +7,10 @@
 # Rob Lewis
 #
 # The routine for learning facts using axioms.
-# FunctionModule is initialized with a list of axioms.
-# Each time update_blackboard is called, the module will check to see if any new clauses can be
-# instantiated from its known axioms, and if so, will add them to the blackboard.
+#
+# FunctionModule is initialized with a list of axioms. Each time update_blackboard is called, the
+# module will check to see if any new clauses can be instantiated from its known axioms, and if
+# so, will add them to the blackboard.
 #
 ####################################################################################################
 
@@ -40,9 +41,8 @@ def reduce_term(term, env):
     Replaces all defined UVars in term with their designated values.
     Returns a pair of a new STerm and a flag whether all UVars have been replaced.
     """
-    #todo: this duplicates some functionality of Term.substitute(), but adds the check for UVars.
-    #can we recover this some other way?
-    #print '    reducing', term, 'from', env
+    # TODO: this duplicates some functionality of Term.substitute(), but adds the check for UVars.
+    # can we recover this some other way?
     if isinstance(term, terms.STerm):
         l = reduce_term(term.term, env)
         return terms.STerm(term.coeff*l[0].coeff, l[0].term), l[1]
@@ -77,7 +77,7 @@ def reduce_term(term, env):
         return terms.STerm(1, terms.FuncTerm(term.func_name, nargs)), flag1
 
     else:
-        raise Exception("Unknown term type encountered in reduce_term: "+str(term))
+        raise Exception('Unknown term type encountered in reduce_term: ' + str(term))
 
 
 class NoTermException(Exception):
@@ -125,9 +125,9 @@ def elim_var_mul(i, pivot, rows):
     return new_rows
 
 
-def add_fm_eq_elim(coeff, term, B):
+def add_gauss_eq_elim(coeff, term, B):
     """
-    Given an additive term, performs fourier-motzkin elimination on known equalities to deduce
+    Given an additive term, performs gaussian elimination on known equalities to deduce
     whether term is equal to any problem term.
     """
     if len(term.args) == 1:
@@ -160,7 +160,7 @@ def add_fm_eq_elim(coeff, term, B):
 
     mat.append(urow)
 
-    #begin FM elimination
+    # begin gaussian elimination
     rows_i = copy.copy(mat)
     for i in range(B.num_terms):  # check if u = c*i
         rows_j = copy.copy(rows_i)
@@ -174,10 +174,10 @@ def add_fm_eq_elim(coeff, term, B):
         row = next(r for r in rows_j if r[-1] != 0)
         l = len([k for k in row if k != 0])
         if l == 1:
-            #we have u = 0. What to do?
+            # we have u = 0. What to do?
             return 0, 0
         elif l == 2:
-            #we've found a match for u
+            # we've found a match for u
             ind = next(k for k in range(len(row)) if row[k] != 0)
             coeff = -fractions.Fraction(row[ind], row[-1])*coeff
             return coeff, ind
@@ -192,9 +192,9 @@ def add_fm_eq_elim(coeff, term, B):
     raise NoTermException
 
 
-def mul_fm_eq_elim(coeff, term, B):
+def mul_gauss_eq_elim(coeff, term, B):
     """
-    Given a multiplicative term, performs fourier motzkin elimination on known equalities to see
+    Given a multiplicative term, performs gaussian elimination on known equalities to see
     whether term is equal to a problem term.
     The first coordinate of the elimination matrix represents the constant coefficient; the ith
     coordinate represents the exponent of ti in c*t1^e1*...*tn^en = 1.
@@ -219,7 +219,7 @@ def mul_fm_eq_elim(coeff, term, B):
         return coeff, B.term_names[nt.key].index
 
     if all(B.implies(a.term.index, terms.NE, 0, 0) for a in nt.args):
-        # we can do FM elim.
+        # we can do gaussian elim.
         urow = [0]*B.num_terms + [-1]
         for a in nt.args:
             urow[a.term.index] = a.exponent
@@ -273,7 +273,6 @@ def mul_fm_eq_elim(coeff, term, B):
                     coeff = coeff*row[0]
                     ind = next(i for i in range(1, len(row)) if row[i] != 0)
                     if row[ind] == 1:  # otherwise, we have u = ti**k, k!=1
-                        print coeff, ind
                         return coeff, ind
             try:
                 r = next(r for r in rows_i if r[i] != 0 and r[-1] == 0 and r[0] == 1)
@@ -344,10 +343,10 @@ def find_problem_term(B, term1):
         raise NoTermException
 
     elif isinstance(term, terms.AddTerm):
-        return add_fm_eq_elim(coeff, term, B)
+        return add_gauss_eq_elim(coeff, term, B)
 
     elif isinstance(term, terms.MulTerm):
-        return mul_fm_eq_elim(coeff, term, B)
+        return mul_gauss_eq_elim(coeff, term, B)
 
     raise NoTermException
 
@@ -388,7 +387,6 @@ def unify(B, termlist, uvars, arg_uvars, envs=list()):
     c = t.args[ind].coeff
 
     # we have: t = f(..., c*u_v, ...)
-    #print 't:', t
     prob_f_terms = [i for i in range(B.num_terms) if
                     (isinstance(B.term_defs[i], terms.FuncTerm)
                      and B.term_defs[i].func_name == t.func_name
@@ -398,7 +396,6 @@ def unify(B, termlist, uvars, arg_uvars, envs=list()):
 
     s = [(fractions.Fraction(B.term_defs[i].args[ind].coeff, c),
           B.term_defs[i].args[ind].term.index) for i in prob_f_terms]
-
     # s is a list of pairs (coeff, j) such that c*coeff*tj occurs as an argument to f in a pr. term
 
     nenvs = []
@@ -417,10 +414,10 @@ def unify(B, termlist, uvars, arg_uvars, envs=list()):
             messages.announce('   closed terms:' + str(closed_terms), messages.DEBUG)
             prob_terms = [find_problem_term(B, ct.term) for ct in closed_terms]
         except NoTermException:
-            #print 'exception for:', v, '=', coeff, j
+
             continue
 
-        #todo: prob_terms isn't actually used in what follows. Could it be?
+        # TODO: prob_terms isn't actually used in what follows. Could it be?
 
         # At this point, every closed term matches something in the problem.
         cenvs = copy.deepcopy(envs) if envs else [{}]
@@ -429,10 +426,12 @@ def unify(B, termlist, uvars, arg_uvars, envs=list()):
             maps = unify(B, [o.term for o in open_terms],
                          [v0 for v0 in uvars if v0 != v], arg_uvars[1:], cenvs)
             nenvs.extend(maps)
+
     return nenvs
 
 
 def instantiate(axiom, B):
+
     # Get a list of assignments that work for all of axiom's triggers.
     envs = unify(B, axiom.triggers, list(axiom.vars), list(axiom.trig_arg_vars))
     messages.announce(' Environments:', messages.DEBUG)
@@ -448,11 +447,9 @@ def instantiate(axiom, B):
             red = reduce_term(l.term1, env)[0].canonize()
             red_coeff, red_term = red.coeff, red.term
             try:
-                #print 'finding prob term:', red, isinstance(red, terms.STerm)
                 lcoeff, lterm = find_problem_term(B, red_term)
                 lcoeff *= red_coeff
             except NoTermException:
-                #sred = red.canonize()
                 lterm = B.term_name(red.term).index
                 lcoeff = red.coeff
 
@@ -470,7 +467,6 @@ def instantiate(axiom, B):
                 terms.comp_eval[comp](lcoeff*terms.IVar(lterm), rcoeff*terms.IVar(rterm))
             )
         clauses.append(literals)
-        #print 'literals:', literals
     return clauses
 
 
