@@ -218,3 +218,17 @@ D) The **axiom instantiation interface**. This module takes as
                    fm = FunctionModule([Forall([x, y], Implies(x<y,
                    f(x) < f(y)))])
                    fm.update_blackboard(b)
+
+
+The information shared between all modules consists of one of the
+following three forms:
+
+1. ``t < c*u``
+2. ``t <= c*u``
+3. ``t = c*u``
+
+Where ``t`` and ``u`` are terms appearing in the problem, and ``c`` is
+a numeric constant. In particular, any contradiction will either be
+obtained by a single module, or be a consequence of inequalities of the
+above form, which themselves are implications of a single theory
+applied to known facts.
