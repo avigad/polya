@@ -17,7 +17,7 @@ lemma "(0::real) < u ==> u < v ==> v < 1 ==> 2 <= x \<Longrightarrow> x <= y \<L
 by (rule mult_strict_mono, auto)
 
 (* even this is nontrivial for sledgehammer *)
-lemma "(0 :: real) < 1 + y^2"
+lemma one_plus_square_gt_0: "(0 :: real) < 1 + y^2"
 by (metis add_commute less_add_one linorder_neqE_linordered_idom pos_add_strict 
   power2_less_0 zero_less_one)
 
@@ -29,7 +29,7 @@ by (smt power2_less_0)
 lemma "(1::real) < x ==> (1 + y^2) * x > (1 + y^2)"
   apply (subst mult.right_neutral [of "1 + y^2", symmetric])
   apply (rule mult_le_less_imp_less, auto)
-by (smt power2_less_0) 
+by (rule one_plus_square_gt_0) 
 
 (* sledgehammer and auto fail on this *)
 lemma "(0::real) < x ==> x < 1 ==> 1 / (1 - x) > 1 / (1 - x^2)"
@@ -49,16 +49,27 @@ lemma "(ALL x y. x <= y --> f x <= f y) ==> (u::real) < v ==> 1 < v ==> (x::real
     f x + u < v^2 + f y"
 by (smt power_less_imp_less_exp power_one_right)
 
-(* again here *)
+(* but fails here *)
+lemma "(ALL x y. x <= y --> f x <= f y) ==> (u::real) < v ==> 1 < w ==> 2 < s ==> 
+    (w + s) / 3 < v ==> (x::real) <= y ==> f x + u < v^2 + f y"
+  apply (drule_tac x = x in spec)
+  apply (drule_tac x = y in spec)
+  apply (erule impE, assumption)
+  apply (subst add_commute)
+  apply (rule add_less_le_mono, auto simp add: eval_nat_numeral)
+  apply (subst mult.right_neutral [of u, symmetric])
+by (rule mult_strict_mono, auto)
+
+(* sledgehammer finds a solution with Z3 *)
 lemma "(ALL x y. x <= y --> f x <= f y) ==> (u::real) < v ==> 1 < v ==> (x::real) <= y ==> 
     f x + u < (1 + v)^10 + f y"
 by (smt power_one_right power_strict_increasing_iff)
 
-(* sledgehammer gets this *)
+(* sledgehammer gets this with resolution *)
 lemma "(ALL x. f x <= 1) ==> (0::real) < w ==> u < v ==> u + w * f x < v + w"
 by (metis add_less_le_mono monoid_mult_class.mult.right_neutral real_mult_le_cancel_iff2)
 
-(* but not this *)
+(* but it doesn't get this *)
 lemma "(ALL x. f x <= 2) ==> (0::real) < w ==> u < v ==> u + w * (f x - 1) < v + w"
   apply (erule add_less_le_mono)
   apply (subst (2) mult.right_neutral [of w, symmetric])
@@ -105,6 +116,30 @@ lemma "(0::real) <= n ==> n < (K / 2) * x ==> 0 < C ==> 0 < eps ==> eps < 1 ==>
   apply (subgoal_tac "K * x = 2 * ((K / 2) * x)")
   apply (erule ssubst)
 by (rule mult_le_less_imp_less, auto simp add: field_simps)
+
+(* sledgehammer fails here *)
+lemma "(0::real) < x ==> x < y ==> (1 + x^2) / (2 + y)^17 < (1 + y^2) / (2 + x)^10"
+  apply (simp add: field_simps del: ring_distribs)
+  apply (rule mult_strict_mono)
+  apply (rule add_strict_left_mono)
+  apply (erule power_strict_mono, auto)
+  apply (rule order_le_less_trans)
+  apply (rule power_mono [of "x + 2" "y + 2"], auto)
+by (rule one_plus_square_gt_0) 
+
+(* sledgehammer fails here *)
+lemma "(0::real) < x ==> x < y ==> (1 + x^2) / (2 + exp y) < (1 + y^2) / (2 + exp x)"
+  apply (subgoal_tac "exp x > 0")
+  apply (subgoal_tac "exp y > 0")
+  apply (auto simp add: field_simps simp del: exp_gt_zero ring_distribs)
+  apply (rule mult_strict_mono)
+  apply (auto simp del: exp_gt_zero)
+  apply (rule power_strict_mono)
+by auto
+
+
+
+  
 
   
 
