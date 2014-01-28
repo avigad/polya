@@ -50,9 +50,6 @@
 #
 # and similarly for STerms.
 #
-# TODO: would it be better to have one AppTerm, and put all the info into the function component?
-# TODO: could have a generic canonization for AC o perations
-#
 ####################################################################################################
 
 
@@ -801,6 +798,7 @@ class TermComparison():
 #
 ####################################################################################################
 
+
 class Clause:
     """
     A clause contains dictionaries that map IVar indices i to comparisons representing ti comp 0,
@@ -808,6 +806,7 @@ class Clause:
 
     It represents the disjunction of all contained comparisons.
     """
+
     def __init__(self, comparisons):
         """
         comparisons is a list of term comparisons.
@@ -944,45 +943,5 @@ class Clause:
 
 
 one = One()
-
 zero = STerm(0, One())
 
-
-####################################################################################################
-#
-# Tests
-#
-####################################################################################################
-
-
-if __name__ == '__main__':
-    u, v, w, x, y, z = Vars('u, v, w, x, y, z')
-    f = Func('f')
-    g = Func('g')
-
-    def test(t):
-        print 'term:', t
-        print 'canonized:', t.canonize()
-        print
-
-    test(x + 0)
-    test(f(x, y, z))
-    test(x + y)
-    test(x + x)
-    test(x + (x + y))
-    test(x)
-    test((x + y) + (z + x))
-    test(x * y)
-    test(2 * x * y)
-    test(2 * (x + y) * w)
-    test(2 * ((x + y) ** 5) * g(x) * (3 * (x * y + f(x) + 2 + w) ** 2))
-    test((u + 3 * v + u + v + x)**2)
-    test(u + 3 * v)
-    test((x + (y * z)**5 + (3 * u + 2 * v)**2)**4 * (u + 3 * v + u + v + x)**2)
-    test(g(f(x, 2*y), z+(4*w+u**2)**3))
-    test(x < 3 * y)
-    test(2 * f(x, y + z)**2 == 3 * u * v)
-    test(-2 * (x + y) * w >= (x + (y * z)**5 + (3 * u + 2 * v)**2)**4 * (u + 3 * v + u + v + x)**2)
-    test(x < -3 * y)
-    test((u+v+3*w)-z)
-    print isinstance((zero < zero).canonize().term1, One)
