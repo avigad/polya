@@ -60,7 +60,7 @@ def show_configuration():
     Tell the user what components are present.
     """
     messages.announce('', messages.INFO)
-    messages.announce('The Polya inequality prover.', messages.INFO)
+    messages.announce('Welcome to the Polya inequality prover.', messages.INFO)
     messages.announce('Looking for components...', messages.INFO)
     if lrs.lrs_path is None:
         messages.announce('lrs not found.', messages.INFO)
@@ -148,6 +148,7 @@ def solve(*assertions):
 
 
 class Solver:
+
     def __init__(self, assertions=list(), axioms=list(), modules=list()):
         """
         assertions: a list of TermComparisons to be asserted to the blackboard.
@@ -221,7 +222,7 @@ class Solver:
         """
         Adds multiple comparisons to the Solver's blackboard.
         """
-        #TODO: this is a horrible hack!
+        # TODO: this is a hack!
         if len(c) > 0 and isinstance(c[0], Forall):
             for a in c:
                 self.add_axiom(a)
