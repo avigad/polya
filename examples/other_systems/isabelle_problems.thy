@@ -74,6 +74,22 @@ lemma "(0::real) < x ==> x < y ==> u < v ==>
     2 * u + exp (1 + x + x^4) <= 2 * v + exp (1 + y + y^4)"
 by (smt exp_le_cancel_iff power_less_imp_less_base)
 
+(* Z3 does fine here *)
+lemma "(ALL (x::real) y. f(x + y) = f(x) + f(y)) ==> f(a + b) > (2::real) ==> f(c + d) > 2 ==>
+    f(a + c + b + d) > 4"
+by smt
+
+(* but sledgehammer fails here *)
+lemma "(ALL (x::real) y. f(x + y) = f(x) * f(y)) ==> f(a + b) > (2::real) ==> f(c + d) > 2 ==>
+    f(a + b + c + d) > 4"
+  apply (drule_tac x = "a + b" in spec)
+  apply (drule_tac x = "c + d" in spec)
+  apply (simp add: add_assoc)
+  apply (subgoal_tac "4 = 2 * 2")
+  apply (erule ssubst) back
+  apply (rule mult_strict_mono)
+by auto 
+
 (* sledgehammer fails here *)
 lemma "(0::real) <= n ==> n < (K / 2) * x ==> 0 < C ==> 0 < eps ==> eps < 1 ==> 
     (1 + eps / (3 * (C + 3))) * n < K * x"
