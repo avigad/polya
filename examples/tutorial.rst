@@ -3,7 +3,7 @@ A Quick Start for Polya
 =======================
 
 Overview
----------
+--------
 
 This document outlines basic usage of the Polya Proof Assistant
 Python package.
@@ -11,7 +11,7 @@ Python package.
 Polya is a Python library that allows the user to express and solve complex inequalities expressed over the real numbers. In particular the aim is to provide a tool that proves *intuitively true* statements of mathematics, something which many automated tools fail to do.
 
 A basic example
-----------------
+---------------
 
 We will need to import the polya python package, which
 should be in your python path
