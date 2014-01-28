@@ -24,11 +24,8 @@
 #     FuncTerm
 #     AddTerm
 #     MulTerm
-#     AbsTerm
-#     MinTerm  (max(x1, ..., xn) is represented by -min(-x1, ..., -xn))
 #
-# For all AppTerms other than AbsTerm and MulTerm, the arguments are STerms. The argument to abs(t)
-# need only be a term, because the scalar can be brought outside. Each MulTerm is of the form
+# For all AppTerms other than MulTerm, the arguments are STerms. Each MulTerm is of the form
 #
 #  (t1^n1) * ... * (tk^nk)
 #
@@ -192,7 +189,7 @@ class Term:
         return MulTerm([MulPair(self, n)])
 
     def __abs__(self):
-        return AbsTerm(self)
+        return AbsTerm(STerm(1, self))
 
     def __lt__(self, other):
         return TermComparison(self, LT, other)
@@ -317,7 +314,7 @@ def Vars(name_str):
 
 ####################################################################################################
 #
-# Subclasses of FuncTerm
+# Subclasses of AppTerm
 #
 ####################################################################################################
 
@@ -448,52 +445,40 @@ class MulTerm(AppTerm):
         return MulTerm([a.substitute(assn) for a in self.args])
 
 
-class AbsTerm(AppTerm):
-
-    def __init__(self, arg):
-        AppTerm.__init__(self, 'abs', [arg], key=(70, 'abs'))
-
-    def pretty_print(self):
-        return ATOM, 'abs({0})'.format(self.args[0].pretty_print()[1])
-
-    def canonize(self):
-        return abs(self.args[0].canonize())
-
-    def __abs__(self):
-        return self
-
-    def substitute(self, assn):
-        return AbsTerm(self.args[0].substitute(assn))
-
-
-# TODO: not implemented yet
-# add binary min and max methods to Term, STerm, and MinTerm
-# handling should be similar to AddTerm
-class MinTerm(AppTerm):
-
-    def __init__(self, args):
-        AppTerm.__init__(self, 'min', args, key=(80, 'min'))
+def functerm_default_canonizer(func_name, args):
+    return STerm(1, FuncTerm(func_name, [a.canonize() for a in args]))
 
 
 class FuncTerm(AppTerm):
 
-    def __init__(self, func_name, args):
+    def __init__(self, func_name, args, canonizer = functerm_default_canonizer):
         AppTerm.__init__(self, func_name, args, key=(90, func_name))
+        self.canonizer = canonizer
 
     def pretty_print(self):
         return ATOM, '{0}({1})'.format(self.func_name,
                                        ', '.join([a.pretty_print()[1] for a in self.args]))
 
     def canonize(self):
-        return STerm(1, FuncTerm(self.func_name, [a.canonize() for a in self.args]))
+        return self.canonizer(self.func_name, self.args)
 
     def substitute(self, assn):
         return FuncTerm(self.func_name, [a.substitute(assn) for a in self.args])
 
 
+class AbsTerm(FuncTerm):
+
+    def __init__(self, arg):
+        FuncTerm.__init__(self, 'abs', [arg])
+
+    def canonize(self):
+        carg = self.args[0].canonize()
+        return STerm(abs(carg.coeff), AbsTerm(STerm(1, carg.term)))
+
+
 class Func():
     """
-    User defined functions.
+    Function symbols.
 
     Example:
       x, y, z = Vars('x, y, z')
@@ -501,7 +486,7 @@ class Func():
       print f(x, y, z)
     """
 
-    def __init__(self, name, arity=None):
+    def __init__(self, name, arity=None, canonizer=functerm_default_canonizer):
         self.name = name
         self.arity = arity
 
@@ -642,7 +627,7 @@ class STerm:
         return STerm(self.coeff, self.term.substitute(assn))
 
     def __abs__(self):
-        return STerm(abs(self.coeff), abs(self.term))
+        return AbsTerm(self)
 
     def __lt__(self, other):
         return TermComparison(self, LT, other)
@@ -849,7 +834,7 @@ class Clause:
         for (i, j) in self.comparisons:
             for (comp, coeff) in self.comparisons[i, j]:
                 cstrs.append(str(comp_eval[comp](IVar(i), coeff*IVar(j))))
-        return "{" + " or ".join(cstrs) + "}"
+        return '{' + ' or '.join(cstrs) + '}'
 
     def __repr__(self):
         return str(self)

@@ -79,7 +79,6 @@ eps = Var('eps')
 
 f = Func('f')
 exp = Func('exp')
-abs2 = Func('abs')
 ceil = Func('ceil')
 
 examples = []
@@ -188,9 +187,9 @@ examples.append(Example(
 
 # in the paper
 examples.append(Example(
-    axioms = [Forall([x,y], abs2(x + y) <= abs2(x) + abs2(y))],
-    hyps = [i >= 0, abs2(f(y) - f(x)) < 1 / (2 * (i + 1)), abs2(f(z) - f(y)) < 1 / (2 * (i + 1))],
-    conc = abs2(f(z) - f(x)) < 1 / (i + 1)
+    axioms = [Forall([x,y], abs(x + y) <= abs(x) + abs(y))],
+    hyps = [i >= 0, abs(f(y) - f(x)) < 1 / (2 * (i + 1)), abs(f(z) - f(y)) < 1 / (2 * (i + 1))],
+    conc = abs(f(z) - f(x)) < 1 / (i + 1)
 ))
 
 #

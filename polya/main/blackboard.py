@@ -146,12 +146,7 @@ class Blackboard():
             elif isinstance(t, terms.MulTerm):
                 new_def = terms.MulTerm([terms.MulPair(self.term_name(a.term), a.exponent)
                                          for a in t.args])
-            elif isinstance(t, terms.AbsTerm):
-                new_def = terms.AbsTerm(self.term_name(t.args[0]))
-            elif isinstance(t, terms.MinTerm):
-                new_def = terms.MinTerm([terms.STerm(a.coeff, self.term_name(a.term))
-                                         for a in t.args])
-            elif isinstance(t, terms.AppTerm):
+            elif isinstance(t, terms.FuncTerm):
                 new_def = terms.FuncTerm(t.func_name, [terms.STerm(a.coeff, self.term_name(a.term))
                                                        for a in t.args])
             else:
