@@ -28,7 +28,7 @@ Polya can make use of more efficient geometric methods to handle additive and mu
 
     Note: there are bugs in the versions of lrs and redund found in some package managers. When you download the binaries in Unix, you may have to set the executable flag:
 
-    chmod a+x lrs redund
+        chmod a+x lrs redund
 
 3. David Avis' [lrs and redund](http://cgm.cs.mcgill.ca/~avis/C/lrs.html). 
 
