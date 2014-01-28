@@ -713,38 +713,3 @@ class Blackboard():
 
         st += '\n******\n'
         return st
-
-####################################################################################################
-#
-# Tests
-#
-####################################################################################################
-
-if __name__ == '__main__':
-
-    # can change 'normal' to 'quiet' or 'low'
-    messages.set_verbosity(messages.normal)
-
-    u, v, w, x, y, z = terms.Vars('u, v, w, x, y, z')
-    f = terms.Func('f')
-    g = terms.Func('g')
-
-    B = Blackboard()
-
-    B.assert_clause(x > y, z != 0, x < y)
-
-    B.assume(x < y)
-    B.assume(y > 4 * x)
-    B.assume(y < -x)
-    B.assume(x < 0)
-    B.assume(x + 0 < f(x, y, z))
-    B.assume((x + y) + (z + x) == 2 * (x + y) * w)
-    B.assume(2 * ((x + y) ** 5) * g(x) * (3 * (x * y + f(x) + 2 + w) ** 2) >=
-            (u + 3 * v + u + v + x) ** 2)
-    B.assume(u + 3 * v !=
-            (x + (y * z) ** 5 + (3 * u + 2 * v) ** 2) ** 4 * (
-                u + 3 * v + u + v + x) ** 2)
-    B.assume(2 * f(x, y + z) ** 2 == 3 * u * v)
-    B.assume(-2 * (x + y) * w >=
-                        (x + (y * z) ** 5 + (3 * u + 2 * v) ** 2) ** 4 * (
-                            u + 3 * v + u + v + x) ** 2)

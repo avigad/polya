@@ -189,7 +189,7 @@ class Term:
         return MulTerm([MulPair(self, n)])
 
     def __abs__(self):
-        return AbsTerm(STerm(1, self))
+        return FuncTerm('abs', [STerm(1, self)])
 
     def __lt__(self, other):
         return TermComparison(self, LT, other)
@@ -445,35 +445,24 @@ class MulTerm(AppTerm):
         return MulTerm([a.substitute(assn) for a in self.args])
 
 
-def functerm_default_canonizer(func_name, args):
-    return STerm(1, FuncTerm(func_name, [a.canonize() for a in args]))
-
-
 class FuncTerm(AppTerm):
 
-    def __init__(self, func_name, args, canonizer = functerm_default_canonizer):
+    def __init__(self, func_name, args):
         AppTerm.__init__(self, func_name, args, key=(90, func_name))
-        self.canonizer = canonizer
 
     def pretty_print(self):
         return ATOM, '{0}({1})'.format(self.func_name,
                                        ', '.join([a.pretty_print()[1] for a in self.args]))
 
     def canonize(self):
-        return self.canonizer(self.func_name, self.args)
+        if self.func_name == 'abs':
+            carg = self.args[0].canonize()
+            return STerm(abs(carg.coeff), FuncTerm('abs', [STerm(1, carg.term)]))
+        else:
+            return STerm(1, FuncTerm(self.func_name, [a.canonize() for a in self.args]))
 
     def substitute(self, assn):
         return FuncTerm(self.func_name, [a.substitute(assn) for a in self.args])
-
-
-class AbsTerm(FuncTerm):
-
-    def __init__(self, arg):
-        FuncTerm.__init__(self, 'abs', [arg])
-
-    def canonize(self):
-        carg = self.args[0].canonize()
-        return STerm(abs(carg.coeff), AbsTerm(STerm(1, carg.term)))
 
 
 class Func():
@@ -486,7 +475,7 @@ class Func():
       print f(x, y, z)
     """
 
-    def __init__(self, name, arity=None, canonizer=functerm_default_canonizer):
+    def __init__(self, name, arity=None):
         self.name = name
         self.arity = arity
 
@@ -627,7 +616,7 @@ class STerm:
         return STerm(self.coeff, self.term.substitute(assn))
 
     def __abs__(self):
-        return AbsTerm(self)
+        return FuncTerm('abs', [self])
 
     def __lt__(self, other):
         return TermComparison(self, LT, other)
