@@ -247,7 +247,6 @@ def mul_fm_eq_elim(coeff, term, B):
         mat.append(urow)
 
         rows_i = copy.copy(mat)
-        print rows_i
         for i in range(1, B.num_terms):
             rows_j = copy.copy(rows_i)
             for j in range(i+1, B.num_terms):
