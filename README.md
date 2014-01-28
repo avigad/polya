@@ -35,7 +35,7 @@ From the examples folder, you can also try some sample problems directly from th
     
 for a list of problems,
 
-    python sample_problems 2 5 7
+    python sample_problems.py 2 5 7
     
 to run Polya on problems 2, 5, and 7 sequentially, and 
 
@@ -43,7 +43,7 @@ to run Polya on problems 2, 5, and 7 sequentially, and
     
 to run Polya on all of the sample problems. You can use the flag "-v" for a more verbose output that shows each module's assertions:
 
-    python sample_problems -v 2 5 7
+    python sample_problems.py -v 2 5 7
     python sample_problems.py -v test_all
     
 If the geometric packages are installed, these are used by default. You can force the use of the Fourier-Motzkin modules instead by adding the switch "-fm" anywhere on the command line.
