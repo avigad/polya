@@ -221,7 +221,8 @@ class Solver:
         """
         Adds multiple comparisons to the Solver's blackboard.
         """
-        if isinstance(c[0], Forall):
+        #TODO: this is a horrible hack!
+        if len(c) > 0 and isinstance(c[0], Forall):
             for a in c:
                 self.add_axiom(a)
         else:
