@@ -126,7 +126,6 @@ def run_modules(B, *modules):
             for m in modules:
                 messages.announce(B.info_dump(), messages.DEBUG)
                 m.update_blackboard(B)
-
         return False
     except Contradiction as e:
         messages.announce(e.msg+'\n', messages.ASSERTION)
