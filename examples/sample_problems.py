@@ -103,7 +103,7 @@ examples.append(Example(
     comment='Discussed in Avigad, Lewis, and Roux (2014)'
 ))
 
-examples.append(Example(
+examples.append(Example( # this is repeated above: example 2?
     hyps=[x > 1],
     conc=((1 + y**2) * x >= 1 + y**2)
 ))
@@ -159,16 +159,14 @@ examples.append(Example(
     axioms=[Forall([x, y], f(x + y) == f(x) * f(y))],
     hyps=[f(a) > 2, f(b) > 2],
     conc=(f(a + b) > 4),
-    comment='Discussed in Avigad, Lewis, and Roux (2014)',
-    omit=True
+    comment='Discussed in Avigad, Lewis, and Roux (2014)'
 ))
 
 examples.append(Example(
     axioms=[Forall([x, y], f(x + y) == f(x) * f(y))],
     hyps=[f(a + b) > 2, f(c + d) > 2],
     conc=(f(a + b + c + d) > 4),
-    comment='Discussed in Avigad, Lewis, and Roux (2014)',
-    omit=True
+    comment='Discussed in Avigad, Lewis, and Roux (2014)'
 ))
 
 examples.append(Example(
