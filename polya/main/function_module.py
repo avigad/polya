@@ -282,6 +282,8 @@ def mul_gauss_eq_elim(coeff, term, B):
                 except StopIteration:
                     if rows_i[-1][i] != 0:  # there is a t_i in u, and nowhere else.
                         raise NoTermException
+                    else:
+                        continue
 
             rows_i = elim_var_mul(i, r, [row for row in rows_i if row is not r])
         raise NoTermException
