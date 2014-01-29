@@ -9,8 +9,7 @@
 #
 # Examples for Polya.
 #
-# TODO: improve command line interface, or example, to set verbosity, include a range, omit
-# examples, print timing, etc.
+# TODO: improve command line interface
 #
 ####################################################################################################
 
@@ -18,8 +17,6 @@
 from polya import *
 import sys
 import timeit
-# TODO: get rid of this
-#import polya.main.configure as configure
 
 
 class Example:
