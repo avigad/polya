@@ -88,7 +88,7 @@ def set_solver_type(s):
     else:
         messages.announce('Error: {0!s} is not in the list of possible arithmetic '
                                'solvers'.format(s), messages.INFO)
-        messages.announce('solver options = {0!s}'.format(solver_options))
+        messages.announce('solver options = {0!s}'.format(solver_options), messages.INFO)
 
 
 ####################################################################################################
