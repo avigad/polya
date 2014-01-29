@@ -2,85 +2,194 @@
 % which can in particular serve as input for MetiTarski
 
 
-fof('ineq_3', conjecture, (
-              ![X,Y,U,V] : 
-              ((0 < U & U < V & V < 1 & 2 <= X & X <= Y)
-              => 2*U^2*X < V*Y^2))
-).
+%fof('ineq_1', conjecture, (
+%              ![X,Y,U,V] : 
+%              ((0 < U & U < V & V < 1 & 2 <= X & X <= Y)
+%              => 2*U^2*X < V*Y^2))
+%).
+%
+%%OUTPUT:
+%SZS status Theorem for metitarski_problems.tptp
+%Processor time: 0.016 = 0.008 (Metis) + 0.008 (RCF)
+%Maximum weight in proof search: 1
 
-fof('ineq_4', conjecture, (
-              ![X,Y] :
-              (X > 1 => (1 + Y^2)*X > 1 + Y^2)
-)).
 
-fof('ineq_5', conjecture, (
-              ![X] :
-              (0 < X & X < 1 
-              => 1/(1-X) < 1/(1-X^2))
-)).
 
-fof('f_non_decr', axiom, (
-                  ![X,Y] :
-                  (X <= Y => f(X) <= f(Y))
-)).
+%fof('ineq_2', conjecture, (
+%              ![X,Y] :
+%              (X > 1 => (1 + Y^2)*X > 1 + Y^2)
+%)).
+%
+%%OUTPUT:
+%SZS status Theorem for metitarski_problems.tptp
+%Processor time: 0.004 = 0.004 (Metis) + 0.000 (RCF)
+%Maximum weight in proof search: 1
 
-fof('ineq_6', conjecture, (
-              ![X,Y,U,V] :
-              ((U < V & X <= Y)
-              => U + f(X) <= V + f(Y) )
-)).
+%fof('ineq_3', conjecture, (
+%              ![X] :
+%              (0 < X & X < 1 
+%              => 1/(1-X) > 1/(1-X^2))
+%)).
+%
+%%OUTPUT:
+%SZS status Theorem for metitarski_problems.tptp
+%Processor time: 0.020 = 0.008 (Metis) + 0.012 (RCF)
+%Maximum weight in proof search: 310
 
-fof('f_leq_1', axiom, (
-               ![X] : 
-               (f(X) <= 1)
-)).
 
-fof('ineq_7', conjecture, (
-              ![X,U,V,W] :
-              ((U < V & 0 < W)
-              => U + W*f(X) < V + W)
-)).
 
-fof('ineq_8', conjecture, (
-              ![X,Y,U,V] : 
-              ((0 < X & X < Y & U < V)
-              => 2*U + exp(1+X+X^4) < 2*V + exp(1+Y+Y^4))
-)).
+%fof('f_non_decr', axiom, (
+%                  ![X,Y] :
+%                  (X <= Y => f(X) <= f(Y))
+%)).
+%fof('ineq_4', conjecture, (
+%              ![X,Y,U,V] :
+%              ((U < V & X <= Y)
+%              => U + f(X) <= V + f(Y) )
+%)).
+%
+%%OUTPUT:
+%******** WARNING : Unrecognized Special Function ********
+%f
+%SZS status GaveUp for metitarski_problems.tptp
+%Processor time: 0.064 = 0.056 (Metis) + 0.008 (RCF)
+%Maximum weight in proof search: 1580
 
-fof('ineq_9', conjecture, (
-              ![N,X,K,EPS,C]:
-              ((N < (K/2)*X & 0 < C & 0 < EPS & EPS < 1)
-              => (1 + EPS/(3*(C + 3)))*N < K * X)
-)).
 
- fof('ineq_10', conjecture, (
-                ![X,Y] : 
-                ((0 < X & X < Y)
-                => (1+X^2)/(2+Y)^17 < (1+Y^2)/(2+X)^10)
- )).
 
- fof('ineq_11', conjecture, (         
-                 ![X,Y] : 
-                ((0 < X & X < Y)
-                => (1+X^2)/(2+exp(Y)) >= (1+Y^2)/(2+exp(X)))
- )).
+%fof('f_leq_1', axiom, (
+%               ![X] : 
+%               (f(X) <= 1)
+%)).
+%
+%fof('ineq_5', conjecture, (
+%              ![X,U,V,W] :
+%              ((U < V & 0 < W)
+%              => U + W*f(X) < V + W)
+%)).
+%
+%%OUTPUT:
+%******** WARNING : Unrecognized Special Function ********
+%f
+%SZS status GaveUp for metitarski_problems.tptp
+%Processor time: 0.064 = 0.056 (Metis) + 0.008 (RCF)
+%Maximum weight in proof search: 1580
 
- fof('ineq_12', conjecture, (
-                  ![X,Y] : 
-                 ((0 < X & X < 1 & 0 < Y & Y < 1)
-                 => (X+Y) - X*Y > 0)
- )).
 
- fof('ineq_13', conjecture, (
-                  ![X,Y] : 
-                 ((0 < X & X < 1 & 0 < Y & Y < 1)
-                 => (X^100+Y^100) - X^100*Y^100 > 0)
- )).
 
- fof('ineq_14', conjecture, (
-                ![X] :
-                (X^2 + 2*X + 1 >= 0)
- )).
+%fof('ineq_9', conjecture, (
+%              ![X,Y,U,V] : 
+%              ((0 < X & X < Y & U < V)
+%              => 2*U + exp(1+X+X^4) < 2*V + exp(1+Y+Y^4))
+%)).
+%
+%%OUTPUT:
+%SZS status GaveUp for metitarski_problems.tptp
+%Processor time: 0.076 = 0.072 (Metis) + 0.004 (RCF)
+%Maximum weight in proof search: 1580
+
+
+
+
+%fof('ineq_10', conjecture, (
+%              ![N,X,K,EPS,C]:
+%              ((N < (K/2)*X & 0 < C & 0 < EPS & EPS < 1)
+%              => (1 + EPS/(3*(C + 3)))*N < K * X)
+%)).
+%
+%%OUTPUT:
+%SZS status GaveUp for metitarski_problems.tptp
+%Processor time: 0.080 = 0.060 (Metis) + 0.020 (RCF)
+%Maximum weight in proof search: 1580
+
+
+
+
+%fof('ineq_11', conjecture, (
+%                ![X,Y] : 
+%                ((0 < X & X < Y)
+%                => (1+X^2)/(2+Y)^17 < (1+Y^2)/(2+X)^10)
+%)).
+%
+%%OUTPUT:
+%SZS status Theorem for metitarski_problems.tptp
+%Processor time: 0.428 = 0.024 (Metis) + 0.404 (RCF)
+%Maximum weight in proof search: 310
+
+
+%fof('exp_incr', axiom, (
+%                  ![X,Y] :
+%                  (X < Y => exp(X) < exp(Y))
+%)).
+%
+%
+%fof('ineq_12', conjecture, (         
+%                 ![X,Y] : 
+%                ((0 < X & X < Y)
+%                => (1+X^2)/(2+exp(Y)) >= (1+Y^2)/(2+exp(X)))
+%)).
+%
+%OUTPUT:
+%SZS status GaveUp for metitarski_problems.tptp
+%Processor time: 0.076 = 0.076 (Metis) + 0.000 (RCF)
+%Maximum weight in proof search: 1580
+
+
+
+
+%fof('ineq_15', conjecture, (
+%                 ![X,Y] : 
+%                ((0 < X & X < 1 & 0 < Y & Y < 1)
+%                => (X+Y) - X*Y > 0)
+%)).
+%
+%%OUTPUT:
+%SZS status Theorem for metitarski_problems.tptp
+%Processor time: 0.020 = 0.012 (Metis) + 0.008 (RCF)
+%Maximum weight in proof search: 1
+        
+
+
+
+%fof('ineq_15_prime', conjecture, (
+%                 ![X,Y] : 
+%                ((0 < X & X < 1 & 0 < Y & Y < 1)
+%                => (X^120+Y^120) - X^120*Y^120 > 0)
+%)).
+%
+%%OUTPUT:
+%SZS status Theorem for metitarski_problems.tptp
+%Processor time: 13.089 = 0.044 (Metis) + 13.045 (RCF)
+%Maximum weight in proof search: 108
+%NOTE: Exponential time increase with the size of the
+%exponents.
+
+%fof('ineq_18', conjecture, (
+%               ![X,Y,Z] :
+%               ((X > 0 & Y < Z) =>
+%               (X*Y < X*Z))
+%)).
+%%OUTPUT
+%SZS status Theorem for metitarski_problems.tptp
+%Processor time: 0.020 = 0.008 (Metis) + 0.012 (RCF)
+%Maximum weight in proof search: 0
+
+
+%fof('ineq_19', conjecture, (
+%               ![X] :
+%               (X^2 + 2*X + 1 >= 0)
+%)).
+%
+%%OUTPUT:
+%SZS status Theorem for metitarski_problems.tptp
+%Processor time: 0.004 = 0.004 (Metis) + 0.000 (RCF)
+%Maximum weight in proof search: 1
+
+
+
 
 include('Axioms/general.ax').
 include('Axioms/exp-general.ax').
+%include('Axioms/exp-extended.ax').
+%include('Axioms/exp-lower.ax').
+%include('Axioms/exp-upper.ax').
