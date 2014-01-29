@@ -19,8 +19,9 @@ def round_down(f):
     Returns the closest fractional approximation to f from below with denominator <= precision.
     """
     if f.denominator > precision:
-        return fractions.Fraction(int(math.floor(float(f * precision))),
-                                  precision)
+        return fractions.Fraction((f.numerator * precision) // f.denominator, precision)
+        # it is hard to tell which is faster
+        # return fractions.Fraction(int(math.floor(f * precision)), precision)
     else:
         return f
 
@@ -31,8 +32,8 @@ def round_up(f):
     Returns the closest fractional approximation to f from above with denominator <= precision.
     """
     if f.denominator > precision:
-        return fractions.Fraction(int(math.ceil(float(f * precision))),
-                                  precision)
+        return fractions.Fraction(((f.numerator * precision) // f.denominator) + 1, precision)
+        # return fractions.Fraction(int(math.ceil(f * precision)), precision)
     else:
         return f
 
