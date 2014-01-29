@@ -118,6 +118,17 @@ def z3example10():
     print s.check()
 
 
+def z3example10a():
+    # not solved
+    exp = z3.Function('exp', z3.RealSort(), z3.RealSort())
+    s = z3.Solver()
+    s.add(0 < x, x < y, u < v, 2*u + exp(1 + x + x**4) >= 2*v + exp(1 + y + y**4))
+    s.add(z3.ForAll([x, y], z3.Implies(x<y, exp(x) < exp(y))))
+    s.add(z3.ForAll([x, y], z3.Implies(exp(x) < exp(y), x<y)))
+    s.add(z3.ForAll([x, y], z3.Implies(z3.And(x**4 < y**4, 0 <= y), x < y)))
+    print s.check()
+
+
 def z3example11():
     # z3 times out here.
     print 'TIMES OUT- SKIPPED'
@@ -168,6 +179,18 @@ def z3example15():
 
     s.add(z3.ForAll([x, y], z3.And(z3.Implies(x<y, exp(x)<exp(y)),
                                                             exp(x)>0)))
+    print s.check()
+
+
+def z3example15a():
+    # DOES NOT SOLVE
+    exp = z3.Function('exp', z3.RealSort(), z3.RealSort())
+    s = z3.Solver()
+    s.add(0<x, x<y, (1+x**2)/(2+exp(y))>=(2+y**2)/(1+exp(x)))
+
+    s.add(z3.ForAll([x, y], z3.And(z3.Implies(x<y, exp(x)<exp(y)),
+                                                            exp(x)>0)))
+    s.add(z3.ForAll([x, y], z3.Implies( z3.And(x**2 < y**2, 0 <= y), x < y)))
     print s.check()
 
 
@@ -229,7 +252,26 @@ def z3example21():
     print s.check()
 
 
+def z3example22():
+    # does not solve
+    s = z3.Solver()
+    exp = z3.Function('exp', z3.RealSort(), z3.RealSort())
+    s.add(0 < x, 3 < y, u < v, 2*u + exp(10) >= 2*v + exp(1 + y**2))
+    s.add(z3.ForAll([x, y], z3.And(z3.Implies(x<y, exp(x)<exp(y)), exp(x)>0)))
+    print s.check()
 
+
+def z3example23():
+    # solves with exponent 10, not with exponent 100
+    s = z3.Solver()
+    s.add((u**6+1)**100 >= (u**6+2)**100)
+    print s.check()
+
+
+def z3example24():
+    s = z3.Solver()
+    s.add(u>0, v>0, (u**5+v**5+1)**19 >= (u**5+v**5+2)**19)
+    print s.check()
 
 
 def test_time(example):

@@ -181,6 +181,8 @@ class Solver:
             if len(axioms) > 0:
                 modules = [FunctionModule(axioms)] + modules
                 self.fm = modules[0]
+
+        self.contradiction = False
         self.assume(*assertions)
         self.modules = modules
 
@@ -192,13 +194,19 @@ class Solver:
         Searches for a contradiction in what has been asserted to the solver.
         Returns True if a contradiction is found, false otherwise.
         """
-        return run_modules(self.B, *self.modules)
+        if self.contradiction:
+            return True
+        self.contradiction = run_modules(self.B, *self.modules)
+        return self.contradiction
 
     def prove(self, claim):
         """
         Tries to establish the truth of TermComparison claim from what is already known.
         Returns true if claim follows from the current blackboard, false otherwise.
         """
+        if self.contradiction:
+            return True
+
         B = copy.deepcopy(self.B)
         a = terms.TermComparison(claim.term1, terms.comp_negate(claim.comp), claim.term2)
         try:
@@ -215,6 +223,7 @@ class Solver:
         try:
             self.B.assert_comparison(c)
         except Contradiction as e:
+            self.contradiction = True
             messages.announce(e.msg, messages.ASSERTION)
 
     def add(self, *c):
@@ -228,6 +237,7 @@ class Solver:
                 try:
                     self.B.add(item)
                 except Contradiction as e:
+                    self.contradiction = True
                     messages.announce(e.msg, messages.ASSERTION)
 
     def assume(self, *c):
