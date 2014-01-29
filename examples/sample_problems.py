@@ -78,9 +78,11 @@ f = Func('f')
 exp = Func('exp')
 ceil = Func('ceil')
 
-examples = []
+examples = list()
 
+#
 # examples from the paper
+#
 
 examples.append(Example(
     hyps=[0 < u, u < v, v < 1, 2 <= x, x <= y],
@@ -89,18 +91,6 @@ examples.append(Example(
 ))
 
 examples.append(Example(
-    hyps=[x > 1],
-    conc=(1 + y**2 * x >= 1 + y**2),
-    comment='Polya fails on this one, but see the next problem. Splitting on sign of y will work.'
-))
-
-examples.append(Example(
-    hyps=[x > 1, z == y**2],
-    conc=(1 + z * x >= 1 + z),
-    comment='Discussed in Avigad, Lewis, and Roux (2014)'
-))
-
-examples.append(Example( # this is repeated above: example 2?
     hyps=[x > 1],
     conc=((1 + y**2) * x >= 1 + y**2)
 ))
@@ -217,11 +207,52 @@ examples.append(Example(
     comment='Discussed in Avigad, Lewis, and Roux (2014)'
 ))
 
+#
+# cases where Polya fails
+#
+
+examples.append(Example(
+    hyps=[0 < x, y < z],
+    conc=(x * y < x * z),
+    comment='Polya fails here. Splitting on y and z will solve this.'
+))
+
+examples.append(Example(
+    hyps=[0 < x, y < z, y < 0, z > 0],
+    conc=(x * y < x * z)
+))
+
+examples.append(Example(
+    hyps=[0 < x, y < z, y == 0, z > 0],
+    conc=(x * y < x * z)
+))
+
+examples.append(Example(
+    hyps=[x > 1],
+    conc=(1 + y**2 * x >= 1 + y**2),
+    comment='Polya fails here. Splitting on y will solve this. See also the next example.'
+))
+
+examples.append(Example(
+    hyps=[x > 1, z == y**2],
+    conc=(1 + z * x >= 1 + z)
+))
+
+# Polya does not refute the hypotheses in the next example, although there is a contradiction.
+# we get t6 = t1*t3*t5, t10=t3*t5, t1>0, t10>0, t6<0.
+# but because the signs of t1 and t3 are unknown, the mul routine cannot find that contradiction.
+examples.append(Example(
+    axioms=[Forall([x, y], f((x * y) / 2) <= (f(x) * f(y)) / 2)],
+    hyps=[z > 0, z * f(x) * f(y) < 0, 4 * z * f(x * y / 2) > 0],
+    comment='Polya fails here. Need a split on f(x).'
+))
+
 examples.append(Example(
     hyps=[x ** 2 + 2 * x + 1 < 0],
     comment='An example where the method does not terminate.',
     omit=True
 ))
+
 
 #
 # arithmetic examples
@@ -274,10 +305,6 @@ examples.append(Example(
 ))
 
 examples.append(Example(
-    hyps=[a > 0, a < 1, b > 0, b < 1, a + b < a * b]
-))
-
-examples.append(Example(
     hyps=[a <= b * x / 2, 0 < c, 0 < d, d < 1, (1 + d / (3 * (c + 3))) * a >= b * x],
     comment='The hypotheses are consistent.'
 ))
@@ -290,19 +317,40 @@ examples.append(Example(
     hyps=[a**21 > 0, a**3 < 1, b**55 > 0, b < 1, a + b < a * b]
 ))
 
-examples.append(Example(
-    hyps=[0 < x, y < z],
-    conc=(x * y < x * z)
-))
 
 #
 # examples involving function symbols
 #
 
+
+examples.append(Example(
+    hyps=[x == y, f(x) != f(y)]
+))
+
 examples.append(Example(
     axioms=[Forall([x, y], Implies(x < y, f(x) < f(y)))],
     hyps=[a < b],
     conc=(f(a) < f(b))
+))
+
+examples.append(Example(
+    axioms=[Forall([x], f(x) > 0)],
+    hyps=[f(x) < y, y < z, z < f(x)]
+))
+
+examples.append(Example(
+    axioms=[Forall([x, y], f(x * y) == f(x) * f(y)), Forall([x], Implies(x > 2, f(x) < 0))],
+    hyps=[x > 1, y > 2, f(x * y) > 0]
+))
+
+examples.append(Example(
+    axioms=[Forall([x, y], f(x, y, x * y) > 0)],
+    hyps=[f(a, b, c * d) < 0, a > 0, b > 0, a == c, b == d]
+))
+
+examples.append(Example(
+    axioms=[Forall([x, y], f(x, y, x + y) > 0)],
+    hyps=[f(e, b, c + d) < 0, a > 0, b > 0, a == c, b == d, a == e]
 ))
 
 examples.append(Example(
@@ -318,40 +366,6 @@ examples.append(Example(
 examples.append(Example(
     axioms=[Forall([x, y], (f(x) + f(y)) / 2 >= f((x + y) / 2))],
     hyps=[z > 0, f(x) + f(y) - z < 0, f((x + y)/2) - 4 * z > 0]
-))
-
-examples.append(Example(
-    axioms=[Forall([x, y], f(x * y) == f(x) * f(y)), Forall([x], Implies(x > 2, f(x) < 0))],
-    hyps=[x > 1, y > 2, f(x * y) > 0]
-))
-
-# Polya does not refute the hypotheses in the next example, although there is a contradiction.
-# we get t6 = t1*t3*t5, t10=t3*t5, t1>0, t10>0, t6<0.
-# but because the signs of t1 and t3 are unknown, the mul routine cannot find that contradiction.
-examples.append(Example(
-    axioms=[Forall([x, y], f((x * y) / 2) <= (f(x) * f(y)) / 2)],
-    hyps=[z > 0, z * f(x) * f(y) < 0, 4 * z * f(x * y / 2) > 0],
-    comment='Polya does not find the contradiction here; it needs to case split on f(x).'
-))
-
-examples.append(Example(
-    axioms=[Forall([x, y], f(x, y, x * y) > 0)],
-    hyps=[f(a, b, c * d) < 0, a > 0, b > 0, a == c, b == d]
-))
-
-examples.append(Example(
-    axioms=[Forall([x, y], f(x, y, x + y) > 0)],
-    hyps=[f(e, b, c + d) < 0, a > 0, b > 0, a == c, b == d, a == e]
-))
-
-
-examples.append(Example(
-    axioms=[Forall([x], f(x) > 0)],
-    hyps=[f(x) < y, y < z, z < f(x)]
-))
-
-examples.append(Example(
-    hyps=[x == y, f(x) != f(y)]
 ))
 
 
@@ -383,7 +397,7 @@ if __name__ == '__main__':
         show_configuration()
         if sys.argv[1] == 'list':
             for i in range(len(examples)):
-                print 'Example #{0!s}'.format(i)
+                print '*** Example {0!s} ***'.format(i)
                 examples[i].show()
         elif sys.argv[1] == 'test_all':
             t = timeit.default_timer()
