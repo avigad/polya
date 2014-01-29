@@ -271,6 +271,7 @@ def derive_info_from_definitions(B):
         if B.implies(key, terms.NE, 0, 0):
             # we have strict information about key already. So everything must have a strict sign.
             for p in B.term_defs[key].args:
+                #print 'from {0} != 0, we get {1} != 0'.format(B.term_defs[key], p.term)
                 B.assert_comparison(p.term != 0)
 
         signs = [mulpair_sign(p) for p in B.term_defs[key].args]

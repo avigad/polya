@@ -33,12 +33,12 @@ def z3example2():
 
 
 def example3():
-    polya.solve(0 < x, x < 1, 1/(1 - x) >= 1/(1 - x**2))
+    polya.solve(0 < x, x < 1, 1/(1 - x) <= 1/(1 - x**2))
 
 
 def z3example3():
     x = z3.Real('x')
-    z3.solve(0 < x, x < 1, 1/(1 - x) >= 1/(1 - x**2))
+    z3.solve(0 < x, x < 1, 1/(1 - x) <= 1/(1 - x**2))
 
 def example4():
     s = polya.Solver()
@@ -51,7 +51,7 @@ def z3example4():
     s = z3.Solver()
     s.add(u < v, x <= y, u + g(x) > v + g(y))
     s.add(z3.ForAll([x, y], z3.Implies(x <= y, g(x) <= g(y))))
-    s.check()
+    print s.check()
 
 
 def example5():
@@ -66,7 +66,7 @@ def z3example5():
     s = z3.Solver()
     s.add(u < v, 0 < w, u + w*g(x) >= v + w)
     s.add(z3.ForAll([x], g(x) <= 1))
-    s.check()
+    print s.check()
 
 def example6():
     exp = polya.Func('exp')
@@ -76,21 +76,22 @@ def example6():
     s.check()
 
 def z3example6():
+    # DOES NOT SOLVE
     u, v, w, x, y = z3.Reals('u v w x y')
     exp = z3.Function('exp', z3.RealSort(), z3.RealSort())
     s = z3.Solver()
     s.add(0 < x, x < y, u < v, 2*u + exp(1 + x + x**4) >= 2*v + exp(1 + y + y**4))
     s.add(z3.ForAll([x, y], z3.Implies(x<y, exp(x) < exp(y))))
-    s.check()
+    print s.check()
 
 def example7():
     n, K, e, C = polya.Vars('n K e C')
-    polya.solve(n <= (K/2)*x, 0 < C, 0 < e < 1, (1 + e/(3*(C + 3)))*n >= K*x)
+    polya.solve(n <= (K/2)*x, 0 < C, 0 < e, e < 1, 0 <= n, (1 + e/(3*(C + 3)))*n >= K*x)
 
 
 def z3example7():
     n, K, e, C, x = z3.Reals('n K e C x')
-    z3.solve(n <= (K/2)*x, 0 < C, 0 < e < 1, (1 + e/(3*(C + 3)))*n >= K*x)
+    z3.solve(n <= (K/2)*x, 0 < C, 0 < e, e < 1, 0 <= n, (1 + e/(3*(C + 3)))*n >= K*x)
 
 
 def example8():
@@ -117,6 +118,7 @@ def example9():
 
 
 def z3example9():
+    # DOES NOT SOLVE
     x, y = z3.Reals('x y')
     exp = z3.Function('exp', z3.RealSort(), z3.RealSort())
     s = z3.Solver()
@@ -124,7 +126,7 @@ def z3example9():
 
     s.add(z3.ForAll([x, y], z3.And(z3.Implies(x<y, exp(x)<exp(y)),
                                                             exp(x)>0)))
-    s.check()
+    print s.check()
 
 
 def example10():
@@ -141,10 +143,12 @@ def example11():
 
 
 def z3example11():
+    # DOES NOT SOLVE
     x, y = z3.Reals('x y')
     z3.solve(x>0, x<1, y>0, y<1, x**1000 + y**1000 - x**1000*y**1000 <= 0)
 
 def example12():
+    # DOES NOT SOLVE
     polya.solve(x**2 + 2*x + 1 < 0)
 
 
@@ -368,10 +372,10 @@ def z3test10():
 
 t = timeit.default_timer()
 
-test10()
+#test10()
 #z3test10()
 
+example7()
 
 
-
-print round(timeit.default_timer() - t, 3)
+#zprint round(timeit.default_timer() - t, 3)

@@ -426,24 +426,24 @@ class Blackboard():
 
         self.inequalities[i, j] = new_comps
 
-        # check to see if new sign info is known.
-        if self.sign(i) == 0 and len(self.inequalities[i, j]) == 2:
-            i_g_0 = geometry.Halfplane(0, -1, True)
-            cw_a = i_g_0.compare_hp(self.inequalities[i, j][0])
-            cw_b = i_g_0.compare_hp(self.inequalities[i, j][1])
-            if cw_a > 0 > cw_b:
-                self.assert_zero_inequality(i, terms.GT)
-            elif cw_a < 0 < cw_b:
-                self.assert_zero_inequality(i, terms.LT)
-
-        if self.sign(j) == 0 and len(self.inequalities[i, j]) == 2:
-            j_g_0 = geometry.Halfplane(1, 0, True)
-            cw_a = j_g_0.compare_hp(self.inequalities[i, j][0])
-            cw_b = j_g_0.compare_hp(self.inequalities[i, j][1])
-            if cw_a > 0 > cw_b:
-                self.assert_zero_inequality(j, terms.GT)
-            elif cw_a < 0 < cw_b:
-                self.assert_zero_inequality(j, terms.LT)
+        # # check to see if new sign info is known.
+        # if self.sign(i) == 0 and len(self.inequalities[i, j]) == 2:
+        #     i_g_0 = geometry.Halfplane(0, -1, True)
+        #     cw_a = i_g_0.compare_hp(self.inequalities[i, j][0])
+        #     cw_b = i_g_0.compare_hp(self.inequalities[i, j][1])
+        #     if cw_a > 0 > cw_b:
+        #         self.assert_zero_inequality(i, terms.GT)
+        #     elif cw_a < 0 < cw_b:
+        #         self.assert_zero_inequality(i, terms.LT)
+        #
+        # if self.sign(j) == 0 and len(self.inequalities[i, j]) == 2:
+        #     j_g_0 = geometry.Halfplane(1, 0, True)
+        #     cw_a = j_g_0.compare_hp(self.inequalities[i, j][0])
+        #     cw_b = j_g_0.compare_hp(self.inequalities[i, j][1])
+        #     if cw_a > 0 > cw_b:
+        #         self.assert_zero_inequality(j, terms.GT)
+        #     elif cw_a < 0 < cw_b:
+        #         self.assert_zero_inequality(j, terms.LT)
 
         if (i, j) in self.disequalities:
             diseqs = self.disequalities.pop(i, j)
@@ -511,16 +511,23 @@ class Blackboard():
                 else:
                     new_comps = old_comps
             self.inequalities[p] = new_comps
-            self.tracker.update((i, j))
+            self.tracker.update(p)
 
             if self.sign(j) == 0 and len(self.inequalities[p]) == 2:
                 j_g_0 = geometry.Halfplane(1, 0, True) if i < j else geometry.Halfplane(0, -1, True)
                 cw_a = j_g_0.compare_hp(self.inequalities[p][0])
                 cw_b = j_g_0.compare_hp(self.inequalities[p][1])
+                strong = self.inequalities[p][0].strong and self.inequalities[p][1].strong
                 if cw_a > 0 > cw_b:
-                    new_zero_ineqs.append(terms.IVar(j) > 0)
+                    if strong:
+                        new_zero_ineqs.append(terms.IVar(j) > 0)
+                    else:
+                        new_zero_ineqs.append(terms.IVar(j) >= 0)
                 elif cw_a < 0 < cw_b:
-                    new_zero_ineqs.append(terms.IVar(j) < 0)
+                    if strong:
+                        new_zero_ineqs.append(terms.IVar(j) < 0)
+                    else:
+                        new_zero_ineqs.append(terms.IVar(j) < 0)
         for c in new_zero_ineqs:
             self.assert_comparison(c)
 

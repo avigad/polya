@@ -221,15 +221,14 @@ class Solver:
         """
         Adds multiple comparisons to the Solver's blackboard.
         """
-        # TODO: this is a hack!
-        if len(c) > 0 and isinstance(c[0], Forall):
-            for a in c:
-                self.add_axiom(a)
-        else:
-            try:
-                self.B.add(*c)
-            except Contradiction as e:
-                messages.announce(e.msg, messages.ASSERTION)
+        for item in c:
+            if isinstance(item, Forall):
+                self.add_axiom(item)
+            else:
+                try:
+                    self.B.add(item)
+                except Contradiction as e:
+                    messages.announce(e.msg, messages.ASSERTION)
 
     def assume(self, *c):
         self.add(*c)

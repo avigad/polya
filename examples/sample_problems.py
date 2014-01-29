@@ -287,7 +287,7 @@ examples.append(Example(
 
 examples.append(Example(
     hyps = [n <= (K / 2) * x, 0 < c, 0 <= n, 0 < eps, eps < 1],
-    conc = (1 + eps / (3 * (c + 3))) * n < K * x
+    conc = (1 + eps / (3 * (c + 3))) * n <= K * x
 ))
 
 
