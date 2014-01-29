@@ -1,242 +1,142 @@
-<?xml version="1.0" encoding="utf-8" ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.12: http://docutils.sourceforge.net/" />
-<title>A Quick Start for Polya</title>
-<style type="text/css">
-
-.hll { background-color: #ffffcc }
-.c { color: #888888 } /* Comment */
-.err { color: #FF0000; background-color: #FFAAAA } /* Error */
-.k { color: #008800; font-weight: bold } /* Keyword */
-.o { color: #333333 } /* Operator */
-.cm { color: #888888 } /* Comment.Multiline */
-.cp { color: #557799 } /* Comment.Preproc */
-.c1 { color: #888888 } /* Comment.Single */
-.cs { color: #cc0000; font-weight: bold } /* Comment.Special */
-.gd { color: #A00000 } /* Generic.Deleted */
-.ge { font-style: italic } /* Generic.Emph */
-.gr { color: #FF0000 } /* Generic.Error */
-.gh { color: #000080; font-weight: bold } /* Generic.Heading */
-.gi { color: #00A000 } /* Generic.Inserted */
-.go { color: #888888 } /* Generic.Output */
-.gp { color: #c65d09; font-weight: bold } /* Generic.Prompt */
-.gs { font-weight: bold } /* Generic.Strong */
-.gu { color: #800080; font-weight: bold } /* Generic.Subheading */
-.gt { color: #0044DD } /* Generic.Traceback */
-.kc { color: #008800; font-weight: bold } /* Keyword.Constant */
-.kd { color: #008800; font-weight: bold } /* Keyword.Declaration */
-.kn { color: #008800; font-weight: bold } /* Keyword.Namespace */
-.kp { color: #003388; font-weight: bold } /* Keyword.Pseudo */
-.kr { color: #008800; font-weight: bold } /* Keyword.Reserved */
-.kt { color: #333399; font-weight: bold } /* Keyword.Type */
-.m { color: #6600EE; font-weight: bold } /* Literal.Number */
-.s { background-color: #fff0f0 } /* Literal.String */
-.na { color: #0000CC } /* Name.Attribute */
-.nb { color: #007020 } /* Name.Builtin */
-.nc { color: #BB0066; font-weight: bold } /* Name.Class */
-.no { color: #003366; font-weight: bold } /* Name.Constant */
-.nd { color: #555555; font-weight: bold } /* Name.Decorator */
-.ni { color: #880000; font-weight: bold } /* Name.Entity */
-.ne { color: #FF0000; font-weight: bold } /* Name.Exception */
-.nf { color: #0066BB; font-weight: bold } /* Name.Function */
-.nl { color: #997700; font-weight: bold } /* Name.Label */
-.nn { color: #0e84b5; font-weight: bold } /* Name.Namespace */
-.nt { color: #007700 } /* Name.Tag */
-.nv { color: #996633 } /* Name.Variable */
-.ow { color: #000000; font-weight: bold } /* Operator.Word */
-.w { color: #bbbbbb } /* Text.Whitespace */
-.mf { color: #6600EE; font-weight: bold } /* Literal.Number.Float */
-.mh { color: #005588; font-weight: bold } /* Literal.Number.Hex */
-.mi { color: #0000DD; font-weight: bold } /* Literal.Number.Integer */
-.mo { color: #4400EE; font-weight: bold } /* Literal.Number.Oct */
-.sb { background-color: #fff0f0 } /* Literal.String.Backtick */
-.sc { color: #0044DD } /* Literal.String.Char */
-.sd { color: #DD4422 } /* Literal.String.Doc */
-.s2 { background-color: #fff0f0 } /* Literal.String.Double */
-.se { color: #666666; font-weight: bold; background-color: #fff0f0 } /* Literal.String.Escape */
-.sh { background-color: #fff0f0 } /* Literal.String.Heredoc */
-.si { background-color: #eeeeee } /* Literal.String.Interpol */
-.sx { color: #DD2200; background-color: #fff0f0 } /* Literal.String.Other */
-.sr { color: #000000; background-color: #fff0ff } /* Literal.String.Regex */
-.s1 { background-color: #fff0f0 } /* Literal.String.Single */
-.ss { color: #AA6600 } /* Literal.String.Symbol */
-.bp { color: #007020 } /* Name.Builtin.Pseudo */
-.vc { color: #336699 } /* Name.Variable.Class */
-.vg { color: #dd7700; font-weight: bold } /* Name.Variable.Global */
-.vi { color: #3333BB } /* Name.Variable.Instance */
-.il { color: #0000DD; font-weight: bold } /* Literal.Number.Integer.Long */
-
-</style>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; }
+code > span.dt { color: #902000; }
+code > span.dv { color: #40a070; }
+code > span.bn { color: #40a070; }
+code > span.fl { color: #40a070; }
+code > span.ch { color: #4070a0; }
+code > span.st { color: #4070a0; }
+code > span.co { color: #60a0b0; font-style: italic; }
+code > span.ot { color: #007020; }
+code > span.al { color: #ff0000; font-weight: bold; }
+code > span.fu { color: #06287e; }
+code > span.er { color: #ff0000; font-weight: bold; }
+  </style>
+  <link rel="stylesheet" href="pandoc.css" type="text/css" />
 </head>
 <body>
-<div class="document" id="a-quick-start-for-polya">
-<h1 class="title">A Quick Start for Polya</h1>
-
-<div class="section" id="overview">
-<h1>Overview</h1>
-<p>This document outlines basic usage of the Polya Proof Assistant
-Python package.</p>
+<h1 id="a-quick-start-for-polya">A Quick Start for Polya</h1>
+<h2 id="overview">Overview</h2>
+<p>This document outlines basic usage of the Polya Proof Assistant Python package.</p>
 <p>Polya is a Python library that allows the user to express and solve complex inequalities expressed over the real numbers. In particular the aim is to provide a tool that proves <em>intuitively true</em> statements of mathematics, something which many automated tools fail to do.</p>
-</div>
-<div class="section" id="a-basic-example">
-<h1>A basic example</h1>
-<p>We will need to import the polya python package, which
-should be in your python path</p>
-<div class="highlight"><pre><span class="kn">from</span> <span class="nn">polya</span> <span class="kn">import</span> <span class="o">*</span>
-</pre></div>
-<p>Then declare the variables which you wish to use to express your
-inequality:</p>
-<div class="highlight"><pre><span class="n">x</span> <span class="o">=</span> <span class="n">Vars</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">)</span>
-</pre></div>
-<p>You can also declare several variables at once, by separating the
-names with a space:</p>
-<div class="highlight"><pre><span class="n">y</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="n">Vars</span><span class="p">(</span><span class="s">&#39;y z&#39;</span><span class="p">)</span>
-</pre></div>
-<p>Then, to prove inequalities, create a <tt class="docutils literal">Solver</tt> object, and add
-inequalities using the variables and the usual Python operations.</p>
-<div class="highlight"><pre><span class="n">s</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">()</span>
-<span class="n">s</span><span class="o">.</span><span class="n">assume</span><span class="p">(</span><span class="n">x</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
-<span class="n">s</span><span class="o">.</span><span class="n">assume</span><span class="p">(</span><span class="n">y</span> <span class="o">&gt;</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">)</span>
-</pre></div>
-<p>We can check that the inequalities assumed up to this point are
-inconsistent:</p>
-<div class="highlight"><pre><span class="n">s</span><span class="o">.</span><span class="n">check</span><span class="p">()</span>
-</pre></div>
+<h2 id="a-basic-example">A basic example</h2>
+<p>We will need to import the polya python package, which should be in your python path</p>
+<pre class="sourceCode python"><code class="sourceCode python"><span class="ch">from</span> polya <span class="ch">import</span> *</code></pre>
+<p>Then declare the variables which you wish to use to express your inequality:</p>
+<pre class="sourceCode python"><code class="sourceCode python">x = Vars(<span class="st">&#39;x&#39;</span>)</code></pre>
+<p>You can also declare several variables at once, by separating the names with a space:</p>
+<p><code>python y, z = Vars('y z')</code> Then, to prove inequalities, create a <code>Solver</code> object, and add inequalities using the variables and the usual Python operations.</p>
+<pre class="sourceCode python"><code class="sourceCode python">s = Solver()
+s.assume(x &gt; <span class="dv">0</span>)
+s.assume(y &gt; x, y &lt;= <span class="dv">0</span>)</code></pre>
+<p>We can check that the inequalities assumed up to this point are inconsistent:</p>
+<pre class="sourceCode python"><code class="sourceCode python">s.check()</code></pre>
 <p>The output should look something like this:</p>
-<pre class="doctest-block">
-&gt;&gt;&gt; lrs found! (/home/croux/prog/python/polya/polya/polyhedron/lrs)
+<pre><code>&gt;&gt;&gt; lrs found! (/home/croux/prog/python/polya/polya/polyhedron/lrs)
+
 redund found! (/home/croux/prog/python/polya/polya/polyhedron/redund)
+
 Defining t1 := x
   := x
+
 Asserting t1 &gt; 0
   := x &gt; 0
+
 Defining t2 := y
   := y
+
 Asserting t1 &lt; t2
   := x &lt; y
+
 Asserting t2 &gt; 0
   := y &gt; 0
+
 Contradiction: t1 &gt;= t2
   := x &gt;= y
+
 &gt;&gt;&gt; Entering congruence closure module
+
 &gt;&gt;&gt; Entering polyhedron additive module
+
 &gt;&gt;&gt; Entering polyhedron multiplicative module
-False
-</pre>
-<p>You can also add hypotheses to the solver, and ask it to attempt to
-prove a new assume.</p>
-<div class="highlight"><pre><span class="n">s</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">()</span>
-<span class="n">s</span><span class="o">.</span><span class="n">assume</span><span class="p">(</span><span class="n">x</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="n">y</span> <span class="o">&gt;</span> <span class="n">x</span><span class="p">)</span>
-<span class="n">s</span><span class="o">.</span><span class="n">prove</span><span class="p">(</span><span class="n">y</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span>
-</pre></div>
-<p>Which should produce a similar result (though prove returns <tt class="docutils literal">True</tt>
-if the proposition is provable).</p>
-</div>
-<div class="section" id="arithmetic">
-<h1>Arithmetic</h1>
-<p>Of course, Polya is capable of proving inequalities involving sums and
-products:</p>
-<div class="highlight"><pre><span class="n">s</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">()</span>
-<span class="n">s</span><span class="o">.</span><span class="n">assume</span><span class="p">(</span><span class="n">x</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="n">x</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">,</span> <span class="n">y</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="n">z</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="n">y</span> <span class="o">+</span> <span class="n">z</span> <span class="o">&lt;=</span> <span class="n">x</span><span class="p">)</span>
-<span class="n">s</span><span class="o">.</span><span class="n">prove</span><span class="p">(</span><span class="n">z</span><span class="o">**</span><span class="mi">2</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">)</span>
-</pre></div>
-</div>
-<div class="section" id="function-symbols-and-axioms">
-<h1>Function symbols and axioms</h1>
-<p>More generally, it is possible to declare function symbols, and add
-axioms involving them to the set of assumptions.</p>
-<div class="highlight"><pre><span class="n">f</span> <span class="o">=</span> <span class="n">Func</span><span class="p">(</span><span class="s">&#39;f&#39;</span><span class="p">)</span>
 
-<span class="n">s</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">()</span>
+False</code></pre>
+<p>You can also add hypotheses to the solver, and ask it to attempt to prove a new assume.</p>
+<pre class="sourceCode python"><code class="sourceCode python">s = Solver()
+s.assume(x &gt; <span class="dv">0</span>, y &gt; x)
+s.prove(y &gt;= <span class="dv">0</span>)</code></pre>
+<p>Which should produce a similar result (though prove returns <code>True</code> if the proposition is provable).</p>
+<h2 id="arithmetic">Arithmetic</h2>
+<p>Of course, Polya is capable of proving inequalities involving sums and products:</p>
+<pre class="sourceCode python"><code class="sourceCode python">s = Solver()
+s.assume(x &gt; <span class="dv">0</span>, x &lt; <span class="dv">1</span>, y &gt; <span class="dv">0</span>, z &gt; <span class="dv">0</span>, y + z &lt;= x)
+s.prove(z**<span class="dv">2</span> &lt;= <span class="dv">1</span>)</code></pre>
+<h2 id="function-symbols-and-axioms">Function symbols and axioms</h2>
+<p>More generally, it is possible to declare function symbols, and add axioms involving them to the set of assumptions.</p>
+<pre class="sourceCode python"><code class="sourceCode python">f = Func(<span class="st">&#39;f&#39;</span>)
+s = Solver()
+s.add_axiom(Forall(x, f(x) &gt; <span class="dv">0</span>))
+s.prove(f(<span class="dv">3</span>) &gt;= <span class="dv">0</span>)</code></pre>
+<p>Axioms take the form of a universal statement, followed a formula built using the usual propositional connectives.</p>
+<pre class="sourceCode python"><code class="sourceCode python">s = Solver()
+s.add_axiom(Forall([x, y], Implies(x &gt; y, f(x) &gt; f(y))))
+s.assume(x &gt; <span class="dv">1</span>)
+s.prove(f(x**<span class="dv">2</span>) &gt; f(x))</code></pre>
+<h2 id="the-blackboard">The Blackboard</h2>
+<p>Polya works by maintaining inequality information using a central structure, the <strong>Blackboard</strong>. It is possible to work directly with blackboards:</p>
+<pre class="sourceCode python"><code class="sourceCode python">b = Blackboard()
+b.assume(<span class="dv">0</span> &lt; x)
+b.assume(x &lt; <span class="dv">3</span>*y)
+b.assume(u &lt; v)
+b.assume(v &lt; <span class="dv">0</span>)
+b.assume(<span class="dv">1</span> &lt; v**<span class="dv">2</span>)
+b.assume(v**<span class="dv">2</span> &lt; x)
+b.assume(u*(<span class="dv">3</span>*y)**<span class="dv">2</span> + <span class="dv">1</span> &gt;= x**<span class="dv">2</span> * v + x)
 
-<span class="n">s</span><span class="o">.</span><span class="n">add_axiom</span><span class="p">(</span><span class="n">Forall</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">))</span>
-
-<span class="n">s</span><span class="o">.</span><span class="n">prove</span><span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span>
-</pre></div>
-<p>Axioms take the form of a universal statement, followed a
-formula built using the usual propositional connectives.</p>
-<div class="highlight"><pre><span class="n">s</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">()</span>
-
-<span class="n">s</span><span class="o">.</span><span class="n">add_axiom</span><span class="p">(</span><span class="n">Forall</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">],</span> <span class="n">Implies</span><span class="p">(</span><span class="n">x</span> <span class="o">&gt;</span> <span class="n">y</span><span class="p">,</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">f</span><span class="p">(</span><span class="n">y</span><span class="p">))))</span>
-
-<span class="n">s</span><span class="o">.</span><span class="n">assume</span><span class="p">(</span><span class="n">x</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">)</span>
-
-<span class="n">s</span><span class="o">.</span><span class="n">prove</span><span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
-</pre></div>
-</div>
-<div class="section" id="the-blackboard">
-<h1>The Blackboard</h1>
-<p>Polya works by maintaining inequality information using a central
-structure, the <strong>Blackboard</strong>. It is possible to work directly with
-blackboards:</p>
-<div class="highlight"><pre><span class="n">b</span> <span class="o">=</span> <span class="n">Blackboard</span><span class="p">()</span>
-<span class="n">b</span><span class="o">.</span><span class="n">assume</span><span class="p">(</span><span class="mi">0</span> <span class="o">&lt;</span> <span class="n">x</span><span class="p">)</span>
-<span class="n">b</span><span class="o">.</span><span class="n">assume</span><span class="p">(</span><span class="n">x</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="o">*</span><span class="n">y</span><span class="p">)</span>
-<span class="n">b</span><span class="o">.</span><span class="n">assume</span><span class="p">(</span><span class="n">u</span> <span class="o">&lt;</span> <span class="n">v</span><span class="p">)</span>
-<span class="n">b</span><span class="o">.</span><span class="n">assume</span><span class="p">(</span><span class="n">v</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span>
-<span class="n">b</span><span class="o">.</span><span class="n">assume</span><span class="p">(</span><span class="mi">1</span> <span class="o">&lt;</span> <span class="n">v</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
-<span class="n">b</span><span class="o">.</span><span class="n">assume</span><span class="p">(</span><span class="n">v</span><span class="o">**</span><span class="mi">2</span> <span class="o">&lt;</span> <span class="n">x</span><span class="p">)</span>
-<span class="n">b</span><span class="o">.</span><span class="n">assume</span><span class="p">(</span><span class="n">u</span><span class="o">*</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">y</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">&gt;=</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">v</span> <span class="o">+</span> <span class="n">x</span><span class="p">)</span>
-
-<span class="n">run</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
-</pre></div>
-<p>Running a blackboard calls a number of <strong>update modules</strong>, which each
-successively add inequality information to the blackboard in turn until
-no more facts are learned.</p>
-<p>In this case the <strong>default modules</strong> are called, which are the
-additive, multiplicative and congruence modules respectively.</p>
-<p>There are several types of <strong>module interfaces</strong>, which can be
-instantiated by concrete modules and called on a given blackboard. The
-different types of modules are as follows:</p>
-<ol class="upperalpha">
-<li><p class="first">The <strong>additive module interface</strong> learns all possible facts which
-are only expressible in terms of the additive properties of the
-known facts, i.e. inequalities of the form a1*x1+...+an*xn &lt; t,
-where &lt; may also be &lt;=, &gt;, &gt;=, or =.</p>
-<p>There are two possible implementations of this module. The first,
-simpler one is based on Fourier-Motzkin elimination and can be
-instantiated by</p>
-<div class="highlight"><pre><span class="n">ma</span> <span class="o">=</span> <span class="n">FMAdditionModule</span><span class="p">()</span>
-</pre></div>
-<p>The second is based on a geometric method, and can only be used if
-CDD and LRS are correctly configured on your machine.</p>
-<div class="highlight"><pre><span class="n">ma</span> <span class="o">=</span> <span class="n">PolyAdditionModule</span><span class="p">()</span>
-</pre></div>
-<p>Either module can then be explicitly used to learn new facts about
-a given blackboard <tt class="docutils literal">b</tt></p>
-<div class="highlight"><pre><span class="n">ma</span><span class="o">.</span><span class="n">update_blackboard</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
-</pre></div>
-</li>
-<li><p class="first">The <strong>multiplicative module interface</strong> works in a similar way to
-the additive module interface, but on the purely multiplicative
-fragment of the problem. Essentially, the concrete implementations
-work in a very similar manner to the additive modules by taking
-logarithms of the known facts. Again there are two flavors</p>
-<div class="highlight"><pre><span class="n">mm1</span> <span class="o">=</span> <span class="n">FMMultiplicationModule</span><span class="p">()</span>
-<span class="n">mm2</span> <span class="o">=</span> <span class="n">PolyMultiplicationModule</span><span class="p">()</span>
-</pre></div>
-</li>
-<li><p class="first">The <strong>congruence module interface</strong>. This module simply learns all
-possible equalities using the usual rules for equality
-(reflexivity, symmetry, transitivity and the congruence rules). At
-the moment it has a single possible instance</p>
-<div class="highlight"><pre><span class="n">mc</span> <span class="o">=</span> <span class="n">CongClosureModule</span><span class="p">()</span>
-</pre></div>
-</li>
-<li><p class="first">The <strong>axiom instantiation interface</strong>. This module takes as
-arguments the set of universally quantified formulas which serve as
-axioms, and performs instantiations of the axioms according to a
-certain heuristic for a given blackboard.</p>
-<div class="highlight"><pre><span class="n">fm</span> <span class="o">=</span> <span class="n">FunctionModule</span><span class="p">([</span><span class="n">Forall</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">],</span> <span class="n">Implies</span><span class="p">(</span><span class="n">x</span><span class="o">&lt;</span><span class="n">y</span><span class="p">,</span>
-<span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">f</span><span class="p">(</span><span class="n">y</span><span class="p">)))])</span>
-<span class="n">fm</span><span class="o">.</span><span class="n">update_blackboard</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
-</pre></div>
-</li>
+   run(b)</code></pre>
+<p>Running a blackboard calls a number of <strong>update modules</strong>, which each successively add inequality information to the blackboard in turn until no more facts are learned.</p>
+<p>In this case the <strong>default modules</strong> are called, which are the additive, multiplicative and congruence modules respectively.</p>
+<p>There are several types of <strong>module interfaces</strong>, which can be instantiated by concrete modules and called on a given blackboard. The different types of modules are as follows:</p>
+<ul>
+<li>The <strong>additive module interface</strong> learns all possible facts which are only expressible in terms of the additive properties of the known facts, i.e. inequalities of the form a1<em>x1+...+an</em>xn &lt; t, where &lt; may also be &lt;=, &gt;, &gt;=, or =.<br /> There are two possible implementations of this module. The first, simpler one is based on Fourier-Motzkin elimination and can be instantiated by</li>
+</ul>
+<pre class="sourceCode python"><code class="sourceCode python">ma = FMAdditionModule()</code></pre>
+<p>The second is based on a geometric method, and can only be used if CDD and LRS are correctly configured on your machine.</p>
+<pre class="sourceCode python"><code class="sourceCode python">ma = PolyAdditionModule()</code></pre>
+<p>Either module can then be explicitly used to learn new facts about a given blackboard <code>b</code></p>
+<pre class="sourceCode python"><code class="sourceCode python">ma.update_blackboard(b)</code></pre>
+<ul>
+<li>The <strong>multiplicative module interface</strong> works in a similar way to the additive module interface, but on the purely multiplicative fragment of the problem. Essentially, the concrete implementations work in a very similar manner to the additive modules by taking logarithms of the known facts. Again there are two flavors</li>
+</ul>
+<pre class="sourceCode python"><code class="sourceCode python">mm1 = FMMultiplicationModule()
+mm2 = PolyMultiplicationModule()</code></pre>
+<ul>
+<li>The <strong>congruence module interface</strong>. This module simply learns all possible equalities using the usual rules for equality (reflexivity, symmetry, transitivity and the congruence rules). At the moment it has a single possible instance</li>
+</ul>
+<pre class="sourceCode python"><code class="sourceCode python">mc = CongClosureModule()</code></pre>
+<ul>
+<li>The <strong>axiom instantiation interface</strong>. This module takes as arguments the set of universally quantified formulas which serve as axioms, and performs instantiations of the axioms according to a certain heuristic for a given blackboard.</li>
+</ul>
+<pre class="sourceCode python"><code class="sourceCode python">fm = FunctionModule([Forall([x, y], Implies(x&lt;y, f(x) &lt; f(y)))])
+fm.update_blackboard(b)</code></pre>
+<p>The information shared between all modules consists of one of the following three forms:</p>
+<ol style="list-style-type: decimal">
+<li><code>t &lt; c*u</code></li>
+<li><code>t &lt;= c*u</code></li>
+<li><code>t = c*u</code></li>
 </ol>
-</div>
-</div>
+<p>Where <code>t</code> and <code>u</code> are terms appearing in the problem, and <code>c</code> is a numeric constant. In particular, any contradiction will either be obtained by a single module, or be a consequence of inequalities of the above form, which themselves are implications of a single theory applied to known facts.</p>
 </body>
 </html>
