@@ -86,6 +86,16 @@ lemma "(0::real) < x ==> x < y ==> u < v ==>
     2 * u + exp (1 + x + x^4) <= 2 * v + exp (1 + y + y^4)"
 by (smt exp_le_cancel_iff power_less_imp_less_base)
 
+(* sledgehammer and auto fail *)
+lemma "(0::real) < x ==> 3 < y ==> (u::real) < v ==>
+    2 * u + exp 10 <= 2 * v + exp (1 + y^2)"
+thm add_mono [of u v]
+  apply (rule add_mono)
+  apply (auto simp add: eval_nat_numeral)
+  apply (subgoal_tac "9 = 3 * 3")
+  apply (erule ssubst)
+by (rule mult_mono, auto)
+
 (* Z3 does fine here *)
 lemma "(ALL (x::real) y. f(x + y) = f(x) + f(y)) ==> f(a + b) > (2::real) ==> f(c + d) > 2 ==>
     f(a + b + c + d) > 4"
