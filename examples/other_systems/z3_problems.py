@@ -26,9 +26,25 @@ def z3example1():
     print s.check()
 
 
+def z3example1a():
+    # solved
+    s = z3.Solver()
+    u = w**100 + 7*w**40 + 1
+    s.add(0 < u, u < v, v < 1, 2 <= x, x <= y, 2 * u**2 * x >= v * y**2)
+    print s.check()
+
+
 def z3example2():
     # solved
     s = z3.Solver()
+    s.add(x > 1, (1 + y**2) * x < 1 + y**2)
+    print s.check()
+
+
+def z3example2a():
+    # solved
+    s = z3.Solver()
+    y = z**100 + 7*z**40 + 1
     s.add(x > 1, (1 + y**2) * x < 1 + y**2)
     print s.check()
 
@@ -43,6 +59,13 @@ def z3example3():
 def z3example4():
     # solved
     s = z3.Solver()
+    s.add(0 < x, x < 1, 1/(1 - x) <= 1/(1 - x**2))
+    print s.check()
+
+def z3example4a():
+    # solved
+    s = z3.Solver()
+    x = y**100 + 7*y**40 + 1
     s.add(0 < x, x < 1, 1/(1 - x) <= 1/(1 - x**2))
     print s.check()
 
@@ -127,6 +150,13 @@ def z3example14():
     # solved
     s = z3.Solver()
     s.add(0 < x, x < y, (1 + x**2)/(2 + y)**17 >= (1 + y**2)/(2 + x)**10)
+    print s.check()
+
+
+def z3example14a():
+    # solved
+    s = z3.Solver()
+    s.add(0 < x, x < y, (1 + x**2)/(2 + y)**100 >= (1 + y**2)/(2 + x)**10)
     print s.check()
 
 
@@ -242,7 +272,7 @@ if __name__ == '__main__':
                 print
             print 'Total:', round(timeit.default_timer()-t, 3), 'seconds'
         else:
-            for i in range(1, len(sys.argv)):
+            for i in sys.argv[1:]:#range(1, len(sys.argv)):
                 print 'Example #{0!s}'.format(i)
                 #examples[i].show()
                 eval("z3example{}()".format(i))
