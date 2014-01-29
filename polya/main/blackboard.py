@@ -384,6 +384,12 @@ class Blackboard():
         old_comps = self.inequalities.get((i, j), [])
         new_comp = geometry.halfplane_of_comp(comp, coeff)
 
+        if i == 0 and comp in [terms.LE, terms.LT]:
+            if coeff > 0:
+                self.assert_zero_inequality(j, terms.GT)
+            elif coeff < 0:
+                self.assert_zero_inequality(j, terms.LT)
+
         if new_comp.strong:
             for c in old_comps:
                 if c.eq_dir(new_comp):
