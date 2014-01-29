@@ -1,6 +1,7 @@
 import polya
 import z3
 import timeit
+import polya.main.messages as messages
 
 u, v, w, x, y, z = polya.Vars('u v w x y z')
 a, b, c, d, e = z3.Reals('a b c d e')
@@ -10,11 +11,12 @@ g = z3.Function('g', z3.RealSort(), z3.RealSort())
 
 ####################################################################################################
 #
-# Examples from the paper
+# These are the examples discussed in section 6 of the paper.
 #
 ####################################################################################################
 
 def example1():
+    #
     polya.solve(0 < u, u < v, v < 1, 2 <= x, x <= y, 2 * u**2 * x >= v * y**2)
 
 
@@ -143,9 +145,10 @@ def example11():
 
 
 def z3example11():
-    # DOES NOT SOLVE
+    # DOES NOT SOLVE: TIMES OUT
     x, y = z3.Reals('x y')
-    z3.solve(x>0, x<1, y>0, y<1, x**1000 + y**1000 - x**1000*y**1000 <= 0)
+    print 'This will time out'
+#    z3.solve(x>0, x<1, y>0, y<1, x**1000 + y**1000 - x**1000*y**1000 <= 0)
 
 def example12():
     # DOES NOT SOLVE
@@ -370,12 +373,34 @@ def z3test10():
     S.add(abs2(f(z) - f(x)) >= 1 / (i + 1))
     print S.check()
 
-t = timeit.default_timer()
+
+def test_time(example):
+    t = timeit.default_timer()
+    rounds = 10
+    for i in range(rounds):
+        eval(example)
+    tot = timeit.default_timer() - t
+    return round(float(tot)/rounds, 3)
+
+
+def time_paper_examples():
+    for i in range(1, 13):
+        print 'Polya on example', i, ':'
+        print '  ', test_time('example'+str(i)+'()'), 'sec'
+        print
+        print 'z3 on example', i, ':'
+        print '  ', test_time('z3example'+str(i)+'()'), 'sec'
+        print
+
+messages.set_verbosity(messages.quiet)
+time_paper_examples()
+
+#example11()
 
 #test10()
 #z3test10()
 
-example7()
+#example7()
 
 
 #zprint round(timeit.default_timer() - t, 3)
