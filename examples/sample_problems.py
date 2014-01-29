@@ -389,7 +389,20 @@ if __name__ == '__main__':
             t = timeit.default_timer()
             for i in range(len(examples)):
                 if not examples[i].omit:
-                    print 'Example {0!s}'.format(i)
+                    print '*** Example {0!s} ***'.format(i)
+                    examples[i].test()
+            print 'Total:', round(timeit.default_timer()-t, 3), 'seconds'
+        # for a comparison of Fourier-Motzkin and polytope methods
+        elif sys.argv[1] == 'test_all_comp':
+            t = timeit.default_timer()
+            for i in range(len(examples)):
+                if not examples[i].omit:
+                    print '*** Example {0!s} ***'.format(i)
+                    set_solver_type('fm')
+                    print '[Fourier-Motzkin]'
+                    examples[i].test()
+                    set_solver_type('poly')
+                    print '[Poly]'
                     examples[i].test()
             print 'Total:', round(timeit.default_timer()-t, 3), 'seconds'
         else:
