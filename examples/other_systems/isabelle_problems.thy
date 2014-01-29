@@ -137,11 +137,95 @@ lemma "(0::real) < x ==> x < y ==> (1 + x^2) / (2 + exp y) < (1 + y^2) / (2 + ex
   apply (rule power_strict_mono)
 by auto
 
+(* from the Isabelle mailing list - Sledgehammer gets it *)
+lemma "(0::real) < x ==> 0 < y ==> y < 1 ==> x + y > x * y"
+by (metis add_strict_mono monoid_add_class.add.right_neutral monoid_mult_class.mult.left_neutral 
+  mult_commute real_mult_less_iff1)
 
+(* Sledgehammer fails *)
+lemma "(0::real) < x ==> 0 < y ==> y < 1 ==> x + y^99 > x * y^99"
+  apply (rule order_le_less_trans)
+  apply (rule mult_right_le_one_le, auto)
+by (rule power_le_one, auto)
 
-  
+(* a slight variant *)
+lemma "(0::real) < x ==> -1 < y ==> y < 0 ==> x + (y + 1)^99 > x * (y + 1)^99"
+  apply (rule order_le_less_trans)
+  apply (rule mult_right_le_one_le, auto)
+by (rule power_le_one, auto)
 
-  
+(* a calculation taken from a formalization *)
+lemma
+  fixes m :: int and 
+    f :: "int => real" and
+    x a b :: real
+  assumes 
+    f_prop: "!!m. m > 0 ==> f m < a + (b - a) / m" and 
+    "a < b" "x > a" and
+    *: "m >= ceiling((b - a) / (x - a)) + 1"
+  shows "f m < x"
+proof -
+  from * have **: "real m > ((b - a) / (x - a))"
+    by (metis add_commute ceiling_real_of_int less_ceiling_eq less_linear not_le 
+        pos_add_strict zero_less_one zle_add1_eq_le)
+  have ***: "real m > 0"
+    apply (rule order_less_trans [OF _ **])
+    using `a < b` `x > a` by (simp add: field_simps)
+  hence "m > 0" by simp
+  hence "f m < a + (b - a) / m" by (intro f_prop)
+  also have "... < a + (b - a) / ((b - a) / (x - a))"
+    apply (rule add_strict_left_mono)
+    apply (rule divide_strict_left_mono)
+    apply (rule **)
+    using assms *** by (auto simp add: field_simps)
+  also with `a < b` have "... = x" 
+    by (simp add: field_simps)
+  finally show ?thesis .
+qed
+
+(* instead of integers, stick to reals *)
+lemma
+  fixes m :: real and 
+    f ceil :: "real => real" and
+    x a b :: real
+  assumes 
+    ceil_prop: "!!x. ceil x >= x" and
+    f_prop: "!!m. m > 0 ==> 
+      f (ceil m) < a + (b - a) / (ceil m)" and 
+    "a < b" "x > a" and
+    *: "m >= ((b - a) / (x - a)) + 1"
+  shows "f (ceil m) < x"
+proof -
+  have "m > 0"
+    apply (rule order_less_le_trans [OF _ *])
+    using `a < b` `x > a` by (simp add: field_simps)
+  hence "f (ceil m) < a + (b - a) / (ceil m)" by (intro f_prop)
+  also have "... < a + (b - a) / ((b - a) / (x - a))"
+    apply (rule add_strict_left_mono)
+    apply (rule divide_strict_left_mono)
+    apply (rule order_less_le_trans [OF _ ceil_prop])
+    apply (rule order_less_le_trans [OF _ *])
+    using `a < b` apply auto
+    using `x > a` apply (simp add: field_simps)
+    apply (erule mult_strict_right_mono)
+    apply (rule order_less_le_trans [OF _ ceil_prop])
+    by (rule `m > 0`)
+  also with `a < b` have "... = x" 
+    by (simp add: field_simps)
+  finally show ?thesis .
+qed
+
+(* Another example taking from a proof that the set of continuity points of a function is 
+   borel; see Billingsley, *Probability and Measure*, third edition, footnote on page 334. *)
+lemma "i > (0::real) ==> abs(f y - f x) < 1 / (2 * (i + 1)) ==> 
+    abs(f z - f y) < 1 / (2 * (i + 1)) ==> abs(f z - f x) < 1 / (i + 1)"
+  apply (subgoal_tac "f z - f x = (f z - f y) + (f y - f x)")
+  apply (erule ssubst)
+  apply (rule order_le_less_trans)
+  apply (rule abs_triangle_ineq)
+  apply (rule order_less_le_trans)
+  apply (erule (1) add_strict_mono)
+by (auto simp add: field_simps)
 
 end
   
