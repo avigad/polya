@@ -31,7 +31,9 @@ def round_up(f):
     Returns the closest fractional approximation to f from above with denominator <= precision.
     """
     if f.denominator > precision:
-        return fractions.Fraction(int(math.ceil(float(f.numerator * precision) / f.denominator)),
+        # return fractions.Fraction(int(math.ceil(float(f.numerator * precision) / f.denominator)),
+        #                           precision)
+        return fractions.Fraction(int(math.ceil(float(f.numerator * precision / f.denominator))),
                                   precision)
     else:
         return f
