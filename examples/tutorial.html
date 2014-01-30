@@ -2,8 +2,8 @@
 <html>
 <head>
 <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<link rel="stylesheet" type="text/css" href="file:///home/avigad/Dropbox/Projects/Polya/git_repository/examples/tutorial.css">
 <meta name="generator" content="ReText 4.1.0">
-<link rel="stylesheet" href="tutorial.css" type="text/css" />
 <title>tutorial</title>
 </head>
 <body>
@@ -101,57 +101,50 @@ b.assume(u*(3*y)**2 + 1 &gt;= x**2 * v + x)
 run(b)
 </code></pre>
 
+<h2>The modules</h2>
 <p>Running a blackboard calls a number of <em>modules</em>, each of which attempts to 
 derive new information and add it to the blackboard. This continues until
 no additional facts are learned.</p>
 <p>In this case the <em>default modules</em> are called, which are the
 additive, multiplicative and congruence modules respectively.</p>
-<ul>
-<li>The <em>additive module</em> learns all possible facts which
-   are only expressible in terms of the additive properties of the
-   known facts, i.e. inequalities of the form a1<em>x1+...+an</em>xn &lt; t,
-   where &lt; may also be &lt;=, &gt;, &gt;=, or =.</li>
-</ul>
+<p>The <em>additive module</em> learns all possible facts which
+are only expressible in terms of the additive properties of the
+known facts, i.e. inequalities of the form a1<em>x1+...+an</em>xn &lt; t,
+where &lt; may also be &lt;=, &gt;, &gt;=, or =.</p>
 <p>In fact, there are two versions of this module. The first,
-   simpler one is based on Fourier-Motzkin elimination and can be
-   instantiated by</p>
+simpler one is based on Fourier-Motzkin elimination and can be
+instantiated by</p>
 <pre><code class="python">ma = FMAdditionModule()
 </code></pre>
 
 <p>The second is based on a geometric method, and can only be used if
-   the computational geometry packages cdd and lrs are correctly configured on 
-   your machine.</p>
+the computational geometry packages cdd and lrs are correctly configured on 
+your machine.</p>
 <pre><code class="python">ma = PolyAdditionModule()
 </code></pre>
 
 <p>Either module can then be explicitly used to learn new facts about
-   a given blackboard <code>b</code></p>
+a given blackboard <code>b</code></p>
 <pre><code class="python">ma.update_blackboard(b)
 </code></pre>
 
-<ul>
-<li>The <em>multiplicative module</em> works is similar to the additive module interface, 
-   but works on the purely multiplicative fragment of the problem. Restricted to
-   the positive reals, the multiplicative module essentially emulates the additive
-   module under the map x -&gt; log x. Again, there are two versions:</li>
-</ul>
+<p>The <em>multiplicative module</em> works is similar to the additive module interface, 
+but works on the purely multiplicative fragment of the problem. Restricted to
+the positive reals, the multiplicative module essentially emulates the additive
+module under the map x -&gt; log x. Again, there are two versions:</p>
 <pre><code class="python">mm1 = FMMultiplicationModule()
 mm2 = PolyMultiplicationModule()
 </code></pre>
 
-<ul>
-<li>The <em>congruance closure module</em>. This module simply learns all possible equalities 
-   using the usual rules for equality (reflexivity, symmetry, transitivity and the 
-   congruence rules):</li>
-</ul>
-<pre><code class="python">mc = CongClosureModule()
+<p>The <em>congruance closure module</em>. This module simply learns all possible equalities 
+using the usual rules for equality (reflexivity, symmetry, transitivity and the 
+congruence rules):</p>
+<pre><code class="python">    mc = CongClosureModule()
 </code></pre>
 
-<ul>
-<li>The <em>function module</em>. This module takes as arguments a set of universally 
-   quantified formulas which serve as axioms, and performs instantiations of the 
-   axioms according to a certain heuristic for a given blackboard.</li>
-</ul>
+<p>The <em>function module</em>. This module takes as arguments a set of universally 
+quantified formulas which serve as axioms, and performs instantiations of the 
+axioms according to a certain heuristic for a given blackboard.</p>
 <pre><code class="python">fm = FunctionModule([Forall([x, y], Implies(x&lt;y, f(x) &lt; f(y)))])
 fm.update_blackboard(b)
 </code></pre>
@@ -170,6 +163,5 @@ forms:</p>
 comp is any of</p>
 <pre><code class="python">&lt;. &lt;=, &gt;, &gt;=, ==, or !=
 </code></pre>
-<p>&nbsp;</p>
 </body>
 </html>

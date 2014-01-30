@@ -138,6 +138,9 @@ b.assume(u*(3*y)**2 + 1 >= x**2 * v + x)
 run(b)
 ```
 
+The modules
+-----------
+
 Running a blackboard calls a number of *modules*, each of which attempts to 
 derive new information and add it to the blackboard. This continues until
 no additional facts are learned.
@@ -145,55 +148,55 @@ no additional facts are learned.
 In this case the *default modules* are called, which are the
 additive, multiplicative and congruence modules respectively.
 
-- The *additive module* learns all possible facts which
-   are only expressible in terms of the additive properties of the
-   known facts, i.e. inequalities of the form a1*x1+...+an*xn < t,
-   where < may also be <=, >, >=, or =.
+The *additive module* learns all possible facts which
+are only expressible in terms of the additive properties of the
+known facts, i.e. inequalities of the form a1*x1+...+an*xn < t,
+where < may also be <=, >, >=, or =.
    
-   In fact, there are two versions of this module. The first,
-   simpler one is based on Fourier-Motzkin elimination and can be
-   instantiated by
+In fact, there are two versions of this module. The first,
+simpler one is based on Fourier-Motzkin elimination and can be
+instantiated by
 
 ```python        
 ma = FMAdditionModule()
 ```
 
-   The second is based on a geometric method, and can only be used if
-   the computational geometry packages cdd and lrs are correctly configured on 
-   your machine.
+The second is based on a geometric method, and can only be used if
+the computational geometry packages cdd and lrs are correctly configured on 
+your machine.
 
 ```python     
 ma = PolyAdditionModule()
 ```
 
-   Either module can then be explicitly used to learn new facts about
-   a given blackboard ``b``
+Either module can then be explicitly used to learn new facts about
+a given blackboard ``b``
 
 ```python
 ma.update_blackboard(b)
 ```
 
-- The *multiplicative module* works is similar to the additive module interface, 
-   but works on the purely multiplicative fragment of the problem. Restricted to
-   the positive reals, the multiplicative module essentially emulates the additive
-   module under the map x -> log x. Again, there are two versions:
+The *multiplicative module* works is similar to the additive module interface, 
+but works on the purely multiplicative fragment of the problem. Restricted to
+the positive reals, the multiplicative module essentially emulates the additive
+module under the map x -> log x. Again, there are two versions:
 
 ```python
 mm1 = FMMultiplicationModule()
 mm2 = PolyMultiplicationModule()
 ```
 
-- The *congruance closure module*. This module simply learns all possible equalities 
-   using the usual rules for equality (reflexivity, symmetry, transitivity and the 
-   congruence rules):
+The *congruance closure module*. This module simply learns all possible equalities 
+using the usual rules for equality (reflexivity, symmetry, transitivity and the 
+congruence rules):
    
 ```python
-mc = CongClosureModule()
+    mc = CongClosureModule()
 ```
 
-- The *function module*. This module takes as arguments a set of universally 
-   quantified formulas which serve as axioms, and performs instantiations of the 
-   axioms according to a certain heuristic for a given blackboard.
+The *function module*. This module takes as arguments a set of universally 
+quantified formulas which serve as axioms, and performs instantiations of the 
+axioms according to a certain heuristic for a given blackboard.
 
 ```python
 fm = FunctionModule([Forall([x, y], Implies(x<y, f(x) < f(y)))])
