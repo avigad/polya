@@ -191,7 +191,7 @@ using the usual rules for equality (reflexivity, symmetry, transitivity and the
 congruence rules):
    
 ```python
-    mc = CongClosureModule()
+mc = CongClosureModule()
 ```
 
 The *function module*. This module takes as arguments a set of universally 
