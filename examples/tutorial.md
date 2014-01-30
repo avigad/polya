@@ -211,8 +211,9 @@ forms:
 * `t comp 0`
 
 where `t` and `u` are terms appearing in the problem, `c` is a rational constant, and
-comp is any of
+comp is any of the following:
  
 ```python
 <. <=, >, >=, ==, or !=
 ``` 
+ 
