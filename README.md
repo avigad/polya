@@ -7,15 +7,7 @@ Polya is a system designed to support interactive theorem proving by verifying t
 
 The system is released under the [Apache 2.0 license](http://www.apache.org/licenses/LICENSE-2.0.html).
 
-For instructions on setting up and using Polya, see INSTALL.md. There are tutorial examples in
-
-    examples/examples.py
-    
-and additional information in the folder "doc". 
-
-
-Using Polya
------------
+For instructions on setting up and using Polya, see the file 'INSTALL.md'.
 
 Once Polya is installed, you can use it directly in the Python 2.7 interactive mode. Start Python:
 
@@ -25,26 +17,19 @@ and at the prompt type
 
     from polya import *
     
-at which point you can try entering some of the examples described in the file
+at which point you can enter the command
 
-    examples/examples.py
+    show_configuration()
     
-From the examples folder, you can also try some sample problems directly from the system prompt. Type
+to see which external packages are present.
 
-    python sample_problems.py list
-    
-for a list of problems,
+There are a tutorial and sample problems in the folder 'example.py'. See the 'README.md' in that folder for more information.
 
-    python sample_problems.py 2 5 7
-    
-to run Polya on problems 2, 5, and 7 sequentially, and 
+For comparisons to other systems, see the data in the folder 'examples/other_systems'.
 
-    python sample_problems.py test_all
-    
-to run Polya on all of the sample problems. You can use the flag "-v" for a more verbose output that shows each module's assertions:
 
-    python sample_problems.py -v 2 5 7
-    python sample_problems.py -v test_all
-    
-If the geometric packages are installed, these are used by default. You can force the use of the Fourier-Motzkin modules instead by adding the switch "-fm" anywhere on the command line.
+
+
+
+
     
