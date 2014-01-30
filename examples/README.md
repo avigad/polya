@@ -12,7 +12,7 @@ and at the prompt type
 
     from polya import *
     
-at which point you can try entering some of the examples described in the [tutorial].(tutorial.html).
+at which point you can try entering some of the examples described in the [tutorial](tutorial.html).
 
 
 Trying the sample problems
