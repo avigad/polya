@@ -1,39 +1,57 @@
-A Quick Start for Polya
-=======================
+Polya: A Quick Start
+====================
 
 Overview
 --------
 
-This document outlines basic usage of the Polya Proof Assistant
-Python package.
+This document outlines basic usage of the Polya Inequality Prover.
 
-Polya is a Python library that allows the user to express and solve complex inequalities expressed over the real numbers. In particular the aim is to provide a tool that proves *intuitively true* statements of mathematics, something which many automated tools fail to do.
+Polya is a Python library that allows the user to verify inequalities between 
+real-valued expressions. It aims, in particular, to capture the common 
+inferences that arise in interactive theorem proving.
+
 
 A basic example
 ---------------
 
-We will need to import the polya python package, which
-should be in your python path
+Run Python 2.7 and import the Polya Python package, which should be in your 
+Python path:
 
-`````````````````python
+```python
 from polya import *
-`````````````````````
+```
 
-Then declare the variables which you wish to use to express your
-inequality:
+You can check to see what external tools have been found:
+
+```python
+show_configuration()
+```
+
+The output should look something like this:
+
+```
+Welcome to the Polya inequality prover.
+Looking for components...
+lrs found (path: lrs).
+redund found (path: redund).
+cdd found.
+```
+
+Then declare the variables which you wish to use to express your inequality:
 
 ```python
 x = Vars('x')
 ```
 
-You can also declare several variables at once, by separating the
-names with a space:
+You can also declare several variables at once, by separating the names with a 
+space or a comma:
 
 ```python
 y, z = Vars('y z')
 ```
-Then, to prove inequalities, create a ``Solver`` object, and add
-inequalities using the variables and the usual Python operations.
+
+Then, to prove inequalities, create a ``Solver`` object, and add inequalities 
+using the variables and the usual Python operations.
 
 ```python
 s = Solver()
@@ -41,63 +59,33 @@ s.assume(x > 0)
 s.assume(y > x, y <= 0)
 ```
 
-We can check that the inequalities assumed up to this point are
-inconsistent:
+The system reports that these declarations have been asserted to a central 
+blackboard. You can ask Polya to check whether they are consistent:
+
 
 ```python
 s.check()
 ```
 
-The output should look something like this:
+In this case, Polya reports that a contradiction has been found.
 
-
-    >>> lrs found! (/home/croux/prog/python/polya/polya/polyhedron/lrs)
-    
-    redund found! (/home/croux/prog/python/polya/polya/polyhedron/redund)
-    
-    Defining t1 := x
-      := x
-    
-    Asserting t1 > 0
-      := x > 0
-    
-    Defining t2 := y
-      := y
-    
-    Asserting t1 < t2
-      := x < y
-    
-    Asserting t2 > 0
-      := y > 0
-    
-    Contradiction: t1 >= t2
-      := x >= y
-    
-    >>> Entering congruence closure module
-    
-    >>> Entering polyhedron additive module
-    
-    >>> Entering polyhedron multiplicative module
-    
-    False
-
-You can also add hypotheses to the solver, and ask it to attempt to
-prove a new assume.
+You can alternatively ask Polya to prove that a claim follows from the 
+hypotheses:
 
 ```python
 s = Solver()
 s.assume(x > 0, y > x)
-s.prove(y >= 0)
+s.prove(y > 0)
 ```
 
-Which should produce a similar result (though prove returns ``True``
-if the proposition is provable).
+The net effect is the same: Polya attempts to prove the conclusion by
+assuming the negation and deriving a contradiction.
+
 
 Arithmetic
 ----------
 
-Of course, Polya is capable of proving inequalities involving sums and
-products:
+Polya is capable of proving inequalities involving sums and products.
 
 ```python
 s = Solver()
@@ -105,12 +93,12 @@ s.assume(x > 0, x < 1, y > 0, z > 0, y + z <= x)
 s.prove(z**2 <= 1)
 ```
 
+
 Function symbols and axioms
 ---------------------------
 
-
-More generally, it is possible to declare function symbols, and add
-axioms involving them to the set of assumptions.
+More generally, you can declare function symbols, and add axioms involving them 
+to the set of assumptions.
 
 
 ```python
@@ -120,8 +108,8 @@ s.add_axiom(Forall(x, f(x) > 0))
 s.prove(f(3) >= 0)
 ```
 
-Axioms take the form of a universal statement, followed a
-formula built using the usual propositional connectives.
+Axioms take the form of a universal statement, followed a formula built using the 
+usual propositional connectives.
 
 ```python
 s = Solver()
@@ -130,12 +118,12 @@ s.assume(x > 1)
 s.prove(f(x**2) > f(x))
 ```
 
-The Blackboard
+
+The blackboard
 --------------
 
-Polya works by maintaining inequality information using a central
-structure, the **Blackboard**. It is possible to work directly with
-blackboards:
+Polya works by maintaining inequality information using a central structure, the 
+*blackboard*. It is possible to work with the blackboard directly:
 
 ```python
 b = Blackboard()
@@ -147,25 +135,22 @@ b.assume(1 < v**2)
 b.assume(v**2 < x)
 b.assume(u*(3*y)**2 + 1 >= x**2 * v + x)
 
-   run(b)
+run(b)
 ```
 
-Running a blackboard calls a number of **update modules**, which each
-successively add inequality information to the blackboard in turn until
-no more facts are learned.
+Running a blackboard calls a number of *modules*, each of which attempts to 
+derive new information and add it to the blackboard. This continues until
+no additional facts are learned.
 
-In this case the **default modules** are called, which are the
+In this case the *default modules* are called, which are the
 additive, multiplicative and congruence modules respectively.
 
-There are several types of **module interfaces**, which can be
-instantiated by concrete modules and called on a given blackboard. The
-different types of modules are as follows:
-
-- The **additive module interface** learns all possible facts which
+- The *additive module* learns all possible facts which
    are only expressible in terms of the additive properties of the
    known facts, i.e. inequalities of the form a1*x1+...+an*xn < t,
-   where < may also be <=, >, >=, or =.   
-   There are two possible implementations of this module. The first,
+   where < may also be <=, >, >=, or =.
+   
+   In fact, there are two versions of this module. The first,
    simpler one is based on Fourier-Motzkin elimination and can be
    instantiated by
 
@@ -174,7 +159,8 @@ ma = FMAdditionModule()
 ```
 
    The second is based on a geometric method, and can only be used if
-   CDD and LRS are correctly configured on your machine.
+   the computational geometry packages cdd and lrs are correctly configured on 
+   your machine.
 
 ```python     
 ma = PolyAdditionModule()
@@ -187,45 +173,43 @@ ma = PolyAdditionModule()
 ma.update_blackboard(b)
 ```
 
-- The **multiplicative module interface** works in a similar way to
-   the additive module interface, but on the purely multiplicative
-   fragment of the problem. Essentially, the concrete implementations
-   work in a very similar manner to the additive modules by taking
-   logarithms of the known facts. Again there are two flavors
+- The *multiplicative module* works is similar to the additive module interface, 
+   but works on the purely multiplicative fragment of the problem. Restricted to
+   the positive reals, the multiplicative module essentially emulates the additive
+   module under the map x -> log x. Again, there are two versions:
 
 ```python
 mm1 = FMMultiplicationModule()
 mm2 = PolyMultiplicationModule()
 ```
 
-- The **congruence module interface**. This module simply learns all
-   possible equalities using the usual rules for equality
-   (reflexivity, symmetry, transitivity and the congruence rules). At
-   the moment it has a single possible instance
-
+- The *congruance closure module*. This module simply learns all possible equalities 
+   using the usual rules for equality (reflexivity, symmetry, transitivity and the 
+   congruence rules):
+   
 ```python
 mc = CongClosureModule()
 ```
 
-- The **axiom instantiation interface**. This module takes as
-   arguments the set of universally quantified formulas which serve as
-   axioms, and performs instantiations of the axioms according to a
-   certain heuristic for a given blackboard.
+- The *function module*. This module takes as arguments a set of universally 
+   quantified formulas which serve as axioms, and performs instantiations of the 
+   axioms according to a certain heuristic for a given blackboard.
 
 ```python
 fm = FunctionModule([Forall([x, y], Implies(x<y, f(x) < f(y)))])
 fm.update_blackboard(b)
 ```
 
-The information shared between all modules consists of one of the
-following three forms:
+The information shared between all modules consists of one of the following 
+forms:
 
-1. `t < c*u`
-2. `t <= c*u`
-3. `t = c*u`
+* `t comp c*u`
 
-Where ``t`` and ``u`` are terms appearing in the problem, and ``c`` is
-a numeric constant. In particular, any contradiction will either be
-obtained by a single module, or be a consequence of inequalities of the
-above form, which themselves are implications of a single theory
-applied to known facts.
+* `t comp 0`
+
+where `t` and `u` are terms appearing in the problem, `c` is a rational constant, and
+comp is any of
+ 
+```python
+<. <=, >, >=, ==, or !=
+``` 

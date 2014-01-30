@@ -16,6 +16,13 @@ lemma "(0::real) < u ==> u < v ==> v < 1 ==> 2 <= x ==> x <= y ==> 2 * u * v^2 <
   apply (simp add: field_simps eval_nat_numeral)
 by (rule mult_strict_mono, auto)
 
+(* sledgehammer and auto fail on this *)
+lemma "(0::real) < u ==> 0 < v ==> (u + v + 1)^3 < (u + v + 2)^5"
+  apply (rule order_less_trans [OF power_strict_mono])
+  prefer 4
+  apply (rule power_strict_increasing)
+by auto
+ 
 (* even this is nontrivial for sledgehammer *)
 lemma one_plus_square_gt_0: "(0 :: real) < 1 + y^2"
 by (metis add_commute less_add_one linorder_neqE_linordered_idom pos_add_strict 
