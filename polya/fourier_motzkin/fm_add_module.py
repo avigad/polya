@@ -352,7 +352,7 @@ class FMAdditionModule:
                 ij_eqs, ij_comps = i_eqs, i_comps
                 # determine all comparisons between IVar(i) and IVar(j)
                 for k in range(j + 1, B.num_terms):
-                     ij_eqs, ij_comps = elim(ij_eqs, ij_comps, k)
+                    ij_eqs, ij_comps = elim(ij_eqs, ij_comps, k)
                 assert_comparisons_to_blackboard(ij_eqs, ij_comps, B)
                 # done with IVar(j)
                 i_eqs, i_comps = elim(i_eqs, i_comps, j)
@@ -361,35 +361,3 @@ class FMAdditionModule:
             # done with IVar(i)
             eqs, comps = elim(eqs, comps, i)
         timer.stop(timer.FMADD)
-
-
-####################################################################################################
-#
-# Tests
-#
-####################################################################################################
-
-if __name__ == '__main__':
-
-    x = terms.IVar(0)
-    y = terms.IVar(1)
-    z = terms.IVar(2)
-    w = terms.IVar(3)
-
-    t1 = 3 * x + 4 * y - 2 * z
-    t2 = -2 * x - 2 * y + 5 * z
-
-    print 't1 = ', t1
-    print 't2 = ', t2
-    print 't1 + t2 = ', t1 + t2
-    print 't1 * 3 + t2 * -1 = ', t1 * 3 + t2 * -1
-    print 't1 + x =', t1 + x
-    print 't1 + w =', t1 + w
-    s1 = cast_to_sum(t1)
-    s2 = cast_to_sum(t2)
-    print 's1:', s1
-    print 's2:', s2
-    print 's1 + s2:', s2
-    print 'eliminate x:', elim_eq_eq(s1, s2, 0)
-    print 'eliminate y:', elim_eq_eq(s1, s2, 1)
-    print 'eliminate z:', elim_eq_eq(s1, s2, 2)
