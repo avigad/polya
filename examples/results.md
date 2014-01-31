@@ -1,11 +1,11 @@
-Some Test Problems
-==================
+Test Problems
+=============
 
 This file provides data to support the discussion in the paper "A heuristic prover for real inequalities", by Avigad, Lewis, and Roux (2014).
 
 All tests were performed on an Intel i7-3770 4 core CPU at 3.4 GHz. The data on Polya was obtained using
 
-    sample_programs.py
+    sample_problems.py
     
 The data on Z3 was obtained using
 
