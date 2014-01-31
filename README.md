@@ -23,9 +23,9 @@ at which point you can enter the command
     
 to see which external packages are present.
 
-There are a tutorial and sample problems in the folder 'example.py'. See the 'README.md' in that folder for more information.
+There are a tutorial and sample problems in the folder 'examples'. See the 'README.md' in that folder for more information.
 
-For comparisons to other systems, see the data in the folder 'examples/other_systems'.
+For benchmark comparisons, see 'examples/results.md' and the data in the folder 'examples/other_systems'.
 
 
 
