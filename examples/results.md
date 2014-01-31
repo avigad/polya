@@ -19,7 +19,8 @@ We also experimented with MetiTarski, which uses Z3 for problems in the language
 
     metitarski_problems.tptp
 
-    
+The results:
+
     *** Example 0 ***
     Hypothesis: u > 0
     Hypothesis: u < v
