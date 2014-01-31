@@ -103,19 +103,19 @@ examples.append(Example(
 
 examples.append(Example(
     hyps=[0 < u, u < v, 0 < z, z + 1 < w],
-    conc=((u + v + z)**3 < (u + v + w)**5),
+    conc=((u + v + z)**3 < (u + v + w + 1)**5),
     comment='Discussed in Avigad, Lewis, and Roux (2014)'
 ))
 
 examples.append(Example(
     hyps=[0 < u, u < v, 0 < z, z + 1 < w],
-    conc=((u + v + z)**33 < (u + v + w)**55),
+    conc=((u + v + z)**33 < (u + v + w + 1)**55),
     comment='Discussed in Avigad, Lewis, and Roux (2014)'
 ))
 
 examples.append(Example(
     hyps=[0 < u, u < (v**2 + 23)**3, 0 < z, z + 1 < w],
-    conc=((u + (v**2 + 23)**3 + z)**3 < (u + (v**2 + 23)**3 + w)**5),
+    conc=((u + (v**2 + 23)**3 + z)**3 < (u + (v**2 + 23)**3 + w + 1)**5),
     comment='Discussed in Avigad, Lewis, and Roux (2014)'
 ))
 
@@ -134,16 +134,16 @@ examples.append(Example(
 ))
 
 examples.append(Example(
-    axioms=[Forall([x, y], Implies(x >= y, f(x) >= f(y)))],
-    hyps=[u < v, 1 < w, 2 < s, (w + s) / 3 < v, x <= y],
-    conc=(f(x) + u < v**2 + f(y)),
+    axioms=[Forall([x], f(x) <= 2)],
+    hyps=[u < v, 0 < w],
+    conc=(u + w * (f(x) - 1) < v + w),
     comment='Discussed in Avigad, Lewis, and Roux (2014)'
 ))
 
 examples.append(Example(
-    axioms=[Forall([x], f(x) <= 2)],
-    hyps=[u < v, 0 < w],
-    conc=(u + w * (f(x) - 1) < v + w),
+    axioms=[Forall([x, y], Implies(x >= y, f(x) >= f(y)))],
+    hyps=[u < v, 1 < w, 2 < s, (w + s) / 3 < v, x <= y],
+    conc=(f(x) + u < v + f(y)),
     comment='Discussed in Avigad, Lewis, and Roux (2014)'
 ))
 
@@ -159,6 +159,12 @@ examples.append(Example(
     hyps=[0 < x, x < y, u < v],
     conc=(2 * u + exp(1 + x + x**4) <= 2 * v + exp(1 + y + y**4)),
     comment='Discussed in Avigad, Lewis, and Roux (2014)'
+))
+
+examples.append(Example(
+    axioms=[Forall([x, y], Implies(x < y, exp(x) < exp(y)))],
+    hyps=[0 < x, 3 < y, u < v],
+    conc=(2 * u + exp(10) <= 2 * v + exp(1 + y**2))
 ))
 
 examples.append(Example(

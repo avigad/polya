@@ -9,4 +9,8 @@ This directory contains the following files, with data to support the discussion
 
 * metitarski_problems.tptp: sample problems in MetiTarski format.
 
-In each case, comments in the file provide additional information. 
+In each case, comments in the file provide additional information. You can run z3_problems.py from the command line:
+
+  python z3_problems.py list
+  python z3_problems.py 12
+  python z3_problems.py test_all

@@ -16,13 +16,6 @@ lemma "(0::real) < u ==> u < v ==> v < 1 ==> 2 <= x ==> x <= y ==> 2 * u * v^2 <
   apply (simp add: field_simps eval_nat_numeral)
 by (rule mult_strict_mono, auto)
 
-(* sledgehammer and auto fail on this *)
-lemma "(0::real) < u ==> 0 < v ==> (u + v + 1)^3 < (u + v + 2)^5"
-  apply (rule order_less_trans [OF power_strict_mono])
-  prefer 4
-  apply (rule power_strict_increasing)
-by auto
- 
 (* even this is nontrivial for sledgehammer *)
 lemma one_plus_square_gt_0: "(0 :: real) < 1 + y^2"
 by (metis add_commute less_add_one linorder_neqE_linordered_idom pos_add_strict 
@@ -33,18 +26,43 @@ lemma "(0 :: real) < 1 + y^2"
 by (smt power2_less_0)
 
 (* sledgehammer and auto fail on this *)
-lemma "(1::real) < x ==> (1 + y^2) * x > (1 + y^2)"
-  apply (subst mult.right_neutral [of "1 + y^2", symmetric])
-  apply (rule mult_le_less_imp_less, auto)
-by (rule one_plus_square_gt_0) 
-
-(* sledgehammer and auto fail on this *)
 lemma "(0::real) < x ==> x < 1 ==> 1 / (1 - x) > 1 / (1 - x^2)"
   apply (auto simp add: field_simps eval_nat_numeral)
   apply (rule mult_imp_div_pos_less)
   apply (auto simp add: field_simps)
   apply (subst mult.right_neutral [of 1, symmetric])
 by (rule mult_strict_mono, auto)
+
+(* sledgehammer and auto fail on this *)
+lemma "(0::real) < u ==> u < v ==> 0 < z ==> z + 1 < w ==> (u + v + w)^3 < (u + v + w + 1)^5"
+  apply (rule order_less_trans)
+  apply (rule power_strict_mono)
+  prefer 4
+  apply (rule power_strict_increasing)
+by auto
+
+(* sledgehammer and auto fail on this *)
+lemma "(0::real) < u ==> u < v ==> 0 < z ==> z + 1 < w ==> (u + v + w)^33 < (u + v + w + 1)^55"
+  apply (rule order_less_trans)
+  apply (rule power_strict_mono)
+  prefer 4
+  apply (rule power_strict_increasing)
+by auto
+
+(* sledgehammer and auto fail on this *)
+lemma "(0::real) < u ==> u < (v^2 + 23)^3 ==> 0 < z ==> z + 1 < w ==> 
+    (u + (v^2 + 23)^3 + w)^3 < (u + (v^2 + 23)^3 + w + 1)^5"
+  apply (rule order_less_trans)
+  apply (rule power_strict_mono)
+  prefer 4
+  apply (rule power_strict_increasing)
+by auto
+
+(* sledgehammer and auto fail on this *)
+lemma "(1::real) < x ==> (1 + y^2) * x > (1 + y^2)"
+  apply (subst mult.right_neutral [of "1 + y^2", symmetric])
+  apply (rule mult_le_less_imp_less, auto)
+by (rule one_plus_square_gt_0) 
 
 (* sledgehammer gets this easily *)
 lemma "(ALL x y. x <= y --> f x <= f y) ==> (u::real) < v ==> (x::real) <= y ==> 
@@ -157,17 +175,18 @@ by auto
 
 (* from the Isabelle mailing list - Sledgehammer gets it *)
 lemma "(0::real) < x ==> 0 < y ==> y < 1 ==> x + y > x * y"
+
 by (metis add_strict_mono monoid_add_class.add.right_neutral monoid_mult_class.mult.left_neutral 
   mult_commute real_mult_less_iff1)
 
 (* Sledgehammer fails *)
-lemma "(0::real) < x ==> 0 < y ==> y < 1 ==> x + y^99 > x * y^99"
+lemma "(0::real) < x ==> 0 < y ==> y < 1 ==> x + y^150 > x * y^150"
   apply (rule order_le_less_trans)
   apply (rule mult_right_le_one_le, auto)
 by (rule power_le_one, auto)
 
 (* a slight variant *)
-lemma "(0::real) < x ==> -1 < y ==> y < 0 ==> x + (y + 1)^99 > x * (y + 1)^99"
+lemma "(0::real) < x ==> -1 < y ==> y < 0 ==> x + (y + 1)^150 > x * (y + 1)^150"
   apply (rule order_le_less_trans)
   apply (rule mult_right_le_one_le, auto)
 by (rule power_le_one, auto)
