@@ -186,10 +186,23 @@
 %Maximum weight in proof search: 1
 
 
+fof('exp_incr', axiom, (
+                  ![X,Y] :
+                  (X < Y => exp(X) < exp(Y))
+)).
 
+fof('bonus_ineq', conjecture, (
+                  ![X,Y,U,V] :
+                  ((X>0 & Y>3 & U<V)
+                  => 2*U + exp(10) <= 2*V + exp(1 + Y^2)))).
+
+%SZS status GaveUp for metitarski_problems.tptp
+%Processor time: 2.172 = 2.124 (Metis) + 0.048 (RCF)
+%Maximum weight in proof search: 1451
+%
 
 include('Axioms/general.ax').
 include('Axioms/exp-general.ax').
-%include('Axioms/exp-extended.ax').
-%include('Axioms/exp-lower.ax').
-%include('Axioms/exp-upper.ax').
+include('Axioms/exp-extended.ax').
+include('Axioms/exp-lower.ax').
+include('Axioms/exp-upper.ax').
