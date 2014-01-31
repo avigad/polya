@@ -82,7 +82,7 @@ The results:
     
     Polya (poly): valid, 26ms
     Polya (fm): valid, 4ms
-    Z3: timed out
+    Z3: times out
     Sledgehammer: fails
     
     
@@ -205,7 +205,7 @@ The results:
     
     Polya (poly): valid, 23ms
     Polya (fm): valid, 19ms
-    Z3: timed out
+    Z3: times out
     Sledgehammer:
     
     
@@ -218,7 +218,7 @@ The results:
     
     Polya (poly): valid, 44ms
     Polya (fm): valid, 42ms
-    Z3: timed out
+    Z3: times out
     Sledgehammer: fails
     
     
@@ -284,7 +284,7 @@ The results:
     
     Polya (poly): valid, 19ms
     Polya (fm): valid, 9ms
-    Z3: timed out
+    Z3: times out
     Sledgehammer: fails
     
     
@@ -297,7 +297,7 @@ The results:
     
     Polya (poly): valid, 28ms
     Polya (fm): valid, 15ms
-    Z3: timed out
+    Z3: times out
     Sledgehammer: fails
     
     
@@ -311,7 +311,7 @@ The results:
     
     Polya (poly): valid, 75ms
     Polya (fm): valid, 72ms
-    Z3: timed out
+    Z3: times out
     Sledgehammer: fails
     
     
