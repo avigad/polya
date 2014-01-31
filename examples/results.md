@@ -13,7 +13,7 @@ The data on Z3 was obtained using
     
 The assessment of Isabelle's Sledgehammer is based on the file
 
-    isabelle_problems.py
+    isabelle_problems.thy
     
 We also experimented with MetiTarski, which uses Z3 for problems in the language of real closed fields. MetiTarski did well on those problems, but it is not designed to handle axioms for uninterpreted function symbols, and did not solve the two problems with exponentiation below. Some tests are found in the file
 
@@ -165,7 +165,7 @@ The results:
     
     Polya (poly): valid, 19ms
     Polya (fm): valid, 14ms
-    Z3: unknown
+    Z3: fails
     Sledgehammer: fails
     
     
@@ -179,7 +179,7 @@ The results:
     
     Polya (poly): valid, 53ms
     Polya (fm): valid, 36ms
-    Z3: unknown
+    Z3: fails
     Sledgehammer: succeeds (resolution, z3)
     
     
@@ -192,7 +192,7 @@ The results:
     
     Polya (poly): valid, 73ms
     Polya (fm): valid, 41ms
-    Z3: unknown
+    Z3: fails
     Sledgehammer: fails
     
     
@@ -205,7 +205,7 @@ The results:
     
     Polya (poly): valid, 23ms
     Polya (fm): valid, 19ms
-    Z3: times out
+    Z3: fails
     Sledgehammer:
     
     
@@ -258,7 +258,7 @@ The results:
     
     Polya (poly): valid, 79ms
     Polya (fm): valid, 76ms
-    Z3: unknown
+    Z3: fails
     Sledgehammer: fails
     
     
@@ -324,7 +324,7 @@ The results:
     
     Polya (poly): valid, 28ms
     Polya (fm): valid, 28ms
-    Z3: unknown
+    Z3: fails
     Sledgehammer: fails
     
     
@@ -339,7 +339,7 @@ The results:
     
     Polya (poly): valid, 94ms
     Polya (fm): valid, 64ms
-    Z3: unknown
+    Z3: fails
     Sledgehammer: fails
     
     
