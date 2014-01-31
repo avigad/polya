@@ -4,27 +4,7 @@ import timeit
 import polya.main.messages as messages
 import sys
 
-#m, u, v, w, x, y, z = z3.Reals('m u v w x y z')
-#a, b, c, d, e, i = z3.Reals('a b c d e i')
-#f = polya.Func('f')
-#f = z3.Function('f', z3.RealSort(), z3.RealSort())
-#g = z3.Function('g', z3.RealSort(), z3.RealSort())
-#ceil = z3.Function('ceil', z3.RealSort(), z3.RealSort())
-#abs2 = z3.Function('abs', z3.RealSort(), z3.RealSort())
-abs = z3.Function('abs', z3.RealSort(), z3.RealSort())
-
-
-a, b, c, d, e, i, K, m, n = z3.Reals('a b c d e i K m n')
-r, s, t, u, v, w, x, y, z = z3.Reals('r s t u v w x y z')
-eps = z3.Real('eps')
-
-f = z3.Function('f', z3.RealSort(), z3.RealSort())
-g = z3.Function('g', z3.RealSort(), z3.RealSort(), z3.RealSort(), z3.RealSort())
-exp = z3.Function('exp', z3.RealSort(), z3.RealSort())
-ceil = z3.Function('ceil', z3.RealSort(), z3.RealSort())
-
 Forall, And, Implies = z3.ForAll, z3.And, z3.Implies
-
 
 class Example:
 
@@ -83,13 +63,15 @@ class Example:
 #
 ####################################################################################################
 
-#a, b, c, d, e, i, K, m, n = Vars('a, b, c, d, e, i, K, m, n')
-#r, s, t, u, v, w, x, y, z = Vars('r, s, t, u, v, w, x, y, z')
-#eps = Var('eps')
+a, b, c, d, e, i, K, m, n = z3.Reals('a b c d e i K m n')
+r, s, t, u, v, w, x, y, z = z3.Reals('r s t u v w x y z')
+eps = z3.Real('eps')
 
-#f = Func('f')
-#exp = Func('exp')
-#ceil = Func('ceil')
+f = z3.Function('f', z3.RealSort(), z3.RealSort())
+g = z3.Function('g', z3.RealSort(), z3.RealSort(), z3.RealSort(), z3.RealSort())
+exp = z3.Function('exp', z3.RealSort(), z3.RealSort())
+ceil = z3.Function('ceil', z3.RealSort(), z3.RealSort())
+abs2 = z3.Function('abs', z3.RealSort(), z3.RealSort())
 
 examples = list()
 
@@ -237,9 +219,10 @@ examples.append(Example(
 
 # times out
 examples.append(Example(
-    axioms=[Forall([x, y], abs(x + y) <= abs(x) + abs(y))],
-    hyps=[i >= 0, abs(f(y) - f(x)) < 1 / (2 * (i + 1)), abs(f(z) - f(y)) < 1 / (2 * (i + 1))],
-    conc=(abs(f(z) - f(x)) < 1 / (i + 1)),
+    axioms=[Forall([x, y], abs2(x + y) <= abs2(x) + abs2(y)), Forall(x, Implies(x >= 0, abs2(x) == x)),
+	    Forall(x, Implies(x <= 0, abs2(x) == -x))],
+    hyps=[i >= 0, abs2(f(y) - f(x)) < 1 / (2 * (i + 1)), abs2(f(z) - f(y)) < 1 / (2 * (i + 1))],
+    conc=(abs2(f(z) - f(x)) < 1 / (i + 1)),
     comment='Discussed in Avigad, Lewis, and Roux (2014)',
     omit=True
 ))
