@@ -42,6 +42,7 @@ from blackboard import Blackboard
 
 solver_options = ['fm', 'poly']
 default_solver = 'none'
+default_split = 2
 
 try:
     import cdd
@@ -97,7 +98,20 @@ def set_solver_type(s):
 #
 ####################################################################################################
 
-def run(B):
+def copy_and_add(B, *comps):
+    """Create a copy of the blackboard B, and
+    add comps to it, return this new blackboard if no inconsistency is
+    immediately raised, return None otherwise.
+    Arguments:
+    - `B`: an instance of Blackboard
+    - `a`: an instance of 
+    """
+    new_B = copy.deepcopy(B)
+    new_B.add(*comps)
+    return new_B
+
+
+def run(B, split):
     """
     Given a blackboard B, runs the default modules  until either a contradiction is
     found or no new information is learned.
@@ -111,21 +125,76 @@ def run(B):
         messages.announce('Unsupported option: {0}'.format(default_solver), messages.INFO)
         return
     cm = CongClosureModule()
-    return run_modules(B, cm, pa, pm)
+    return run_modules(B, [cm, pa, pm], split)
 
 
-def run_modules(B, *modules):
+def saturate_modules(B, modules):
+    """Run the modules in succession on B until saturation
+    
+    Arguments:
+    - `B`: a blackboard
+    - `modules`: a list of modules
+    """
+    mid = B.identify()
+    while len(B.get_new_info(mid)) > 0:
+        for m in modules:
+            messages.announce(B.info_dump(), messages.DEBUG)
+            m.update_blackboard(B)
+
+
+def all_contr(f, l):
+    """Returns True if f(a) raises
+    Contradiction for every a in l and False otherwise
+    
+    Arguments:
+    - `f`: a function a -> Unit
+    - `l`: a list of as
+    """
+    b = True
+    for a in l:
+        try:
+            f(a)
+            b = False
+            break
+        #TODO: have a join operation for contradiction
+        except Contradiction:
+            pass
+    return b
+
+
+def split_modules(B, modules, n):
+    """
+    
+    Arguments:
+    - `B`:
+    - `modules`:
+    - `n`:
+    """
+    saturate_modules(B, modules)
+    if n <= 0:
+        return B
+    else:
+        cases = B.case_split()
+        if len(cases) == 0:
+            # print '\n\nnothing to split on!\n\n'
+            return B
+        elif all_contr(lambda c:
+                       split_modules(copy_and_add(B, c), modules, n - 1),
+                       cases):
+            # print '\n\n splitting on {0!s}!\n\n'.format(cases)
+            raise Contradiction('Contradiction when splitting on {0!s}'.format(cases))
+        else:
+            return B
+
+
+def run_modules(B, modules, split):
     """
     Given a blackboard B, iteratively runs the modules in modules until either a contradiction is
     found or no new information is learned.
     Returns True if a contradiction is found, False otherwise.
     """
     try:
-        mid = B.identify()
-        while len(B.get_new_info(mid)) > 0:
-            for m in modules:
-                messages.announce(B.info_dump(), messages.DEBUG)
-                m.update_blackboard(B)
+        split_modules(B, modules, split)
         return False
     except Contradiction as e:
         messages.announce(e.msg+'\n', messages.ASSERTION)
@@ -143,22 +212,25 @@ def solve(*assertions):
     except Contradiction as e:
         messages.announce(e.msg+'\n', messages.ASSERTION)
         return True
-    return run(B)
+    return run(B, default_split)
 
 
 class Solver:
 
-    def __init__(self, assertions=list(), axioms=list(), modules=list()):
+    def __init__(self, assertions=list(), axioms=list(),
+                 modules=list(), split=default_split):
         """
         assertions: a list of TermComparisons to be asserted to the blackboard.
         axioms: a list of Axioms
         poly: True if the Solver should try to use the polyhedron modules
         """
         if not isinstance(assertions, list) or not isinstance(axioms, list):
-            messages.announce('Error: assertions and axioms must be passed as lists.',
-                              messages.INFO)
-            messages.announce('Usage: Solver([assertions=list()[, axioms=list()[, poly=True]]])',
-                              messages.INFO)
+            messages.announce(
+                'Error: assertions and axioms must be passed as lists.',
+                messages.INFO)
+            messages.announce(
+                'Usage: Solver([assertions=list()[, axioms=list()[, poly=True]]])',
+                messages.INFO)
             raise Exception
 
         self.B = Blackboard()
@@ -172,8 +244,9 @@ class Solver:
                 pa = fm_add_module.FMAdditionModule()
                 pm = fm_mult_module.FMMultiplicationModule()
             else:
-                messages.announce('Unsupported option: {0}'.format(default_solver),
-                                  messages.INFO)
+                messages.announce(
+                    'Unsupported option: {0}'.format(default_solver),
+                    messages.INFO)
                 raise Exception
 
             modules.extend([pa, pm])
@@ -185,6 +258,7 @@ class Solver:
         self.contradiction = False
         self.assume(*assertions)
         self.modules = modules
+        self.split = split
 
     def set_modules(self, modules):
         self.modules = modules
@@ -196,7 +270,7 @@ class Solver:
         """
         if self.contradiction:
             return True
-        self.contradiction = run_modules(self.B, *self.modules)
+        self.contradiction = run_modules(self.B, self.modules, self.split)
         return self.contradiction
 
     def prove(self, claim):
@@ -207,14 +281,13 @@ class Solver:
         if self.contradiction:
             return True
 
-        B = copy.deepcopy(self.B)
         a = terms.TermComparison(claim.term1, terms.comp_negate(claim.comp), claim.term2)
         try:
-            B.assert_comparison(a)
+            B = copy_and_add(self.B, a)
         except Contradiction as e:
-            messages.announce(e.msg, messages.ASSERTION)
-            return True
-        return run_modules(B, *self.modules)
+            messages.announce(e.msg+'\n', messages.ASSERTION)
+        else:
+            return run_modules(B, self.modules, self.split)
 
     def _assert_comparison(self, c):
         """

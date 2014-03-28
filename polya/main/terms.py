@@ -87,7 +87,7 @@ def pretty_print_fraction(frac):
 ####################################################################################################
 
 
-class Term:
+class Term(object):
 
     def __init__(self):
         self.key = None
@@ -465,7 +465,7 @@ class FuncTerm(AppTerm):
         return FuncTerm(self.func_name, [a.substitute(assn) for a in self.args])
 
 
-class Func():
+class Func(object):
     """
     Function symbols.
 
@@ -493,7 +493,7 @@ class Func():
 ####################################################################################################
 
 
-class STerm:
+class STerm(object):
 
     def __init__(self, coeff, term):
         self.coeff = fractions.Fraction(coeff)
@@ -644,7 +644,7 @@ class STerm:
 ####################################################################################################
 
 
-class MulPair:
+class MulPair(object):
 
     def __init__(self, term, exponent):
         self.term = term
@@ -710,7 +710,7 @@ comp_eval = {GT: lambda x, y: x > y, GE: lambda x, y: x >= y, EQ: lambda x, y: x
              LE: lambda x, y: x <= y, LT: lambda x, y: x < y, NE: lambda x, y: x != y}
 
 
-class TermComparison():
+class TermComparison(object):
 
     def __init__(self, term1, comp, term2):
         if isinstance(term1, numbers.Rational):

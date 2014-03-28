@@ -37,6 +37,7 @@
 ####################################################################################################
 
 
+import random
 import polya.main.terms as terms
 import polya.main.messages as messages
 import polya.util.geometry as geometry
@@ -53,7 +54,7 @@ class Error(Exception):
 ####################################################################################################
 
 
-class Tracker:
+class Tracker(object):
     """
     Allows modules to query for only the information that has been updated since the last time they
     were called.
@@ -91,7 +92,40 @@ class Tracker:
             self.updates[k].add(key)
 
 
-class Blackboard():
+class Split(object):
+    """Implements case_split which takes as imput a
+    Blackboard and returns a list of statements to split on
+    """
+    
+    def __init__(self, seed=None):
+        """Initialize the split, and give an optional seed
+        
+        Arguments:
+        - `seed`:
+        """
+        self.seed = seed
+        random.seed(self.seed)
+
+    def case_split(self, bb):
+        """Return a list of statements [s0,...,sn] to split on:
+        if bb+s0, ..., bb+sn is inconsistent iff bb is inconsistent.
+        
+        Arguments:
+        - `bb`: an instance of Blackboard
+        """
+        no_sign = []
+        for i in range(0, bb.num_terms):
+            if not (i in bb.zero_inequalities):
+                no_sign.append(bb.term_defs[i])
+        if len(no_sign) == 0:
+            return []
+        else:
+            x = random.choice(no_sign)
+            return [x == 0, x < 0, x > 0]
+
+
+
+class Blackboard(object):
 
     def __init__(self):
 
@@ -111,6 +145,7 @@ class Blackboard():
         self.zero_disequalities = set([])  # Set of IVar indices not equal to 0
 
         self.clauses = set()  # List of Clauses
+        self.split = Split()  # This object determines how to perform case splits
 
         self.tracker = Tracker(self)
 
@@ -410,7 +445,7 @@ class Blackboard():
                 new_comps = [new_comp, old_comp]
             else:
                 # we should never reach this point.
-                raise Exception('Mistake made in assert_inequality')
+                assert(False)
         else:
             #a, b = old_comps[0], old_comps[1]
             # We know that b is clockwise from a.
@@ -428,28 +463,9 @@ class Blackboard():
             if new_comps[0].compare_hp(new_comps[1]) == 0:  # we have equality
                 del self.inequalities[i, j]
                 self.assert_equality(i, coeff, j)
-                return
+                return None
 
         self.inequalities[i, j] = new_comps
-
-        # # check to see if new sign info is known.
-        # if self.sign(i) == 0 and len(self.inequalities[i, j]) == 2:
-        #     i_g_0 = geometry.Halfplane(0, -1, True)
-        #     cw_a = i_g_0.compare_hp(self.inequalities[i, j][0])
-        #     cw_b = i_g_0.compare_hp(self.inequalities[i, j][1])
-        #     if cw_a > 0 > cw_b:
-        #         self.assert_zero_inequality(i, terms.GT)
-        #     elif cw_a < 0 < cw_b:
-        #         self.assert_zero_inequality(i, terms.LT)
-        #
-        # if self.sign(j) == 0 and len(self.inequalities[i, j]) == 2:
-        #     j_g_0 = geometry.Halfplane(1, 0, True)
-        #     cw_a = j_g_0.compare_hp(self.inequalities[i, j][0])
-        #     cw_b = j_g_0.compare_hp(self.inequalities[i, j][1])
-        #     if cw_a > 0 > cw_b:
-        #         self.assert_zero_inequality(j, terms.GT)
-        #     elif cw_a < 0 < cw_b:
-        #         self.assert_zero_inequality(j, terms.LT)
 
         if (i, j) in self.disequalities:
             diseqs = self.disequalities.pop(i, j)
@@ -694,6 +710,11 @@ class Blackboard():
             elif comp in (terms.LT, terms.LE):
                 return -1
         return 0
+
+    def case_split(self):
+        """Performs a case split depending on the current state
+        """
+        return self.split.case_split(self)
 
     def info_dump(self):
         """
