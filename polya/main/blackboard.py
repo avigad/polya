@@ -42,6 +42,18 @@ import polya.main.terms as terms
 import polya.main.messages as messages
 import polya.util.geometry as geometry
 
+default_seed = 0
+
+def set_default_seed(seed):
+    """Changes the default seed used in Split initialization
+    
+    Arguments:
+    - `seed`: an integer or None
+    """
+    global default_seed
+    default_seed = seed
+
+
 
 class Error(Exception):
     pass
@@ -145,7 +157,7 @@ class Blackboard(object):
         self.zero_disequalities = set([])  # Set of IVar indices not equal to 0
 
         self.clauses = set()  # List of Clauses
-        self.split = Split()  # This object determines how to perform case splits
+        self.split = Split(seed=default_seed)  # This object determines how to perform case splits
 
         self.tracker = Tracker(self)
 

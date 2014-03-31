@@ -31,7 +31,7 @@ from polya.fourier_motzkin.fm_add_module import FMAdditionModule
 from polya.fourier_motzkin.fm_mult_module import FMMultiplicationModule
 from polya.main.congruence_closure_module import CongClosureModule
 from polya.main.function_module import FunctionModule
-from blackboard import Blackboard
+from blackboard import Blackboard, set_default_seed
 
 
 ####################################################################################################
@@ -43,6 +43,9 @@ from blackboard import Blackboard
 solver_options = ['fm', 'poly']
 default_solver = 'none'
 default_split = 2
+default_seed = 7
+set_default_seed(default_seed)
+
 
 try:
     import cdd
@@ -176,12 +179,12 @@ def split_modules(B, modules, n):
     else:
         cases = B.case_split()
         if len(cases) == 0:
-            # print '\n\nnothing to split on!\n\n'
+            print '\n\nnothing to split on!\n\n'
             return B
         elif all_contr(lambda c:
                        split_modules(copy_and_add(B, c), modules, n - 1),
                        cases):
-            # print '\n\n splitting on {0!s}!\n\n'.format(cases)
+            print '\n\n splitting on {0!s}!\n\n'.format(cases)
             raise Contradiction('Contradiction when splitting on {0!s}'.format(cases))
         else:
             return B
