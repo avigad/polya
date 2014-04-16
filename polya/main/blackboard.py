@@ -194,8 +194,9 @@ class Blackboard(object):
                 new_def = terms.MulTerm([terms.MulPair(self.term_name(a.term), a.exponent)
                                          for a in t.args])
             elif isinstance(t, terms.FuncTerm):
-                new_def = terms.FuncTerm(t.func_name, [terms.STerm(a.coeff, self.term_name(a.term))
-                                                       for a in t.args])
+                new_def = t.func(*[terms.STerm(a.coeff, self.term_name(a.term)) for a in t.args])
+                # new_def = terms.FuncTerm(t.func_name, [terms.STerm(a.coeff, self.term_name(a.term))
+                #                                        for a in t.args])
             else:
                 raise Error('cannot create name for {0!s}'.format(t))
             i = self.num_terms  # index of the new term

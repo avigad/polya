@@ -74,7 +74,8 @@ def reduce_term(term, env):
             s, flag2 = t[0], t[1]
             nargs.append(a.coeff * s)
             flag1 = flag1 and flag2
-        return terms.STerm(1, terms.FuncTerm(term.func_name, nargs)), flag1
+        #return terms.STerm(1, terms.FuncTerm(term.func_name, nargs)), flag1
+        return terms.STerm(1, term.func(*nargs)), flag1
 
     else:
         raise Exception('Unknown term type encountered in reduce_term: ' + str(term))

@@ -189,7 +189,8 @@ class Term(object):
         return MulTerm([MulPair(self, n)])
 
     def __abs__(self):
-        return FuncTerm('abs', [STerm(1, self)])
+        return Func('abs')(STerm(1, self))
+        # return FuncTerm('abs', [STerm(1, self)])
 
     def __lt__(self, other):
         return TermComparison(self, LT, other)
@@ -447,22 +448,25 @@ class MulTerm(AppTerm):
 
 class FuncTerm(AppTerm):
 
-    def __init__(self, func_name, args):
-        AppTerm.__init__(self, func_name, args, key=(90, func_name))
+    def __init__(self, func, args):
+        AppTerm.__init__(self, func.name, args, key=(90, func.name))
+        self.func = func
 
     def pretty_print(self):
         return ATOM, '{0}({1})'.format(self.func_name,
                                        ', '.join([a.pretty_print()[1] for a in self.args]))
 
     def canonize(self):
-        if self.func_name == 'abs':
-            carg = self.args[0].canonize()
-            return STerm(abs(carg.coeff), FuncTerm('abs', [STerm(1, carg.term)]))
-        else:
-            return STerm(1, FuncTerm(self.func_name, [a.canonize() for a in self.args]))
+        return self.func.canonizer(self)
+        # if self.func_name == 'abs':
+        #     carg = self.args[0].canonize()
+        #     return STerm(abs(carg.coeff), FuncTerm('abs', [STerm(1, carg.term)]))
+        # else:
+        #     return STerm(1, FuncTerm(self.func_name, [a.canonize() for a in self.args]))
 
     def substitute(self, assn):
-        return FuncTerm(self.func_name, [a.substitute(assn) for a in self.args])
+        return self.func(*[a.substitute(assn) for a in self.args])
+        #return FuncTerm(self.func_name, [a.substitute(assn) for a in self.args])
 
 
 class Func(object):
@@ -475,15 +479,23 @@ class Func(object):
       print f(x, y, z)
     """
 
-    def __init__(self, name, arity=None):
+    def default_canonizer(self, func_term):
+        if func_term.func_name == 'abs':
+            carg = func_term.args[0].canonize()
+            return STerm(abs(carg.coeff), abs(STerm(1, carg.term))) #todo: not sure about this line
+        else:
+            return STerm(1, func_term.func(*[a.canonize() for a in func_term.args]))
+
+    def __init__(self, name, arity=None, canonize=None):
         self.name = name
         self.arity = arity
+        self.canonizer = self.default_canonizer if canonize is None else canonize
 
     def __call__(self, *args):
         if self.arity is not None and len(args) != self.arity:
             raise Error('Wrong number of arguments to {0!s}'.format(self.name))
 
-        return FuncTerm(self.name, args)
+        return FuncTerm(self, args)
 
 
 ####################################################################################################
@@ -616,7 +628,8 @@ class STerm(object):
         return STerm(self.coeff, self.term.substitute(assn))
 
     def __abs__(self):
-        return FuncTerm('abs', [self])
+        #return FuncTerm('abs', [self])
+        return Func('abs')(self)
 
     def __lt__(self, other):
         return TermComparison(self, LT, other)

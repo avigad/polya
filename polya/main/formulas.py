@@ -236,8 +236,9 @@ class Forall:
                 return terms.MulTerm([terms.MulPair(replace_vars(s.term), s.exponent)
                                       for s in t.args])
             elif isinstance(t, terms.FuncTerm):
-                return terms.FuncTerm(t.func_name, [terms.STerm(s.coeff, replace_vars(s.term))
-                                                    for s in t.args])
+                return t.func(*[terms.STerm(s.coeff, replace_vars(s.term)) for s in t.args])
+                #return terms.FuncTerm(t.func_name, [terms.STerm(s.coeff, replace_vars(s.term))
+                                                    #for s in t.args])
             else:
                 return t
 
