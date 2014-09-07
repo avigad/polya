@@ -438,11 +438,28 @@ class Blackboard(object):
             elif coeff < 0:
                 self.assert_zero_inequality(j, terms.LT)
 
-        if new_comp.strong:
-            for c in old_comps:
-                if c.eq_dir(new_comp):
+        for c in old_comps:
+            if c.eq_dir(new_comp):
+                if new_comp.strong and not c.strong:
                     c.strong = True
                     return
+                else:
+                    # shouldn't get here
+                    assert(False)
+            elif c.opp_dir(new_comp):
+                if (not new_comp.strong) and (not c.strong):
+                    self.assert_equality(i, coeff, j)
+                else:
+                    assert(False)
+                return
+        #
+        # if new_comp.strong:
+        #     for c in old_comps:
+        #         if c.eq_dir(new_comp):
+        #             c.strong = True
+        #             return
+
+
         # If we reach this point, we can assume that new_comp is not collinear with anything
         # in old_comps
 

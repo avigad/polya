@@ -175,6 +175,12 @@ class Halfplane:
         """
         return self.cross(hp.a, hp.b) == 0 and self.a * hp.a >= 0 and self.b * hp.b >= 0
 
+    def opp_dir(self, hp):
+        """
+        Returns true if self and hp point in the opposite direction, false otherwise.
+        """
+        return self.cross(hp.a, hp.b) == 0 and self.a * hp.a <= 0 and self.b * hp.b <= 0
+
     def to_comp(self, t1, t2):
         if self.a == 0:  # vertical
             if self.contains_point(1, 0):

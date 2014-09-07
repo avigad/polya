@@ -149,7 +149,7 @@ class Term(object):
             if isinstance(other, MulTerm):
                 return other * self
             elif self.key == other.key:
-                return MulPair(self, 2)
+                return MulTerm([MulPair(self, 2)])
             else:
                 return MulTerm([MulPair(self, 1), MulPair(other, 1)])
         elif isinstance(other, STerm):
@@ -189,7 +189,8 @@ class Term(object):
         return MulTerm([MulPair(self, n)])
 
     def __abs__(self):
-        return Func('abs')(STerm(1, self))
+        return abs_val(self)
+        #return Func('abs')(STerm(1, self))
         # return FuncTerm('abs', [STerm(1, self)])
 
     def __lt__(self, other):
@@ -482,7 +483,7 @@ class Func(object):
     def default_canonizer(self, func_term):
         if func_term.func_name == 'abs':
             carg = func_term.args[0].canonize()
-            return STerm(abs(carg.coeff), abs(STerm(1, carg.term))) #todo: not sure about this line
+            return STerm(abs(carg.coeff), abs(STerm(1, carg.term)))
         else:
             return STerm(1, func_term.func(*[a.canonize() for a in func_term.args]))
 
@@ -497,6 +498,24 @@ class Func(object):
 
         return FuncTerm(self, args)
 
+
+####################################################################################################
+#
+# Known functions
+#
+####################################################################################################
+
+def abs_canonizer(func_term):
+    carg = func_term.args[0].canonize()
+    return STerm(abs(carg.coeff), abs(STerm(1, carg.term)))
+
+abs_val = Func('abs', 1, abs_canonizer)
+
+minm, maxm = Func('min'), Func('max')
+
+floor, ceil = Func('floor', 1), Func('ceil', 1)
+
+exp, log = Func('exp', 1), Func('log', 1)
 
 ####################################################################################################
 #
