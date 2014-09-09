@@ -42,7 +42,7 @@ from blackboard import Blackboard, set_default_seed
 
 solver_options = ['fm', 'poly']
 default_solver = 'none'
-default_split = 2
+default_split = 0
 default_seed = 7
 set_default_seed(default_seed)
 
@@ -265,6 +265,9 @@ class Solver:
 
     def set_modules(self, modules):
         self.modules = modules
+
+    def append_module(self, m):
+        self.modules.append(m)
 
     def check(self):
         """

@@ -298,6 +298,14 @@ class Blackboard(object):
                 return False
 
         if comp in [terms.LT, terms.LE, terms.GE, terms.GT]:
+
+            # TODO: added by JA on 9/9, to facilitate a call in minimum_module
+            # if i > j:
+            #     if coeff > 0:
+            #         i, comp, coeff, j = j, terms.comp_reverse(comp), 1 / coeff, i
+            #     else:
+            #         i, comp, coeff, j = j, comp, 1 / coeff, i
+
             if (i, j) in self.equalities:
                 e_coeff = self.equalities[i, j]
                 if coeff == e_coeff:
@@ -370,6 +378,23 @@ class Blackboard(object):
             if i in self.zero_inequalities and self.zero_inequalities[i] in [terms.LT, terms.GT]:
                 return True
             return False
+
+    def implies_comparison(self,c):
+        """
+        Takes an instance of terms.TermComparison, and assume the comparison canonizes to
+        a comparison between IVars. Determines whether the comparison is implied by
+        information in the blackboard.
+        """
+        c = c.canonize()
+
+        term1, comp, coeff, term2 = c.term1, c.comp, c.term2.coeff, c.term2.term
+        if coeff == 0:
+            term2 = terms.IVar(0)
+        if isinstance(term1, terms.IVar) and isinstance(term2, terms.IVar):
+            return self.implies(term1.index, comp, coeff, term2.index)
+        else:
+            return False
+
 
     def assert_comparison(self, c):
         """
@@ -448,7 +473,7 @@ class Blackboard(object):
                     assert(False)
             elif c.opp_dir(new_comp):
                 if (not new_comp.strong) and (not c.strong):
-                    self.assert_equality(i, coeff, j)
+                    self.assert_comparison(terms.IVar(i) == coeff * terms.IVar(j))
                 else:
                     assert(False)
                 return
@@ -498,7 +523,7 @@ class Blackboard(object):
         self.inequalities[i, j] = new_comps
 
         if (i, j) in self.disequalities:
-            diseqs = self.disequalities.pop(i, j)
+            diseqs = self.disequalities.pop((i, j))
             n_diseqs = set(k for k in diseqs if not self.implies(i, terms.NE, k, j))
             if len(n_diseqs) > 0:
                 self.disequalities[i, j] = n_diseqs

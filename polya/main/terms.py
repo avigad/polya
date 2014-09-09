@@ -458,7 +458,7 @@ class FuncTerm(AppTerm):
                                        ', '.join([a.pretty_print()[1] for a in self.args]))
 
     def canonize(self):
-        return self.func.canonizer(self)
+        return self.func.canonize(self)
         # if self.func_name == 'abs':
         #     carg = self.args[0].canonize()
         #     return STerm(abs(carg.coeff), FuncTerm('abs', [STerm(1, carg.term)]))
@@ -480,42 +480,70 @@ class Func(object):
       print f(x, y, z)
     """
 
-    def default_canonizer(self, func_term):
-        if func_term.func_name == 'abs':
-            carg = func_term.args[0].canonize()
-            return STerm(abs(carg.coeff), abs(STerm(1, carg.term)))
-        else:
-            return STerm(1, func_term.func(*[a.canonize() for a in func_term.args]))
+    def default_canonize(self, func_term):
+        # if func_term.func_name == 'abs':
+        #     carg = func_term.args[0].canonize()
+        #     return STerm(abs(carg.coeff), abs(STerm(1, carg.term)))
+        # else:
+        return STerm(1, func_term.func(*[a.canonize() for a in func_term.args]))
 
     def __init__(self, name, arity=None, canonize=None):
         self.name = name
         self.arity = arity
-        self.canonizer = self.default_canonizer if canonize is None else canonize
+        self.canonize = self.default_canonize if canonize is None else canonize
 
     def __call__(self, *args):
         if self.arity is not None and len(args) != self.arity:
             raise Error('Wrong number of arguments to {0!s}'.format(self.name))
-
         return FuncTerm(self, args)
 
 
 ####################################################################################################
 #
-# Known functions
+# Some built-in functions
 #
 ####################################################################################################
 
-def abs_canonizer(func_term):
+
+def abs_canonize(func_term):
     carg = func_term.args[0].canonize()
     return STerm(abs(carg.coeff), abs(STerm(1, carg.term)))
 
-abs_val = Func('abs', 1, abs_canonizer)
+abs_val = Func('abs', 1, abs_canonize)
 
-minm, maxm = Func('min'), Func('max')
+def min_canonize(func_term):
+    cargs = sorted([arg.canonize() for arg in func_term.args], key=lambda a: a.key)
+    # todo: remove duplicates?
+    first_coeff = cargs[0].coeff
+    if first_coeff == 0:
+        return STerm(1, minm(*cargs))
+    elif first_coeff > 0:
+        new_args = [arg / first_coeff for arg in cargs]
+        return STerm(first_coeff, minm(*new_args))
+    else:
+        new_args = [-arg / first_coeff for arg in cargs]
+        return STerm(-first_coeff, minm(*new_args))
 
-floor, ceil = Func('floor', 1), Func('ceil', 1)
+minm = Func('minm', None, min_canonize)
+
+def max_canonize(func_term):
+    # replace max(t1,...,tn) by -min(-t1,...,tn)
+    cargs = [arg * -1 for arg in func_term.args]
+    return min_canonize(minm(*cargs)) * -1
+
+maxm = Func('maxm', None, max_canonize)
+
+floor = Func('floor', 1)
+
+def ceil_canonize(func_term):
+    # replace ceil(t) by -floor(-t)
+    arg = func_term.args[0]
+    return (floor(arg * -1)).canonize * -1
+
+ceil = Func('ceil', 1, ceil_canonize)
 
 exp, log = Func('exp', 1), Func('log', 1)
+
 
 ####################################################################################################
 #
