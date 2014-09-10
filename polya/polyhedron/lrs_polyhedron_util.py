@@ -73,6 +73,7 @@ def create_h_format_matrix(comparisons, num_vars):
             # Add routine does not handle disequality
             continue
 
+
         row = [0] * (num_vars + 2)
         row[1] = (-1 if comp == terms.GT else 0)
 

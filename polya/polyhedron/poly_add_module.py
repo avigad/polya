@@ -168,7 +168,8 @@ def get_2d_comparisons(vertices, lin_set):
                     pt = next(v for v in i_j_vertices if not l_b1.get_direction(v) == terms.EQ)
                 except StopIteration:
                     # There is no direction information to be found: all vertices are collinear.
-                    continue
+                    #continue
+                    learned_comparisons.append(bound1[1]*terms.IVar(i) == bound1[0]*terms.IVar(j))
                 #print '*** l_b1 = ', l_b1, pt, terms.comp_str[l_b1.get_direction(pt)]
                 dir1 = adjust_strength(strong1 and strong2, l_b1.get_direction(pt))
                 learned_comparisons.append(
@@ -268,21 +269,22 @@ class PolyAdditionModule:
 
 if __name__ == '__main__':
 
-    # can change 'normal' to 'quiet' or 'low'
-    messages.set_verbosity(messages.normal)
-
-    u, v, w, x, y, z = terms.Vars('u, v, w, x, y, z')
-    f = terms.Func('f')
-    g = terms.Func('g')
-
-    B = blackboard.Blackboard()
-
-    B.assert_comparison(u > 0)
-    B.assert_comparison(u < 1)
-    B.assert_comparison(v > 0)
-    B.assert_comparison(v < 1)
-    B.assert_comparison(u + v > u * v)
-
-    p = PolyAdditionModule()
-
-    p.update_blackboard(B)
+    # # can change 'normal' to 'quiet' or 'low'
+    # messages.set_verbosity(messages.normal)
+    #
+    # u, v, w, x, y, z = terms.Vars('u, v, w, x, y, z')
+    # f = terms.Func('f')
+    # g = terms.Func('g')
+    #
+    # B = blackboard.Blackboard()
+    #
+    # B.assert_comparison(u > 0)
+    # B.assert_comparison(u < 1)
+    # B.assert_comparison(v > 0)
+    # B.assert_comparison(v < 1)
+    # B.assert_comparison(u + v > u * v)
+    #
+    # p = PolyAdditionModule()
+    #
+    # p.update_blackboard(B)
+    pass
