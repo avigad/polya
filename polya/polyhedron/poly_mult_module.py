@@ -61,7 +61,8 @@ def get_mul_comparisons(vertices, lin_set, num_vars, prime_of_index):
 
         ineqs = cdd.Polyhedron(matrix).get_inequalities()
 
-        for c in ineqs:
+        for ind in range(len(ineqs)):
+            c = ineqs[ind]
             if c[2] == c[1] == 0:  # no comp
                 continue
             strong = not any(
@@ -91,9 +92,14 @@ def get_mul_comparisons(vertices, lin_set, num_vars, prime_of_index):
             if skip:
                 continue
 
+            if ind in ineqs.lin_set:
+                new_comp = terms.EQ
+            else:
+                new_comp = terms.GT if strong else terms.GE
+
             new_comparisons.append((terms.MulPair(terms.IVar(i), c[1]),
                                    terms.MulPair(terms.IVar(j), c[2]),
-                                   const, terms.GT if strong else terms.GE))
+                                   const, new_comp))
     return new_comparisons
 
 
