@@ -21,6 +21,7 @@ import polya.util.timer as timer
 import polya.util.num_util as num_util
 import fractions
 import copy
+import itertools
 # from itertools import product, ifilter
 # from inspect import getargspec
 # from copy import copy
@@ -378,7 +379,16 @@ def unify(B, termlist, uvars, arg_uvars, envs=list()):
 
     if len(arg_uvars) == 0:
         #todo: we should find a way to handle the case where no variables occur alone in func terms.
-        return envs
+        n_envs = []
+        for e in envs:
+            #print e
+            for pr in itertools.product(range(B.num_terms), repeat=len(uvars)):
+                e2 = copy.copy(e)
+                for uv in range(len(uvars)):
+                    e2[uvars[uv]] = (1, pr[uv])
+                n_envs.append(e2)
+        #print 'n_nens:', n_envs
+        return n_envs
 
     v = arg_uvars[0]
     vkey = terms.UVar(v).key

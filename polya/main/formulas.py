@@ -33,7 +33,7 @@ class Axiom:
     """
     literals is a list of term_comparisons. The axiom represents their disjunction.
     """
-    def __init__(self, literals):
+    def __init__(self, literals, triggers=list()):
         #todo: make triggers a set
 
         def find_uvars(term):
@@ -72,7 +72,7 @@ class Axiom:
         self.literals = [l.canonize() for l in literals]
 
         # todo: user should be able to specify triggers if they would like to.
-        triggers = list()
+        #triggers = list()
         if len(triggers) == 0:
             for c in self.literals:
                 triggers.extend(find_func_subterms(c.term1))
