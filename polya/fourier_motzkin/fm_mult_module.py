@@ -314,8 +314,11 @@ def one_comparison_to_comparison(c, B):
     l = len(p.args)
     comp = terms.GT if c.strong else terms.GE
     if l == 0:
-        assert c.strong  # comparisons 1 >= 1 should have been eliminated
-        return p.coeff*terms.IVar(0) > 0
+        #print c
+        return terms.comp_eval[comp](p.coeff * terms.IVar(0), terms.IVar(0))
+
+        #assert c.strong  # comparisons 1 >= 1 should have been eliminated
+        #return p.coeff*terms.IVar(0) > 0
 #        return None
     if l == 1:
         m = multiplicand_to_mulpair(p.args[0])
@@ -359,14 +362,18 @@ class FMMultiplicationModule:
         eqs, comps = get_multiplicative_information(B)
         # t0 = 1; ignore
         for i in range(1, B.num_terms):
+            print 'i:',i
             # at this point, eqs and comps have all comparisons with indices >= i
             i_eqs, i_comps = eqs, comps
             # determine all comparisons with IVar(i) and IVar(j) with j >= i
             for j in range(i + 1, B.num_terms):
+                print 'j:', j
                 # at this point, i_eqs and i_comps have all comparisons with i and indices >= j
                 ij_eqs, ij_comps = i_eqs, i_comps
                 # determine all comparisons between IVar(i) and IVar(j)
                 for k in range(j + 1, B.num_terms):
+                    print 'k:',k
+                    print ij_eqs,ij_comps
                     ij_eqs, ij_comps = elim(ij_eqs, ij_comps, k)
                 assert_comparisons_to_blackboard(ij_eqs, ij_comps, B)
                 # done with IVar(j)
