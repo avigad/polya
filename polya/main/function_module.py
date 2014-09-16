@@ -379,6 +379,9 @@ def unify(B, termlist, uvars, arg_uvars, envs=list()):
 
     if len(arg_uvars) == 0:
         #todo: we should find a way to handle the case where no variables occur alone in func terms.
+
+        return envs
+        # The code below is a tentative generalization.
         n_envs = []
         for e in envs:
             #print e

@@ -298,3 +298,33 @@ def derive_info_from_definitions(B):
             # we don't know any information about the sign of key.
             s = reduce(lambda x, y: x*y, signs)
             B.assert_comparison(terms.comp_eval[sign_to_comp[s.dir, s.strong]](terms.IVar(key), 0))
+
+def preprocess_cancellations(B):
+    """
+    This routine tries to overcome some of the limitations of the elimination routine by looking
+    for comparisons where there is not full sign information.
+
+    Given a comparison t_1^k_1 * ... * t_n^k^n <> s_1^l_1 * ... * s_n ^ l_n, we cancel out as many
+    pieces as we can that have sign info and check what remains for a valid comparison.
+    """
+
+    mul_inds = {i:B.term_defs[i]
+                for i in range(len(B.term_defs)) if isinstance(B.term_defs[i],terms.MulTerm)}
+    comps = []
+
+    for c in (c for c in B.get_inequalities() + B.get_equalities() if
+            (c.term2.coeff != 0 and (c.term1.index in mul_inds or c.term2.term.index in mul_inds))):
+        lterm = mul_inds[c.term1.index] if c.term1.index in mul_inds else c.term1
+        rterm = mul_inds[c.term2.term.index] if c.term2.term.index in mul_inds else c.term2.term
+        coeff = c.term2.coeff
+        comp = c.comp
+        for p in rterm.args:
+            s = B.sign(p.term.index)
+            if s != 0:
+                cancel = terms.MulTerm(terms.MulPair(p.term,-p.exponent))
+                rterm, lterm = rterm * cancel, lterm * cancel
+                comp = terms.comp_reverse(comp) if (s < 0 and p.exponent % 2 == 1) else comp
+        print 'discovered:', terms.comp_eval[comp](lterm, coeff * rterm)
+
+
+

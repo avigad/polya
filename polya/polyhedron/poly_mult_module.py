@@ -126,8 +126,28 @@ def add_of_mul_comps(m_comparisons, num_terms):
     a_comparisons = []
 
     for c in m_comparisons:
+        (c2, sc2) = (c.term2.term, c.term2.coeff) if isinstance(c.term2, terms.STerm) \
+            else (c.term2, None)
         if c.comp == terms.EQ:
-            t = -c.term2
+            if isinstance(c2, terms.IVar):
+                t = -c2
+            elif isinstance(c2, terms.MulTerm):
+                for mp in [m for m in c2.args if m.term.index != 0]:
+                    t += mp.term * mp.exponent
+            else:
+                raise Exception
+
+            if sc2 is not None:
+                const = fractions.Fraction(sc2)
+                if const.numerator != 1:
+                    fac = num_util.factorization(const.numerator)
+                    for i in fac:
+                        t -= fac[i] * terms.IVar(index_of(i))
+                if const.denominator != 1:
+                    fac = num_util.factorization(const.denominator)
+                    for i in fac:
+                        t += fac[i] * terms.IVar(index_of(i))
+
             if isinstance(c.term1, terms.MulTerm):
                 for mp in [m for m in c.term1.args if m.term.index != 0]:
                     t += mp.term * mp.exponent
@@ -176,6 +196,10 @@ class PolyMultiplicationModule:
 
         mul_util.derive_info_from_definitions(B)
 
+        print 'preprocessing'
+
+        #mul_util.preprocess_cancellations(B)
+
         m_comparisons = mul_util.get_multiplicative_information(B)
         # Each ti in m_comparisons really represents |t_i|.
 
@@ -195,6 +219,7 @@ class PolyMultiplicationModule:
 
         new_comparisons = get_mul_comparisons(v_matrix, v_lin_set,
                                               B.num_terms, prime_of_index)
+
 
         for m1, m2, coeff, comp in new_comparisons:
             c = mul_util.process_mul_comp(m1, m2, coeff, comp, B)
