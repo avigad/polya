@@ -401,6 +401,8 @@ class MulTerm(AppTerm):
         scalar = reduce(lambda x, y: x * y, [a.coeff for a in cargs], 1)
         new_multerm = reduce(lambda x, y: x * y, [a.term for a in cargs], One())
         new_args = sorted(new_multerm.args, key=lambda a: a.key)
+        if len(new_args) == 1 and new_args[0].exponent == 1:
+            return STerm(scalar, new_args[0].term)
         return STerm(scalar, MulTerm(new_args))
 
     def __mul__(self, other):

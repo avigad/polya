@@ -318,13 +318,17 @@ def preprocess_cancellations(B):
         rterm = mul_inds[c.term2.term.index] if c.term2.term.index in mul_inds else c.term2.term
         coeff = c.term2.coeff
         comp = c.comp
+        if isinstance(rterm, terms.IVar):
+            rterm = terms.MulTerm([terms.MulPair(rterm, 1)])
         for p in rterm.args:
             s = B.sign(p.term.index)
             if s != 0:
-                cancel = terms.MulTerm(terms.MulPair(p.term,-p.exponent))
-                rterm, lterm = rterm * cancel, lterm * cancel
+                cancel = terms.MulTerm([terms.MulPair(p.term,-p.exponent)])
+                rterm, lterm = (rterm * cancel).canonize().term, (lterm * cancel).canonize().term
                 comp = terms.comp_reverse(comp) if (s < 0 and p.exponent % 2 == 1) else comp
-        print 'discovered:', terms.comp_eval[comp](lterm, coeff * rterm)
+
+        if B.has_name(lterm)[0] and B.has_name(rterm)[0]:
+            B.assert_comparison(terms.comp_eval[comp](lterm, coeff * rterm))
 
 
 

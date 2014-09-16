@@ -196,9 +196,7 @@ class PolyMultiplicationModule:
 
         mul_util.derive_info_from_definitions(B)
 
-        print 'preprocessing'
-
-        #mul_util.preprocess_cancellations(B)
+        mul_util.preprocess_cancellations(B)
 
         m_comparisons = mul_util.get_multiplicative_information(B)
         # Each ti in m_comparisons really represents |t_i|.

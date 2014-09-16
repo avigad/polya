@@ -359,7 +359,6 @@ class FMMultiplicationModule:
         timer.start(timer.FMMUL)
         messages.announce_module('Fourier-Motzkin multiplicative module')
         mul_util.derive_info_from_definitions(B)
-        print 'preprocessing'
         mul_util.preprocess_cancellations(B)
         eqs, comps = get_multiplicative_information(B)
         # t0 = 1; ignore
