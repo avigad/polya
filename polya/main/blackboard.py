@@ -642,7 +642,9 @@ class Blackboard(object):
 
         superseded = False
         if (i, j) in self.inequalities:
-            for (comp1, coeff1) in self.inequalities[i, j]:
+            for c in self.inequalities[i, j]:
+                comp = c.to_comp(terms.IVar(i), terms.IVar(j))
+                comp1, coeff1 = comp.comp, comp.term2.coeff
                 if coeff1 == coeff:
                     if comp1 == terms.GE:
                         self.assert_inequality(i, terms.GT, coeff, j)
