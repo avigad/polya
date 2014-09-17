@@ -1,6 +1,6 @@
 ####################################################################################################
 #
-# sample_problems2.py
+# test_minimum_module.py
 #
 # Authors:
 # Jeremy Avigad
@@ -16,7 +16,7 @@
 
 from polya import *
 from polya.main.terms import minm, maxm, floor, ceil
-import polya.main.minimum_module as minimum_module
+import polya.main.minimum_module as mm
 from sample_problems import Example
 import sys
 import timeit
@@ -60,9 +60,13 @@ examples.append(Example(
 
 if __name__ == '__main__':
 
+<<<<<<< HEAD:examples/sample_problems2.py
     #set_solver_type('fm')
+=======
+    # set_solver_type('fm')
+>>>>>>> minimum module working:examples/test_minimum_module.py
     S = Solver()
-    m = minimum_module.MinimumModule()
+    m = mm.MinimumModule()
     S.append_module(m)
 
     # works
@@ -78,27 +82,45 @@ if __name__ == '__main__':
     # S.assume(x <= y)
     # S.prove(2 * x + minm(w, z) < 3 * y + w)
 
-    # # works
+    # set_solver_type('fm')
+    # messages.set_verbosity(messages.debug)
+    # S = Solver()
+    # S.assume(x==z, y==w, x>0, y>0)
+    # S.prove(x*y == z*w)
+
+    # set_solver_type('fm')
+    # messages.set_verbosity(messages.debug)
+    # S = Solver()
+    # S.assume(x==z, y==w, x>0, y>0)
+    # S.prove(x*y == z*w)
+
+    # works
     # S.assume(x < y, u <= v)
     # S.prove(u + minm(x + 2 * u, y + 2 * v) <= x + 3 * v)
 
-    # works, but only with fm, not poly
-    S.assume(x <= y)
-    S.prove(minm(x, y) + maxm(x, y) == x + y)
+    # works, but not without the assumption
+    # S.assume(x >= y)
+    # S.prove(minm(x, y) + maxm(x, y) == x + y)
 
-    # fails
-    # S.assume(x < u, y < u, z < u, x < v, y < v, z < v)
-    # S.assume(a == -1 * x, b == -1 * y, c == -z)
-    # S.prove(maxm(x, y, z) < minm(u, v))
+    # works
+    S.assume(x < u, y < u, z < u, x < v, y < v, z < v)
+    S.prove(maxm(x, y, z) < minm(u, v))
 
-#    set_solver_type('fm')
-    #messages.set_verbosity(messages.debug)
-    S = Solver()
-    S.assume(x==z, y==w, x>0, y>0)
-    S.prove(x*y == z*w)
+    # S.assume(x > 2 * y)
+    # S.assume(x == 3 * y)
+    # S.prove(y > 0)
 
-    set_solver_type('fm')
-    #messages.set_verbosity(messages.debug)
-    S = Solver()
-    S.assume(x==z, y==w, x>0, y>0)
-    S.prove(x*y == z*w)
+    # a = mm.Extended(5)
+    # b = mm.infty
+    # c = mm.neg_infty
+    # d = mm.Extended(8)
+    # I1 = mm.ComparisonRange(a, b, False, False, False)
+    # I2 = mm.ComparisonRange(c, d, True, True, True)
+    # print 'I1 = ', I1
+    # print 'I2 = ', I2
+    # print 'I1 & I2 = ', I1 & I2
+
+    # B = Blackboard()
+    # B.add(x >= -2 * y)
+    # B.add(x > 3 * y)
+    # print mm.get_ge_range(B, 1, 2)

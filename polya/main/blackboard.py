@@ -299,13 +299,6 @@ class Blackboard(object):
 
         if comp in [terms.LT, terms.LE, terms.GE, terms.GT]:
 
-            # TODO: added by JA on 9/9, to facilitate a call in minimum_module
-            # if i > j:
-            #     if coeff > 0:
-            #         i, comp, coeff, j = j, terms.comp_reverse(comp), 1 / coeff, i
-            #     else:
-            #         i, comp, coeff, j = j, comp, 1 / coeff, i
-
             if (i, j) in self.equalities:
                 e_coeff = self.equalities[i, j]
                 if coeff == e_coeff:
@@ -746,7 +739,7 @@ class Blackboard(object):
 
     def sign(self, i):
         """
-        Returns 1 if ti > 0, -1 if ti < 0, 0 otherwise
+        Returns 1 if ti > 0, -1 if ti < 0, 0 if = 0 or unknown
         """
         if i in self.zero_inequalities:
             comp = self.zero_inequalities[i]
@@ -758,7 +751,7 @@ class Blackboard(object):
 
     def weak_sign(self, i):
         """
-        Returns 1 if ti >= 0, -1 if ti <= 0, 0 otherwise
+        Returns 1 if ti >= 0, -1 if ti <= 0, 0 if = 0 or unknown
         """
         if i in self.zero_inequalities:
             comp = self.zero_inequalities[i]
