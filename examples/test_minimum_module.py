@@ -60,11 +60,7 @@ examples.append(Example(
 
 if __name__ == '__main__':
 
-<<<<<<< HEAD:examples/sample_problems2.py
-    #set_solver_type('fm')
-=======
     # set_solver_type('fm')
->>>>>>> minimum module working:examples/test_minimum_module.py
     S = Solver()
     m = mm.MinimumModule()
     S.append_module(m)
@@ -77,7 +73,7 @@ if __name__ == '__main__':
     # S.assume(x <= y)
     # S.prove(maxm(x, y) == y)
 
-    # works
+    # #works
     # S.assume(0 < x)
     # S.assume(x <= y)
     # S.prove(2 * x + minm(w, z) < 3 * y + w)
@@ -102,9 +98,9 @@ if __name__ == '__main__':
     # S.assume(x >= y)
     # S.prove(minm(x, y) + maxm(x, y) == x + y)
 
-    # works
-    S.assume(x < u, y < u, z < u, x < v, y < v, z < v)
-    S.prove(maxm(x, y, z) < minm(u, v))
+    # # works
+    # S.assume(x < u, y < u, z < u, x < v, y < v, z < v)
+    # S.prove(maxm(x, y, z) < minm(u, v))
 
     # S.assume(x > 2 * y)
     # S.assume(x == 3 * y)
@@ -120,7 +116,7 @@ if __name__ == '__main__':
     # print 'I2 = ', I2
     # print 'I1 & I2 = ', I1 & I2
 
-    # B = Blackboard()
-    # B.add(x >= -2 * y)
-    # B.add(x > 3 * y)
-    # print mm.get_ge_range(B, 1, 2)
+    B = Blackboard()
+    B.add(x >= -2 * y)
+    B.add(x < 3 * y)
+    print B.get_le_range(1, 2)

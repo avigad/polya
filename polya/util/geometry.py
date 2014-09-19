@@ -122,6 +122,7 @@ def find_two_strongest(lines):
             l2 = l
     return l1, l2
 
+
 class Halfplane:
     """
     Defines the halfplane counterclockwise of the vector (a, b).
@@ -219,3 +220,188 @@ def halfplane_of_comp(comp, coeff):
         return hp
     else:
         return Halfplane(-coeff, -1, (True if comp in [terms.GT, terms.LT] else False))
+
+
+def add_halfplane_comparison(hp, hp_list):
+    """
+    Takes a new half plane comparison, and return a list of 0, 1, or 2 half plane comparisons,
+    assumed not to be equidirectional with the new one.
+    Returns a list with the strongest comparisons, taking new one into account.
+    """
+
+    if len(hp_list) < 2:
+        return hp_list + [hp]
+    else:
+        if hp.compare_hp(hp_list[0]) == -1:
+            if hp.compare_hp(hp_list[1]) == -1:
+                # hp is counterclockwise from both
+                if hp_list[0].compare_hp(hp_list[1]) == -1:
+                    return [hp, hp_list[1]]
+                else:
+                    return [hp, hp_list[0]]
+            else:
+                return hp_list
+        else:
+            if hp.compare_hp(hp_list[1]) == 1:
+                # hp is clockwise from both
+                if hp_list[0].compare_hp(hp_list[1]) == 1:
+                    return [hp_list[1], hp]
+                else:
+                    return [hp_list[0], hp]
+            else:
+                return hp_list
+
+
+def halfplane_flip(hp):
+    """
+    Converts a comparison between ti and tj into a comparison between tj and ti
+    """
+    return Halfplane(-hp.b, -hp.a, hp.strong)
+
+####################################################################################################
+#
+# Extended real intervals
+#
+####################################################################################################
+
+VAL, INF, NEG_INF = range(3)
+
+
+class Extended:
+    """
+    The extended reals: infinity, negative infinity, or a value
+    """
+
+    def __init__(self, val=None):
+        self.type = VAL
+        self.val = val if val else 0
+
+    def __str__(self):
+        if self.type == INF:
+            return 'infinity'
+        elif self.type == NEG_INF:
+            return '-infinity'
+        else:
+            return str(self.val)
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __cmp__(self, other):
+        if self.type == NEG_INF:
+            return 0 if other.type == NEG_INF else -1
+        elif self.type == VAL:
+            if other.type == NEG_INF:
+                return 1
+            elif other.type == VAL:
+                return cmp(self.val, other.val)
+            else:
+                return -1
+        else:
+            return 0 if other.type == INF else 1
+
+    def scale(self, c):
+        """
+        Scale by a nonzero coefficient.
+        """
+        if self.type == INF:
+            return self if c > 0 else neg_infty
+        elif self.type == NEG_INF:
+            return self if c > 0 else infty
+        else:
+            return Extended(self.val * c)
+
+
+infty = Extended()
+infty.type = INF
+
+neg_infty = Extended()
+neg_infty.type = NEG_INF
+
+
+class ComparisonRange:
+    """
+    An interval (whose endpoints can be +-infinity) of values c such that a comparison like
+    t1 <= c * t2 is entailed by information in the blackboard.
+    Extra tags indicate whether the inequality is strict or weak at the endpoints and in the
+    interior.
+
+    """
+
+    def __init__(self, lower, upper, lower_strict, interior_strict, upper_strict):
+        self.lower = lower
+        self.upper = upper
+        self.lower_strict = lower_strict
+        self.interior_strict = interior_strict
+        self.upper_strict = upper_strict
+
+    def __str__(self):
+        lower_str = 'strict' if self.lower_strict else 'weak'
+        interior_str = 'strict' if self.interior_strict else 'weak'
+        upper_str = 'strict' if self.upper_strict else 'weak'
+        return '[{0!s}, {1!s}], {2}, {3}, {4}'.format(self.lower, self.upper, lower_str,
+                                                      interior_str, upper_str)
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __and__(self, other):
+
+        if (self.upper < self.lower or other.upper < other.lower or self.upper < other.lower or
+           other.upper < self.lower):
+            return empty_range
+
+        if self.lower < other.lower:
+            lower = other.lower
+            if lower < self.upper:
+                lower_strict = other.lower_strict and self.interior_strict
+            else:  # lower == self.upper:
+                lower_strict = other.lower_strict and self.upper_strict
+        elif self.lower == other.lower:
+            lower = self.lower
+            lower_strict = self.lower_strict and other.lower_strict
+        else:  # other.lower < self.lower
+            lower = self.lower
+            if lower < other.upper:
+                lower_strict = self.lower_strict and other.interior_strict
+            else:  # lower == other.upper
+                lower_strict = self.lower_strict and other.upper_strict
+
+        if self.upper < other.upper:
+            upper = self.upper
+            if other.lower < upper:
+                upper_strict = self.upper_strict and other.interior_strict
+            else:  # other.lower == upper:
+                upper_strict = self.upper_strict and other.lower_strict
+        elif self.upper == other.upper:
+            upper = self.upper
+            upper_strict = self.upper_strict and other.upper_strict
+        else:  # other.upper < self.upper
+            upper = other.upper
+            if self.lower < upper:
+                upper_strict = other.upper_strict and self.interior_strict
+            else:  # self.lower == upper
+                upper_strict = other.upper_strict and self.lower_strict
+
+        if lower < upper:
+            interior_strict = self.interior_strict and other.interior_strict
+        else:
+            interior_strict = lower_strict
+
+        return ComparisonRange(lower, upper, lower_strict, interior_strict, upper_strict)
+
+    def is_empty(self):
+        return self.upper < self.lower
+
+    def scale(self, c):
+        """
+        Scale by a nonzero coefficient.
+        """
+        if c > 0:
+            return ComparisonRange(self.lower.scale(c), self.upper.scale(c), self.lower_strict,
+                                   self.interior_strict, self.upper_strict)
+        else:
+            return ComparisonRange(self.upper.scale(c), self.lower.scale(c), self.upper_strict,
+                                   self.interior_strict, self.lower_strict)
+
+empty_range = ComparisonRange(Extended(0), Extended(-1), False, False, False)

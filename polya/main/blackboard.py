@@ -797,3 +797,248 @@ class Blackboard(object):
 
         st += '\n******\n'
         return st
+    
+    def get_halfplane_comparisons(self, i, j):
+        """
+        Assumes i ~= j, no equalities between ti and tj are known, and neither ti == 0 nor tj == 0
+        are known.
+        Returns a list of the at most two strongest half plane comparisons between ti and tj.
+        """
+    
+        if i < j:
+            hp_comps = self.inequalities.get((i, j), [])
+        else:
+            hp_comps = [geometry.halfplane_flip(hp) for hp in self.inequalities.get((j, i), [])]
+    
+        if i in self.zero_inequalities:
+            comp = self.zero_inequalities[i]
+            if comp in [terms.GT, terms.GE]:
+                new_hp = geometry.Halfplane(0, -1, (True if comp == terms.GT else False))
+            else:
+                new_hp = geometry.Halfplane(0, 1, (True if comp == terms.LT else False))
+            hp_comps = geometry.add_halfplane_comparison(new_hp, hp_comps)
+    
+        if j in self.zero_inequalities:
+            comp = self.zero_inequalities[j]
+            if comp in [terms.GT, terms.GE]:
+                new_hp = geometry.Halfplane(-1, 0, (True if comp == terms.GT else False))
+            else:
+                new_hp = geometry.Halfplane(1, 0, (True if comp == terms.LT else False))
+            hp_comps = geometry.add_halfplane_comparison(new_hp, hp_comps)
+    
+        return hp_comps
+    
+    def get_le_range(self, i, j):
+        """
+        Takes a selflackselfoard self, and two indices, i, j < self,num_terms.
+        Returns an geometry.ComparisonRange for the comparison t_i <= c * t_j.
+        """
+    
+        si = self.sign(i)
+        wsi = self.weak_sign(i)
+        sj = self.sign(j)
+        wsj = self.weak_sign(j)
+    
+        if i ==j or (i < j and (i, j) in self.equalities) or (j < i and (j, i) in self.equalities):
+            if i == j:
+                coeff = geometry.Extended(1)
+            elif i < j:
+                coeff = geometry.Extended(self.equalities[i, j])
+            else:
+                coeff = geometry.Extended(1 / self.equalities[j, i])
+            if sj == 1:
+                return geometry.ComparisonRange(coeff, geometry.infty, False, True, True)
+            elif wsj == 1:
+                return geometry.ComparisonRange(coeff, geometry.infty, False, False, False)
+            elif sj == -1:
+                return geometry.ComparisonRange(geometry.neg_infty, coeff, True, True, False)
+            elif wsj == -1:
+                return geometry.ComparisonRange(geometry.neg_infty, coeff, False, False, False)
+            else:
+                return geometry.ComparisonRange(coeff, coeff, False, False, False)
+    
+        if j in self.zero_equalities:
+            if i in self.zero_equalities:
+                return geometry.ComparisonRange(geometry.neg_infty, geometry.infty,
+                                                False, False, False)
+            elif i in self.zero_inequalities:
+                if self.zero_inequalities[i] == terms.LT:
+                    return geometry.ComparisonRange(geometry.neg_infty, geometry.infty,
+                                                    True, True, True)
+                elif self.zero_inequalities[i] == terms.LE:
+                    return geometry.ComparisonRange(geometry.neg_infty, geometry.infty,
+                                                    False, False, False)
+                else:
+                    return geometry.empty_range
+            else:
+                return geometry.empty_range
+    
+        if i in self.zero_equalities:
+            if j in self.zero_inequalities:
+                comp = self.zero_inequalities[j]
+                if comp == terms.GT:
+                    return geometry.ComparisonRange(geometry.Extended(0), geometry.infty,
+                                                    False, True, True)
+                elif comp == terms.GE:
+                    return geometry.ComparisonRange(geometry.Extended(0), geometry.infty,
+                                                    False, False, False)
+                elif comp == terms.LE:
+                    return geometry.ComparisonRange(geometry.neg_infty, geometry.Extended(0),
+                                                    False, False, False)
+                else:
+                    return geometry.ComparisonRange(geometry.neg_infty, geometry.Extended(0),
+                                                    False, True, True)
+            else:
+                return geometry.empty_range
+    
+        hp_comps = self.get_halfplane_comparisons(i, j)
+        if len(hp_comps) == 0:
+            return geometry.empty_range
+        if len(hp_comps) == 1:
+            hp = hp_comps[0]
+            if hp.a <= 0:
+                return geometry.empty_range
+            else:
+                coeff = geometry.Extended(hp.a / hp.b)
+                strict = hp.strong
+                return geometry.ComparisonRange(coeff, coeff, strict, strict, strict)
+        else:
+            hp0, hp1 = hp_comps[0], hp_comps[1]
+            if hp0.compare_hp(hp1) == 1:
+                hp0, hp1 = hp1, hp0
+            if hp0.b <= 0 and hp1.b <= 0:
+                return geometry.empty_range
+            elif hp0.b <= 0:
+                lower = geometry.neg_infty
+                upper = geometry.Extended(hp1.a / hp1.b)
+                return geometry.ComparisonRange(lower, upper, True, True, hp1.strong)
+            elif hp1.b <= 0:
+                lower = geometry.Extended(hp0.a / hp0.b)
+                upper = geometry.infty
+                return geometry.ComparisonRange(lower, upper, hp0.strong, True, True)
+            else:
+                lower = geometry.Extended(hp0.a / hp0.b)
+                upper = geometry.Extended(hp1.a / hp1.b)
+                return geometry.ComparisonRange(lower, upper, hp0.strong, True, hp1.strong)
+    
+    
+    # TODO: this is similar to the previous one. Can they selfe comselfined?
+    def get_ge_range(self, i, j):
+        """
+        Takes a selflackselfoard self, and two indices, i, j < self,num_terms.
+        Returns an geometry.ComparisonRange for the comparison t_i >= c * t_j.
+        """
+    
+        si = self.sign(i)
+        wsi = self.weak_sign(i)
+        sj = self.sign(j)
+        wsj = self.weak_sign(j)
+    
+        if i == j or (i < j and (i, j) in self.equalities) or (j < i and (j, i) in self.equalities):
+            if i == j:
+                coeff = geometry.Extended(1)
+            elif i < j:
+                coeff = geometry.Extended(self.equalities[i, j])
+            else:
+                coeff = geometry.Extended(1 / self.equalities[j, i])
+            if sj == 1:
+                return geometry.ComparisonRange(geometry.neg_infty, coeff, True, True, False)
+            elif wsj == 1:
+                return geometry.ComparisonRange(geometry.neg_infty, coeff, False, False, False)
+            elif sj == -1:
+                return geometry.ComparisonRange(coeff, geometry.infty, False, True, True)
+            elif wsj == -1:
+                return geometry.ComparisonRange(coeff, geometry.infty, False, False, False)
+            else:
+                return geometry.ComparisonRange(coeff, coeff, False, False, False)
+    
+        if j in self.zero_equalities:
+            if i in self.zero_equalities:
+                return geometry.ComparisonRange(geometry.neg_infty, geometry.infty,
+                                                False, False, False)
+            elif i in self.zero_inequalities:
+                if self.zero_inequalities[i] == terms.GT:
+                    return geometry.ComparisonRange(geometry.neg_infty, geometry.infty,
+                                                    True, True, True)
+                elif self.zero_inequalities[i] == terms.GE:
+                    return geometry.ComparisonRange(geometry.neg_infty, geometry.infty,
+                                                    False, False, False)
+                else:
+                    return geometry.empty_range
+            else:
+                return geometry.empty_range
+    
+        if i in self.zero_equalities:
+            if j in self.zero_inequalities:
+                comp = self.zero_inequalities[j]
+                if comp == terms.GT:
+                    return geometry.ComparisonRange(geometry.neg_infty, geometry.Extended(0),
+                                                    True, True, False)
+                elif comp == terms.GE:
+                    return geometry.ComparisonRange(geometry.neg_infty, geometry.Extended(0),
+                                                    False, False, False)
+                elif comp == terms.LE:
+                    return geometry.ComparisonRange(geometry.Extended(0), geometry.infty,
+                                                    False, False, False)
+                else:
+                    return geometry.ComparisonRange(geometry.Extended(0), geometry.infty,
+                                                    True, True, False)
+            else:
+                return geometry.empty_range
+    
+        hp_comps = self.get_halfplane_comparisons(i, j)
+        if len(hp_comps) == 0:
+            return geometry.empty_range
+        if len(hp_comps) == 1:
+            hp = hp_comps[0]
+            if hp.a <= 0:
+                return geometry.empty_range
+            else:
+                coeff = geometry.Extended(hp.a / hp.b)
+                strict = hp.strong
+                return geometry.ComparisonRange(coeff, coeff, strict, strict, strict)
+        else:
+            hp0, hp1 = hp_comps[0], hp_comps[1]
+            if hp0.compare_hp(hp1) == 1:
+                hp0, hp1 = hp1, hp0
+            if hp0.b >= 0 and hp1.b >= 0:
+                return geometry.empty_range
+            elif hp0.b >= 0:
+                lower = geometry.neg_infty
+                upper = geometry.Extended(hp1.a / hp1.b)
+                return geometry.ComparisonRange(lower, upper, True, True, hp1.strong)
+            elif hp1.b >= 0:
+                lower = geometry.Extended(hp0.a / hp0.b)
+                upper = geometry.infty
+                return geometry.ComparisonRange(lower, upper, hp0.strong, True, True)
+            else:
+                lower = geometry.Extended(hp0.a / hp0.b)
+                upper = geometry.Extended(hp1.a / hp1.b)
+                return geometry.ComparisonRange(lower, upper, hp0.strong, True, hp1.strong)
+
+    def le_coeff_range(self, i, j, coeff):
+        """
+        Takes a blackboard, B, and i, j < B.num_terms.
+        Returns a comparison range for the relation c * ti <= coeff * tj, i.e. a range of values for
+        c for which the comparison is known to hold.
+        """
+
+        if coeff == 0:
+            if i in self.zero_equalities:
+                return geometry.ComparisonRange(geometry.neg_infty, geometry.infty,
+                                                False, False, False)
+            elif i in self.zero_inequalities:
+                if self.zero_inequalities[i] == terms.GT:
+                    return geometry.ComparisonRange(geometry.neg_infty, geometry.infty,
+                                                    True, True, True)
+                elif self.zero_inequalities[i] == terms.GE:
+                    return geometry.ComparisonRange(geometry.neg_infty, geometry.infty,
+                                                    False, False, False)
+                else:
+                    return geometry.empty_range
+            else:
+                return geometry.empty_range
+        elif coeff > 0:
+            return self.get_ge_range(j, i).scale(coeff)
+        else:  # coeff < 0
+            return self.get_le_range(j, i).scale(coeff)
