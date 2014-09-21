@@ -398,6 +398,7 @@ class MulTerm(AppTerm):
 
     def canonize(self):
         cargs = [a.canonize() for a in self.args]
+        print self.args, cargs
         scalar = reduce(lambda x, y: x * y, [a.coeff for a in cargs], 1)
         new_multerm = reduce(lambda x, y: x * y, [a.term for a in cargs], One())
         new_args = sorted(new_multerm.args, key=lambda a: a.key)
@@ -668,7 +669,8 @@ class STerm(object):
             Error('Cannot divide {0!s} by {1!s}'.format(other, self))
 
     def __pow__(self, n):
-        if not isinstance(n, (int, long)):
+        if (not isinstance(n, (int, long))) and \
+                not (isinstance(n, fractions.Fraction) and n.denominator == 1):
             Error('Non integer power')    # TODO: for now, we only handle integer powers
         else:
             return STerm(self.coeff ** n, self.term ** n)
