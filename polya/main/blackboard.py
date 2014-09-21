@@ -198,6 +198,7 @@ class Blackboard(object):
                 # new_def = terms.FuncTerm(t.func_name, [terms.STerm(a.coeff, self.term_name(a.term))
                 #                                        for a in t.args])
             else:
+                print isinstance(t, terms.STerm)
                 raise Error('cannot create name for {0!s}'.format(t))
             i = self.num_terms  # index of the new term
             self.term_defs[i] = new_def

@@ -17,6 +17,8 @@ import polya.util.timer as timer
 import polya.util.num_util as num_util
 import fractions
 import copy
+import polya.main.blackboard as blackboard
+import polya.main.function_module as function_module
 
 
 class ExponentialModule:
@@ -27,6 +29,26 @@ class ExponentialModule:
         The exponential module must be instantiated with a function module to add axioms to.
         """
         self.fm = fm
+        x, y = terms.Vars('x y')
+        self.fm.add_axiom(formulas.Forall([x], terms.exp(x) > 0))
+        self.fm.add_axiom(formulas.Forall([x, y],
+                                          formulas.Implies(x < y, terms.exp(x) < terms.exp(y))))
+        self.fm.add_axiom(formulas.Forall([x, y],
+                                          formulas.Implies(x != y, terms.exp(x) != terms.exp(y))))
 
     def update_blackboard(self, B):
-        pass
+        exp_inds = [i for i in range(B.num_terms) if (isinstance(B.term_defs[i], terms.FuncTerm)
+                                                      and B.term_defs[i].func_name=='exp')]
+        for i in exp_inds:
+            exponent = B.term_defs[i].args[0]
+            if exponent.coeff != 1:
+                term2 = (terms.exp(exponent.term)**exponent.coeff).canonize()
+                n = B.term_name(term2.term)
+                B.assert_comparison(terms.IVar(i) == term2.coeff * n)
+
+if __name__ == '__main__':
+    B = blackboard.Blackboard()
+    x, y = terms.Vars('x y')
+    B.assert_comparison(terms.exp(3*x)<5*y)
+    fm = function_module.FunctionModule()
+    ExponentialModule(fm).update_blackboard(B)

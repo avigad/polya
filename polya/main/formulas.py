@@ -106,6 +106,14 @@ class Axiom:
     def __repr__(self):
         return str(self)
 
+    def __eq__(self, other):
+        if not isinstance(other, Axiom):
+            return False
+        return str(self) == str(other)
+
+    def __hash__(self):
+        return hash(str(self))
+
 
 class Formula:
     def __init__(self):

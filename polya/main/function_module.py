@@ -492,17 +492,17 @@ class FunctionModule:
         """
         axioms is a list of Formula objects, that need to be converted into Axiom objects.
         """
-        self.axioms = []
+        self.axioms = set()
         for a in axioms:
             clauses = formulas.cnf(a)
-            self.axioms.extend(formulas.Axiom(c) for c in clauses)
+            self.axioms.update(formulas.Axiom(c) for c in clauses)
 
     def add_axiom(self, axiom):
         """
         axiom is a Formula.
         """
         clauses = formulas.cnf(axiom)
-        self.axioms.extend(formulas.Axiom(c) for c in clauses)
+        self.axioms.update(formulas.Axiom(c) for c in clauses)
 
     def update_blackboard(self, B):
         timer.start(timer.FUN)
