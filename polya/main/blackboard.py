@@ -358,10 +358,12 @@ class Blackboard(object):
             return self.zero_inequalities.get(i, terms.EQ) == comp
 
         elif comp == terms.LE:
-            return self.zero_inequalities.get(i, terms.EQ) in [terms.LE, terms.LT]
+            return self.zero_inequalities.get(i, terms.EQ) in [terms.LE, terms.LT] \
+                or self.implies_zero_comparison(i, terms.EQ)
 
         elif comp == terms.GE:
-            return self.zero_inequalities.get(i, terms.EQ) in [terms.GE, terms.GT]
+            return self.zero_inequalities.get(i, terms.EQ) in [terms.GE, terms.GT] \
+                or self.implies_zero_comparison(i, terms.EQ)
 
         elif comp == terms.EQ:
             return i in self.zero_equalities
@@ -373,7 +375,7 @@ class Blackboard(object):
                 return True
             return False
 
-    def implies_comparison(self,c):
+    def implies_comparison(self, c):
         """
         Takes an instance of terms.TermComparison, and assume the comparison canonizes to
         a comparison between IVars. Determines whether the comparison is implied by
