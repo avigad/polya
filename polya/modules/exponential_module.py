@@ -11,14 +11,9 @@
 ####################################################################################################
 
 import polya.main.terms as terms
-import polya.main.messages as messages
 import polya.main.formulas as formulas
-import polya.util.timer as timer
-import polya.util.num_util as num_util
-import fractions
-import copy
 import polya.main.blackboard as blackboard
-import polya.main.function_module as function_module
+import polya.modules.function_module as function_module
 
 
 class ExponentialModule:

@@ -15,7 +15,7 @@
 ####################################################################################################
 
 import polya.main.terms as terms
-import polya.polyhedron.lrs as lrs
+import polya.modules.polyhedron.lrs as lrs
 
 # where should this go?
 try:

@@ -14,14 +14,16 @@
 #
 ####################################################################################################
 
+import itertools
+
 import polya.main.terms as terms
-import polya.main.blackboard as blackboard
 import polya.main.messages as messages
 import polya.util.geometry as geo
-import polya.polyhedron.lrs_polyhedron_util as lrs_util
-import polya.polyhedron.lrs as lrs
+import polya.modules.polyhedron.lrs_polyhedron_util as lrs_util
+import polya.modules.polyhedron.lrs as lrs
 import polya.util.timer as timer
-import itertools
+
+
 
 
 ####################################################################################################

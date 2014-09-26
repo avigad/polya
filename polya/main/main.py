@@ -13,24 +13,25 @@
 ####################################################################################################
 
 from __future__ import division
-import polya.main.terms as terms
-import polya.main.messages as messages
-import polya.polyhedron.lrs as lrs
 import copy
 
-import polya.polyhedron.poly_add_module as poly_add_module
-import polya.polyhedron.poly_mult_module as poly_mult_module
-import polya.fourier_motzkin.fm_add_module as fm_add_module
-import polya.fourier_motzkin.fm_mult_module as fm_mult_module
+import polya.main.terms as terms
+import polya.main.messages as messages
+
+import polya.modules.polyhedron.lrs as lrs
+import polya.modules.polyhedron.poly_add_module as poly_add_module
+import polya.modules.polyhedron.poly_mult_module as poly_mult_module
+import polya.modules.fourier_motzkin.fm_add_module as fm_add_module
+import polya.modules.fourier_motzkin.fm_mult_module as fm_mult_module
 
 from terms import Var, Vars, UVar, Func, Contradiction
 from formulas import Forall, Implies, And, Or, Not
-from polya.polyhedron.poly_mult_module import PolyMultiplicationModule
-from polya.polyhedron.poly_add_module import PolyAdditionModule
-from polya.fourier_motzkin.fm_add_module import FMAdditionModule
-from polya.fourier_motzkin.fm_mult_module import FMMultiplicationModule
-from polya.main.congruence_closure_module import CongClosureModule
-from polya.main.function_module import FunctionModule
+from polya.modules.polyhedron.poly_mult_module import PolyMultiplicationModule
+from polya.modules.polyhedron.poly_add_module import PolyAdditionModule
+from polya.modules.fourier_motzkin.fm_add_module import FMAdditionModule
+from polya.modules.fourier_motzkin.fm_mult_module import FMMultiplicationModule
+from polya.modules.congruence_closure_module import CongClosureModule
+from polya.modules.function_module import FunctionModule
 from blackboard import Blackboard, set_default_seed
 
 

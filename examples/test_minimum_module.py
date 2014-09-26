@@ -15,11 +15,8 @@
 
 
 from polya import *
-from polya.main.terms import minm, maxm, floor, ceil
-import polya.main.minimum_module as mm
+import polya.modules.minimum_module as mm
 from sample_problems import Example
-import sys
-import timeit
 
 
 
