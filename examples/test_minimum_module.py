@@ -113,7 +113,10 @@ if __name__ == '__main__':
     # print 'I2 = ', I2
     # print 'I1 & I2 = ', I1 & I2
 
-    B = Blackboard()
-    B.add(x >= -2 * y)
-    B.add(x < 3 * y)
-    print B.get_le_range(1, 2)
+    # B = Blackboard()
+    # B.add(x >= -2 * y)
+    # B.add(x < 3 * y)
+    # print B.get_le_range(1, 2)
+
+    S.assume(exp(x + y + z) < 20, exp(x)>5, exp(y)>6, exp(z)>4)
+    S.check()

@@ -24,7 +24,7 @@ import polya.modules.polyhedron.poly_mult_module as poly_mult_module
 import polya.modules.fourier_motzkin.fm_add_module as fm_add_module
 import polya.modules.fourier_motzkin.fm_mult_module as fm_mult_module
 
-from terms import Var, Vars, UVar, Func, Contradiction
+from terms import Var, Vars, UVar, Func, Contradiction, exp, log, minm, maxm, floor, ceil
 from formulas import Forall, Implies, And, Or, Not
 from polya.modules.polyhedron.poly_mult_module import PolyMultiplicationModule
 from polya.modules.polyhedron.poly_add_module import PolyAdditionModule
@@ -32,6 +32,7 @@ from polya.modules.fourier_motzkin.fm_add_module import FMAdditionModule
 from polya.modules.fourier_motzkin.fm_mult_module import FMMultiplicationModule
 from polya.modules.congruence_closure_module import CongClosureModule
 from polya.modules.function_module import FunctionModule
+from polya.modules.exponential_module import ExponentialModule
 from blackboard import Blackboard, set_default_seed
 
 
@@ -240,7 +241,8 @@ class Solver:
         self.B = Blackboard()
         self.fm = None
         if len(modules) == 0:
-            modules = [CongClosureModule()]
+            self.fm = FunctionModule(axioms)
+            modules = [self.fm, CongClosureModule(), ExponentialModule(self.fm)]
             if default_solver == 'poly':
                 pa = poly_add_module.PolyAdditionModule()
                 pm = poly_mult_module.PolyMultiplicationModule()
@@ -254,10 +256,6 @@ class Solver:
                 raise Exception
 
             modules.extend([pa, pm])
-
-            if len(axioms) > 0:
-                modules = [FunctionModule(axioms)] + modules
-                self.fm = modules[0]
 
         self.contradiction = False
         self.assume(*assertions)
