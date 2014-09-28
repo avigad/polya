@@ -338,7 +338,8 @@ class Blackboard(object):
 
         # All equality info is stored, so see if we know this equality.
         elif comp == terms.EQ:
-            return coeff == self.equalities.get((i, j), None)
+            return coeff == self.equalities.get((i, j), None) or\
+                   (i in self.zero_equalities and j in self.zero_equalities)
 
         # See if we know this disequality, or if the disequality is implied by an inequality.
         elif comp == terms.NE:

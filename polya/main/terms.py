@@ -398,7 +398,6 @@ class MulTerm(AppTerm):
 
     def canonize(self):
         cargs = [a.canonize() for a in self.args]
-        print self.args, cargs
         scalar = reduce(lambda x, y: x * y, [a.coeff for a in cargs], 1)
         new_multerm = reduce(lambda x, y: x * y, [a.term for a in cargs], One())
         new_args = sorted(new_multerm.args, key=lambda a: a.key)
