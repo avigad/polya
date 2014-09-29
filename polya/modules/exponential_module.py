@@ -19,6 +19,7 @@ import fractions
 #import copy
 import polya.main.blackboard as blackboard
 import polya.modules.function_module as function_module
+from polya import *
 
 
 def factor_constant(B):
@@ -62,7 +63,6 @@ def factor_sum(B):
         coeff, t = B.term_defs[i].args[0].coeff, B.term_defs[B.term_defs[i].args[0].term.index]
         if coeff == 1 and isinstance(t, terms.AddTerm):
             margs = [B.term_name(terms.exp(a).canonize().term) for a in t.args]
-            print margs
             t2 = reduce(lambda x, y: x*y, margs, 1).canonize()
             n = B.term_name(t2.term)
             B.assert_comparison(terms.IVar(i) == t2.coeff * n)
@@ -80,20 +80,28 @@ class ExponentialModule:
         self.fm.add_axiom(formulas.Forall([x, y],
                                           formulas.Implies(x < y, terms.exp(x) < terms.exp(y))))
         self.fm.add_axiom(formulas.Forall([x, y],
+                                          formulas.Implies(x <= y, terms.exp(x) <= terms.exp(y))))
+        self.fm.add_axiom(formulas.Forall([x, y],
                                           formulas.Implies(x != y, terms.exp(x) != terms.exp(y))))
 
     def update_blackboard(self, B):
         timer.start(timer.EXP)
-        messages.announce_module('Exponential module')
+        messages.announce_module('exponential module')
         factor_constant(B)
         factor_sum(B)
         timer.stop(timer.EXP)
 
 if __name__ == '__main__':
-    B = blackboard.Blackboard()
-    x, y = terms.Vars('x y')
-    B.assert_comparison(terms.exp(3*x) < 5*y)
-    B.assert_comparison(terms.exp(4*x + 3*y) < 0)
-    fm = function_module.FunctionModule()
-    ExponentialModule(fm).update_blackboard(B)
-    ExponentialModule(fm).update_blackboard(B)
+    # B = blackboard.Blackboard()
+    x, y, z, w, u, v = terms.Vars('x y z w u v')
+    # B.assert_comparison(terms.exp(3*x) < 5*y)
+    # B.assert_comparison(terms.exp(4*x + 3*y) < 0)
+    # fm = function_module.FunctionModule()
+    # ExponentialModule(fm).update_blackboard(B)
+    # ExponentialModule(fm).update_blackboard(B)
+
+    s = Solver()
+#    s.add(exp(3*x + 2*y) > 20, exp(x)<1, exp(y)<1)
+    s.add(z > exp(x), w > exp(y))
+    s.prove(z**3 + w**2 > exp(3 * x + 2 * y))
+    s.check()

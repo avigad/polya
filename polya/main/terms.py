@@ -333,6 +333,8 @@ class AddTerm(AppTerm):
     def canonize(self):
         cargs = [arg.canonize() for arg in self.args]
         new_addterm = reduce(lambda x, y: x + y, cargs, 0)    # remove duplicates
+        if not isinstance(new_addterm, AddTerm):    # terms cancelled
+            return new_addterm
         new_args = sorted(new_addterm.args, key=lambda a: a.key)
         first_coeff = new_args[0].coeff
         new_args2 = [arg / first_coeff for arg in new_args]
@@ -366,6 +368,8 @@ class AddTerm(AppTerm):
                     break
             else:
                 args.append(b)
+        if len(args) == 1:
+            return args[0]
         return AddTerm(args) if args else zero
 
     def scaled(self, c):
@@ -400,6 +404,8 @@ class MulTerm(AppTerm):
         cargs = [a.canonize() for a in self.args]
         scalar = reduce(lambda x, y: x * y, [a.coeff for a in cargs], 1)
         new_multerm = reduce(lambda x, y: x * y, [a.term for a in cargs], One())
+        if not isinstance(new_multerm, MulTerm):    # terms cancelled
+            return scalar * new_multerm
         new_args = sorted(new_multerm.args, key=lambda a: a.key)
         if len(new_args) == 1 and new_args[0].exponent == 1:
             return STerm(scalar, new_args[0].term)
