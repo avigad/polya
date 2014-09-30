@@ -322,7 +322,7 @@ def preprocess_cancellations(B):
             rterm = terms.MulTerm([terms.MulPair(rterm, 1)])
         for p in rterm.args:
             s = B.sign(p.term.index)
-            if s != 0:
+            if s != 0 or (B.implies_zero_comparison(p.term.index, terms.NE) and p.exponent%2 == 0):
                 cancel = terms.MulTerm([terms.MulPair(p.term,-p.exponent)])
                 rterm, lterm = (rterm * cancel).canonize().term, (lterm * cancel).canonize().term
                 comp = terms.comp_reverse(comp) if (s < 0 and p.exponent % 2 == 1) else comp
