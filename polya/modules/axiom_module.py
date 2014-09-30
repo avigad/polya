@@ -1,6 +1,6 @@
 ####################################################################################################
 #
-# function_module.py
+# axiom_module.py
 #
 # Authors:
 # Jeremy Avigad
@@ -8,7 +8,7 @@
 #
 # The routine for learning facts using axioms.
 #
-# FunctionModule is initialized with a list of axioms. Each time update_blackboard is called, the
+# AxiomModule is initialized with a list of axioms. Each time update_blackboard is called, the
 # module will check to see if any new clauses can be instantiated from its known axioms, and if
 # so, will add them to the blackboard.
 #
@@ -486,7 +486,7 @@ def instantiate(axiom, B):
     return clauses
 
 
-class FunctionModule:
+class AxiomModule:
 
     def __init__(self, axioms=list()):
         """

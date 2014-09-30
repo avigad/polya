@@ -13,7 +13,7 @@
 import polya.main.terms as terms
 import polya.main.formulas as formulas
 import polya.main.blackboard as blackboard
-import polya.modules.function_module as function_module
+import polya.modules.axiom_module as function_module
 import polya.main.messages as messages
 
 from polya.main.main import Solver    # TODO: delete this after testing
@@ -22,17 +22,17 @@ from polya.main.main import Solver    # TODO: delete this after testing
 class AbsModule:
 
 
-    def __init__(self, fm):
+    def __init__(self, am):
         """
         The abs module must be instantiated with a function module to add axioms to.
         """
-        self.fm = fm
+        self.am = am
         x = terms.Var('x')
-        self.fm.add_axiom(formulas.Forall([x], terms.abs_val(x) >= 0))
-        self.fm.add_axiom(formulas.Forall([x], terms.abs_val(x) >= x))
-        self.fm.add_axiom(formulas.Forall([x], terms.abs_val(x) >= -x))
-        self.fm.add_axiom(formulas.Forall([x], formulas.Implies(x >= 0, terms.abs_val(x) == x)))
-        self.fm.add_axiom(formulas.Forall([x], formulas.Implies(x <= 0, terms.abs_val(x) == -x)))
+        self.am.add_axiom(formulas.Forall([x], terms.abs_val(x) >= 0))
+        self.am.add_axiom(formulas.Forall([x], terms.abs_val(x) >= x))
+        self.am.add_axiom(formulas.Forall([x], terms.abs_val(x) >= -x))
+        self.am.add_axiom(formulas.Forall([x], formulas.Implies(x >= 0, terms.abs_val(x) == x)))
+        self.am.add_axiom(formulas.Forall([x], formulas.Implies(x <= 0, terms.abs_val(x) == -x)))
 
     def update_blackboard(self, B):
         """
@@ -110,9 +110,9 @@ class AbsModule:
 if __name__ == '__main__':
 
     S = Solver()
-    fm = function_module.FunctionModule()
-    m = AbsModule(fm)
-    S.append_module(fm)
+    am = function_module.AxiomModule()
+    m = AbsModule(am)
+    S.append_module(am)
     S.append_module(m)
 
     x, y, z, w = terms.Vars('x y z w')

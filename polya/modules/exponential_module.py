@@ -10,15 +10,13 @@
 #
 ####################################################################################################
 
-import polya.main.terms as terms
-import polya.main.messages as messages
+#import polya.main.terms as terms
+#import polya.main.messages as messages
 import polya.main.formulas as formulas
 import polya.util.timer as timer
 #import polya.util.num_util as num_util
 import fractions
 #import copy
-import polya.main.blackboard as blackboard
-import polya.modules.function_module as function_module
 from polya import *
 
 
@@ -109,18 +107,18 @@ def factor_sum(B):
 
 class ExponentialModule:
 
-    def __init__(self, fm):
+    def __init__(self, am):
         """
-        The exponential module must be instantiated with a function module to add axioms to.
+        The exponential module must be instantiated with an axiom module to add axioms to.
         """
-        self.fm = fm
+        self.am = am
         x, y = terms.Vars('x y')
-        self.fm.add_axiom(formulas.Forall([x], terms.exp(x) > 0))
-        self.fm.add_axiom(formulas.Forall([x, y],
+        self.am.add_axiom(formulas.Forall([x], terms.exp(x) > 0))
+        self.am.add_axiom(formulas.Forall([x, y],
                                           formulas.Implies(x < y, terms.exp(x) < terms.exp(y))))
-        self.fm.add_axiom(formulas.Forall([x, y],
+        self.am.add_axiom(formulas.Forall([x, y],
                                           formulas.Implies(x <= y, terms.exp(x) <= terms.exp(y))))
-        self.fm.add_axiom(formulas.Forall([x, y],
+        self.am.add_axiom(formulas.Forall([x, y],
                                           formulas.Implies(x != y, terms.exp(x) != terms.exp(y))))
 
     def update_blackboard(self, B):
@@ -135,7 +133,7 @@ if __name__ == '__main__':
     x, y, z, w, u, v = terms.Vars('x y z w u v')
     # B.assert_comparison(terms.exp(3*x) < 5*y)
     # B.assert_comparison(terms.exp(4*x + 3*y) < 0)
-    # fm = function_module.FunctionModule()
+    # fm = function_module.AxiomModule()
     # ExponentialModule(fm).update_blackboard(B)
     # ExponentialModule(fm).update_blackboard(B)
 

@@ -31,7 +31,7 @@ from polya.modules.polyhedron.poly_add_module import PolyAdditionModule
 from polya.modules.fourier_motzkin.fm_add_module import FMAdditionModule
 from polya.modules.fourier_motzkin.fm_mult_module import FMMultiplicationModule
 from polya.modules.congruence_closure_module import CongClosureModule
-from polya.modules.function_module import FunctionModule
+from polya.modules.axiom_module import AxiomModule
 from polya.modules.exponential_module import ExponentialModule
 from blackboard import Blackboard, set_default_seed
 
@@ -241,7 +241,7 @@ class Solver:
         self.B = Blackboard()
         self.fm = None
         if len(modules) == 0:
-            self.fm = FunctionModule(axioms)
+            self.fm = AxiomModule(axioms)
             modules = [self.fm, CongClosureModule(), ExponentialModule(self.fm)]
             if default_solver == 'poly':
                 pa = poly_add_module.PolyAdditionModule()
@@ -323,10 +323,10 @@ class Solver:
 
     def add_axiom(self, a):
         """
-        Adds an axiom to the solver, and instantiates a FunctionModule if necessary.
+        Adds an axiom to the solver, and instantiates a AxiomModule if necessary.
         """
         if self.fm:
             self.fm.add_axiom(a)
         else:
-            self.modules = [FunctionModule([a])] + self.modules
+            self.modules = [AxiomModule([a])] + self.modules
             self.fm = self.modules[0]
