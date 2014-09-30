@@ -22,6 +22,17 @@ import polya.modules.function_module as function_module
 from polya import *
 
 
+def find_exps_with_arg(B, i):
+    """
+    B is a blackboard, i is an IVar index.
+    Returns a list of pairs [(j, c)] such that t_j = exp(c*t_i) in B.
+    """
+    return [(i, B.term_defs[i].args[0].coeff) for i in range(B.num_terms)
+            if (isinstance(B.term_defs[i], terms.FuncTerm)
+                and B.term_defs[i].func_name == 'exp'
+                and B.term_defs[i].args[0].term.index == i)]
+
+
 def factor_constant(B):
     """
     Takes a Blackboard and a list of IVar indices, s.t. i in exp_inds implies B.term_defs[i] is an
@@ -49,6 +60,24 @@ def factor_constant(B):
                 raise Exception('Exponential module has tried to take a non-integer power')
 
 
+# def factor_sum(B):
+#     """
+#     Takes a Blackboard and a list of IVar indices, s.t. i in exp_inds implies B.term_defs[i] is an
+#     exponential function.
+#     Asserts a number of comparisons to B.
+#     If B.term_defs[i] is of the form exp(t_1 + ct_2 + ...), will declare that it is equal to
+#     exp(t_1)*exp(ct_2)*...
+#     """
+#     exp_inds = [i for i in range(B.num_terms) if (isinstance(B.term_defs[i], terms.FuncTerm)
+#                                                   and B.term_defs[i].func_name == 'exp')]
+#     for i in exp_inds:
+#         coeff, t = B.term_defs[i].args[0].coeff, B.term_defs[B.term_defs[i].args[0].term.index]
+#         if isinstance(t, terms.AddTerm):
+#             margs = [B.term_name(terms.exp(coeff*a).canonize().term) for a in t.args]
+#             t2 = reduce(lambda x, y: x*y, margs, 1).canonize()
+#             n = B.term_name(t2.term)
+#             B.assert_comparison(terms.IVar(i) == t2.coeff * n)
+
 def factor_sum(B):
     """
     Takes a Blackboard and a list of IVar indices, s.t. i in exp_inds implies B.term_defs[i] is an
@@ -62,11 +91,15 @@ def factor_sum(B):
     for i in exp_inds:
         coeff, t = B.term_defs[i].args[0].coeff, B.term_defs[B.term_defs[i].args[0].term.index]
         if isinstance(t, terms.AddTerm):
-            margs = [B.term_name(terms.exp(coeff*a).canonize().term) for a in t.args]
-            t2 = reduce(lambda x, y: x*y, margs, 1).canonize()
-            n = B.term_name(t2.term)
-            B.assert_comparison(terms.IVar(i) == t2.coeff * n)
+            cset = {coeff}
+            for a in t.args:
+                cset.update([fractions.Fraction(c, a.term.index)
+                             for (i, c) in find_exps_with_arg(B, a.term.index)])
 
+            for c in cset:
+                margs = [terms.exp(c*a) for a in t.args]
+                t2 = reduce(lambda x, y: x*y, margs, 1).canonize()
+                B.assert_comparison(terms.IVar(i) == t2**fractions.Fraction(coeff, c))
 
 
 class ExponentialModule:
@@ -102,10 +135,9 @@ if __name__ == '__main__':
     # ExponentialModule(fm).update_blackboard(B)
 
     s = Solver()
-#    s.add(exp(3*x + 2*y) > 20, exp(x)<1, exp(y)<1)
-#     s.add(z > exp(x), w > exp(y))
-#     s.prove(z**3 * w**2 > exp(3 * x + 2 * y))
+    s.add(z > exp(x), w > exp(y))
+    s.prove(z**3 * w**2 > exp(3 * x + 2 * y))
 
-    s.add(0<x, x<y, u<v)
-    s.prove(2 * u + exp(1 + x + x**4) <= 2 * v + exp(1 + y + y**4))
+    # s.add(0<x, x<y, u<v)
+    # s.prove(2 * u + exp(1 + x + x**4) <= 2 * v + exp(1 + y + y**4))
 
