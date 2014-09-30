@@ -697,7 +697,7 @@ class Blackboard(object):
         if c.satisfied:
             return
 
-        if messages.visible(messages.ASSERTION):
+        if messages.visible(messages.ASSERTION) and c not in self.clauses:
             messages.announce_strong('Asserting clause: {0!s}'.format(s))
         l = len(c)
         if l > 1:
