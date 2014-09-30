@@ -99,7 +99,12 @@ def factor_sum(B):
             for c in cset:
                 margs = [terms.exp(c*a) for a in t.args]
                 t2 = reduce(lambda x, y: x*y, margs, 1).canonize()
-                B.assert_comparison(terms.IVar(i) == t2**fractions.Fraction(coeff, c))
+                exp = fractions.Fraction(coeff, c)
+                if exp.denominator == 1:
+                    B.assert_comparison(terms.IVar(i) == t2**exp)
+                else:
+                    v = t2**exp.numerator
+                    B.assert_comparison(terms.IVar(i)**exp.denominator == v)
 
 
 class ExponentialModule:
