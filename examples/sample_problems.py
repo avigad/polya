@@ -395,6 +395,12 @@ examples.append(Example(
     hyps=[z > 0, f(x) + f(y) - z < 0, f((x + y)/2) - 4 * z > 0]
 ))
 
+examples.append(Example(
+    hyps=[x > 0, x*y*z < 0, x*w > 0],
+    conc=(w > y*z),
+    comment="Need a case split on y to solve this."
+))
+
 
 ####################################################################################################
 #

@@ -380,3 +380,25 @@ class FMMultiplicationModule:
             # done with IVar(i)
             eqs, comps = elim(eqs, comps, i)
         timer.stop(timer.FMMUL)
+
+    def get_split_weight(self, B):
+        """
+        returns a list of tuples (i, j, c, w). A tuple represents that this module would be
+        interested to know the direction of the comparison t_i <> c*t_j, with weight w.
+        """
+        def occurs_in_mul_term(i):
+            for k in [j for j in range(B.num_terms) if isinstance(B.term_defs[j], terms.MulTerm)]:
+                if i in [t.term.index for t in B.term_defs[k].args]:
+                    return True
+            return False
+
+        def no_sign_info(i):
+            if not (B.implies_zero_comparison(i, terms.GT)) and \
+                    not (B.implies_zero_comparison(i, terms.LT)) and \
+                    not (B.implies_zero_comparison(i, terms.EQ)):
+                return True
+            else:
+                return False
+
+        return [(i, 0, 0, 1) for i in range(B.num_terms) if (occurs_in_mul_term(i)
+                                                             and no_sign_info(i))]

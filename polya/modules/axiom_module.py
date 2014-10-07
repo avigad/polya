@@ -513,3 +513,6 @@ class AxiomModule:
             for c in clauses:
                 B.assert_clause(*c)
         timer.stop(timer.FUN)
+
+    def get_split_weight(self, B):
+        return None

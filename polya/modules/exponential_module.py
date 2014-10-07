@@ -128,6 +128,9 @@ class ExponentialModule:
         factor_sum(B)
         timer.stop(timer.EXP)
 
+    def get_split_weight(self, B):
+        return None
+
 if __name__ == '__main__':
     # B = blackboard.Blackboard()
     x, y, z, w, u, v = terms.Vars('x y z w u v')

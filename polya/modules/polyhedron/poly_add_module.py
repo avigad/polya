@@ -261,6 +261,9 @@ class PolyAdditionModule:
             B.assert_comparison(c)
         timer.stop(timer.PADD)
 
+    def get_split_weight(self, B):
+        return None
+
 
 ####################################################################################################
 #

@@ -106,6 +106,9 @@ class AbsModule:
                 for a in abs_of_args:
                     B.assert_comparison(terms.IVar(i) >= a * 2 - sum_of_abs_of_args)
 
+    def get_split_weight(self, B):
+        return None
+
 
 if __name__ == '__main__':
 

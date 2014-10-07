@@ -14,6 +14,7 @@
 
 from __future__ import division
 import copy
+import itertools
 
 import polya.main.terms as terms
 import polya.main.messages as messages
@@ -44,7 +45,8 @@ from blackboard import Blackboard, set_default_seed
 
 solver_options = ['fm', 'poly']
 default_solver = 'none'
-default_split = 0
+default_split_depth = 0
+default_split_breadth = 0
 default_seed = 7
 set_default_seed(default_seed)
 
@@ -116,7 +118,7 @@ def copy_and_add(B, *comps):
     return new_B
 
 
-def run(B, split):
+def run(B, split_depth, split_breadth):
     """
     Given a blackboard B, runs the default modules  until either a contradiction is
     found or no new information is learned.
@@ -130,7 +132,7 @@ def run(B, split):
         messages.announce('Unsupported option: {0}'.format(default_solver), messages.INFO)
         return
     cm = CongClosureModule()
-    return run_modules(B, [cm, pa, pm], split)
+    return run_modules(B, [cm, pa, pm], split_depth, split_breadth)
 
 
 def saturate_modules(B, modules):
@@ -147,59 +149,102 @@ def saturate_modules(B, modules):
             m.update_blackboard(B)
 
 
-def all_contr(f, l):
-    """Returns True if f(a) raises
-    Contradiction for every a in l and False otherwise
-    
-    Arguments:
-    - `f`: a function a -> Unit
-    - `l`: a list of as
+def knows_split(B, i, j, c):
     """
-    b = True
-    for a in l:
-        try:
-            f(a)
-            b = False
-            break
-        #TODO: have a join operation for contradiction
-        except Contradiction:
-            pass
-    return b
+    Returns True if B knows either t_i = c*t_j, t_i > c*t_j, or t_i < c*t_j
+    """
+    return B.implies(i, terms.EQ, c, j) or B.implies(i, terms.GT, c, j) \
+        or B.implies(i, terms.LT, c, j)
 
 
-def split_modules(B, modules, n):
+def get_splits(B, modules):
     """
-    
-    Arguments:
-    - `B`:
-    - `modules`:
-    - `n`:
+    Asks each module for a list of comparisons it would like to see.
+    Adds up this information and returns a list of tuples (i, j, c), ordered so that splitting
+    on t_i <> c*t_j is most desirable for those that come earlier.
     """
-    saturate_modules(B, modules)
-    if n <= 0:
+    splits = {}
+    for m in modules:
+        l = m.get_split_weight(B)
+        if l is not None:
+            for (i, j, c, w) in l:
+                splits[i, j, c] = splits.get((i, j, c), 0) + w
+
+    slist = [q for q in sorted(splits.keys(), key=lambda p: (-splits[p], p[0]))
+             if splits[q] > 0 and not knows_split(B, q[0], q[1], q[2])]
+
+    return slist
+
+
+def split_modules(B, modules, depth, breadth, saturate=True):
+    """
+    B is a blackboard.
+    modules is a list of modules.
+    depth restricts how many subsequent splits will be performed: ie, if depth=2, will assume x>0
+     and y>0, but won't assume z>0 on top of that.
+    breadth restricts how many splits will be considered at each depth. ie, if depth=1, breadth=3,
+     will try the three most promising splits separately. If depth=2, breadth=3, will try the three
+     most promising splits determined after each of the three most promising preliminary splits.
+    """
+    #print 'SPLITTING: depth=', depth
+    if saturate:
+        saturate_modules(B, modules)
+    if depth <= 0:
         return B
     else:
-        cases = B.case_split()
-        if len(cases) == 0:
-            print '\n\nnothing to split on!\n\n'
-            return B
-        elif all_contr(lambda c:
-                       split_modules(copy_and_add(B, c), modules, n - 1),
-                       cases):
-            print '\n\n splitting on {0!s}!\n\n'.format(cases)
-            raise Contradiction('Contradiction when splitting on {0!s}'.format(cases))
-        else:
-            return B
+        backup_bbds = {}
+        backup_modules = {}
+        candidates = get_splits(B, modules)[:breadth]
+        for i in range(len(candidates)):
+            ti, tj = terms.IVar(candidates[i][0]), candidates[i][2]*terms.IVar(candidates[i][1])
+
+            backup_bbds[i, terms.GT] = copy.deepcopy(B)
+            backup_modules[i, terms.GT] = copy.deepcopy(modules)
+            gtsplit = False
+            try:
+                #print 'ASSUMING {0} > {1}, where {0} is {2}'.format(ti, tj, B.term_defs[ti.index])
+                backup_bbds[i, terms.GT].assert_comparison(ti > tj)
+                gtsplit = run_modules(backup_bbds[i, terms.GT], backup_modules[i, terms.GT], 0, 0)
+            except Contradiction:
+                gtsplit = True
+
+            if gtsplit:
+                #print 'DETERMINED {0} <= {1}'.format(ti, tj)
+                B.assert_comparison(ti <= tj)
+                return split_modules(B, modules, depth, breadth)
+
+            # no contradiction was found assuming >.
+            backup_bbds[i, terms.LT] = copy.deepcopy(B)
+            backup_modules[i, terms.LT] = copy.deepcopy(modules)
+            ltsplit = False
+            try:
+                #print 'ASSUMING {0} < {1}, where {0} is {2}'.format(ti, tj, B.term_defs[ti.index])
+                backup_bbds[i, terms.LT].assert_comparison(ti < tj)
+                ltsplit = run_modules(backup_bbds[i, terms.LT], backup_modules[i, terms.LT], 0, 0)
+            except Contradiction:
+                ltsplit = True
+
+            if ltsplit:
+                #print 'DETERMINED {0} >= {1}'.format(ti, tj)
+                B.assert_comparison(ti >= tj)
+                return split_modules(B, modules, depth, breadth)
+
+        # at this point, none of the depth-1 splits have returned any useful information.
+        for (i, c) in itertools.product(range(len(candidates)), [terms.GT, terms.LT]):
+            # print i, c
+            # print backup_bbds[i, c]
+            # print backup_modules[i, c]
+            split_modules(backup_bbds[i, c], backup_modules[i, c], depth-1, breadth, saturate=False)
 
 
-def run_modules(B, modules, split):
+def run_modules(B, modules, depth, breadth):
     """
     Given a blackboard B, iteratively runs the modules in modules until either a contradiction is
     found or no new information is learned.
     Returns True if a contradiction is found, False otherwise.
     """
     try:
-        split_modules(B, modules, split)
+        split_modules(B, modules, depth, breadth)
         return False
     except Contradiction as e:
         messages.announce(e.msg+'\n', messages.ASSERTION)
@@ -217,13 +262,13 @@ def solve(*assertions):
     except Contradiction as e:
         messages.announce(e.msg+'\n', messages.ASSERTION)
         return True
-    return run(B, default_split)
+    return run(B, default_split_depth, default_split_breadth)
 
 
 class Solver:
 
-    def __init__(self, assertions=list(), axioms=list(),
-                 modules=list(), split=default_split):
+    def __init__(self, assertions=list(), axioms=list(), modules=list(),
+                 split_depth=default_split_depth, split_breadth=default_split_breadth):
         """
         assertions: a list of TermComparisons to be asserted to the blackboard.
         axioms: a list of Axioms
@@ -260,7 +305,7 @@ class Solver:
         self.contradiction = False
         self.assume(*assertions)
         self.modules = modules
-        self.split = split
+        self.split_depth, self.split_breadth = split_depth, split_breadth
 
     def set_modules(self, modules):
         self.modules = modules
@@ -275,7 +320,7 @@ class Solver:
         """
         if self.contradiction:
             return True
-        self.contradiction = run_modules(self.B, self.modules, self.split)
+        self.contradiction = run_modules(self.B, self.modules, self.split_depth, self.split_breadth)
         return self.contradiction
 
     def prove(self, claim):
@@ -292,7 +337,7 @@ class Solver:
         except Contradiction as e:
             messages.announce(e.msg+'\n', messages.ASSERTION)
         else:
-            return run_modules(B, self.modules, self.split)
+            return run_modules(B, self.modules, self.split_depth, self.split_breadth)
 
     def _assert_comparison(self, c):
         """

@@ -361,3 +361,6 @@ class FMAdditionModule:
             # done with IVar(i)
             eqs, comps = elim(eqs, comps, i)
         timer.stop(timer.FMADD)
+
+    def get_split_weight(self, B):
+        return None

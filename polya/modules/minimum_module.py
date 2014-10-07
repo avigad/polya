@@ -70,6 +70,9 @@ class MinimumModule:
                                     B.assert_comparison(c * terms.IVar(j) <= terms.IVar(i))
         timer.stop(timer.MINM)
 
+    def get_split_weight(self, B):
+        return None
+
 
                 # old code
                 # # if any argument is the smallest, t_i is equal to that

@@ -61,3 +61,6 @@ class CongClosureModule:
                 if eq_func_terms(f1, f2):
                     B.assert_comparison(terms.IVar(i) == terms.IVar(j))
         timer.stop(timer.CCM)
+
+    def get_split_weight(self, B):
+        return None
