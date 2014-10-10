@@ -126,7 +126,7 @@ The results:
     Sledgehammer: succeeds (resolution)
     
     
-    *** Example 9 ***
+    *** Example 8 ***
     Axiom: Forall([x], f(x) <= 2)
     Hypothesis: u < v
     Hypothesis: w > 0
@@ -139,19 +139,19 @@ The results:
     Sledgehammer: fails
     
     
-    *** Example 8 ***
+    *** Example 9 ***
     Axiom: Forall([x, y], Implies(x >= y, f(x) >= f(y)))
     Hypothesis: u < v
     Hypothesis: w > 1
     Hypothesis: s > 2
     Hypothesis: (1/3)*(w + s) < v
     Hypothesis: x <= y
-    Conclusion: f(x) + u < v + f(y)
+    Conclusion: f(x) + u < v**2 + f(y)
     Comment: Discussed in Avigad, Lewis, and Roux (2014)
     
-    Polya (poly): valid, 11ms
-    Polya (fm): valid, 9ms
-    Z3: valid, 3ms
+    Polya (poly): valid, 48ms
+    Polya (fm): valid, 49ms
+    Z3: valid, fails
     Sledgehammer: fails
     
     
