@@ -153,7 +153,6 @@ class Term(object):
             else:
                 return MulTerm([MulPair(self, 1), MulPair(other, 1)])
         elif isinstance(other, STerm):
-            #todo: I added this, but I'm not sure that this is the desired behavior. Check w Jeremy
             return other * self
         else:
             raise Error('Cannot multiply Term {0!s} by {1!s}'.format(self, other))
@@ -186,7 +185,15 @@ class Term(object):
 
     def __pow__(self, n):
         # case where self is a MulTerm is handled in that class
-        return MulTerm([MulPair(self, n)])
+        if isinstance(n, numbers.Rational):
+            if n.denominator == 1:
+                return MulTerm([MulPair(self, n)])
+            elif n.numerator == 1:
+                return root(n.denominator, self)
+            else:
+                return MulTerm([MulPair(root(n.denominator, self), n.numerator)])
+        else:
+            raise Error('In {0!s} ** {1!s}, exponent must be Rational.'.format(self, n))
 
     def __abs__(self):
         return abs_val(self)
@@ -449,7 +456,13 @@ class MulTerm(AppTerm):
             return result if scalar == 1 else STerm(scalar, result)
 
     def __pow__(self, n):
-        return MulTerm([a ** n for a in self.args])
+        if isinstance(n, numbers.Rational):
+            if n.denominator % 2 == 0:
+                return MulTerm([MulPair(root(n.denominator, self), n.numerator)])
+            else:
+                return MulTerm([a ** n for a in self.args])
+        else:
+            raise Error('In {0!s} ** {1!s}, exponent must be Rational.'.format(self, n))
 
     def substitute(self, assn):
         return MulTerm([a.substitute(assn) for a in self.args])
@@ -683,11 +696,15 @@ class STerm(object):
             Error('Cannot divide {0!s} by {1!s}'.format(other, self))
 
     def __pow__(self, n):
-        if (not isinstance(n, (int, long))) and \
-                not (isinstance(n, fractions.Fraction) and n.denominator == 1):
-            Error('Non integer power')    # TODO: for now, we only handle integer powers
+        if isinstance(n, numbers.Rational):
+            if n.denominator == 1:
+                return STerm(self.coeff ** n, self.term ** n)
+            elif n.numerator == 1:
+                return STerm(1, root(n.denominator, self))
+            else:
+                return STerm(1, MulTerm([MulPair(root(n.denominator, self), n.numerator)]))
         else:
-            return STerm(self.coeff ** n, self.term ** n)
+            raise Error('In {0!s} ** {1!s}, exponent must be Rational.'.format(self, n))
 
     def substitute(self, assn):
         return STerm(self.coeff, self.term.substitute(assn))

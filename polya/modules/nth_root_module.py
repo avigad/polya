@@ -18,6 +18,7 @@ import polya.modules.axiom_module as function_module
 import polya.main.messages as messages
 
 from polya.main.main import Solver    # TODO: delete this after testing
+import fractions
 
 
 class NthRootModule:
@@ -69,10 +70,11 @@ if __name__ == '__main__':
     S.append_module(am)
     S.append_module(m)
 
-    x, y, z, w = terms.Vars('x y z w')
+    x, y, z, w, u = terms.Vars('x y z w u')
 
     # S.assume(y > 0)
     S.assume(x > y)
+    S.assume((w * z) ** fractions.Fraction(2, 3) < u)
     S.prove(terms.root(3, x) > terms.root(3, y))
 
 
