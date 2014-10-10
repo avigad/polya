@@ -467,15 +467,9 @@ class FuncTerm(AppTerm):
 
     def canonize(self):
         return self.func.canonize(self)
-        # if self.func_name == 'abs':
-        #     carg = self.args[0].canonize()
-        #     return STerm(abs(carg.coeff), FuncTerm('abs', [STerm(1, carg.term)]))
-        # else:
-        #     return STerm(1, FuncTerm(self.func_name, [a.canonize() for a in self.args]))
 
     def substitute(self, assn):
         return self.func(*[a.substitute(assn) for a in self.args])
-        #return FuncTerm(self.func_name, [a.substitute(assn) for a in self.args])
 
 
 class Func(object):
@@ -489,10 +483,6 @@ class Func(object):
     """
 
     def default_canonize(self, func_term):
-        # if func_term.func_name == 'abs':
-        #     carg = func_term.args[0].canonize()
-        #     return STerm(abs(carg.coeff), abs(STerm(1, carg.term)))
-        # else:
         return STerm(1, func_term.func(*[a.canonize() for a in func_term.args]))
 
     def __init__(self, name, arity=None, canonize=None):
@@ -504,6 +494,18 @@ class Func(object):
         if self.arity is not None and len(args) != self.arity:
             raise Error('Wrong number of arguments to {0!s}'.format(self.name))
         return FuncTerm(self, args)
+
+
+class NthRoot(Func):
+    """
+    The nth root functions (one for each integer n > 0).
+    """
+
+    def __init__(self, n):
+        self.name = 'root_{0!s}'.format(n)
+        self.n = n
+        self.arity = 1
+        self.canonize = self.default_canonize
 
 
 ####################################################################################################
@@ -551,6 +553,13 @@ def ceil_canonize(func_term):
 ceil = Func('ceil', 1, ceil_canonize)
 
 exp, log = Func('exp', 1), Func('log', 1)
+
+def root(n, t):
+    """
+    Returns the nth root of t.
+    """
+    return NthRoot(n)(t)
+
 
 
 ####################################################################################################

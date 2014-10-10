@@ -25,7 +25,7 @@ import polya.modules.polyhedron.poly_mult_module as poly_mult_module
 import polya.modules.fourier_motzkin.fm_add_module as fm_add_module
 import polya.modules.fourier_motzkin.fm_mult_module as fm_mult_module
 
-from terms import Var, Vars, UVar, Func, Contradiction, exp, log, minm, maxm, floor, ceil
+from terms import Var, Vars, UVar, Func, Contradiction, exp, log, minm, maxm, floor, ceil, root
 from formulas import Forall, Implies, And, Or, Not
 from polya.modules.polyhedron.poly_mult_module import PolyMultiplicationModule
 from polya.modules.polyhedron.poly_add_module import PolyAdditionModule
