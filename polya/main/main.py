@@ -34,6 +34,9 @@ from polya.modules.fourier_motzkin.fm_mult_module import FMMultiplicationModule
 from polya.modules.congruence_closure_module import CongClosureModule
 from polya.modules.axiom_module import AxiomModule
 from polya.modules.exponential_module import ExponentialModule
+from polya.modules.abs_module import AbsModule
+from polya.modules.minimum_module import MinimumModule
+from polya.modules.nth_root_module import NthRootModule
 from blackboard import Blackboard, set_default_seed
 
 
@@ -301,6 +304,7 @@ class Solver:
                 raise Exception
 
             modules.extend([pa, pm])
+            modules.extend([AbsModule(self.fm), MinimumModule(), NthRootModule(self.fm)])
 
         self.contradiction = False
         self.assume(*assertions)
