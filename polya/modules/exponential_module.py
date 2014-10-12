@@ -23,7 +23,7 @@ import fractions
 def find_logs_with_arg(B, i):
     """
     B is a blackboard, i is an IVar index.
-    Returns a list of pairs [(j, c)] such that t_j = exp(c*t_i) in B.
+    Returns a list of pairs [(j, c)] such that t_j = log(c*t_i) in B.
     """
     return [(i, B.term_defs[i].args[0].coeff) for i in range(B.num_terms)
             if (isinstance(B.term_defs[i], terms.FuncTerm)
@@ -44,13 +44,11 @@ def find_exps_with_arg(B, i):
 
 def exp_factor_constant(B):
     """
-    Takes a Blackboard and a list of IVar indices, s.t. i in exp_inds implies B.term_defs[i] is an
-    exponential function.
-    Asserts a number of comparisons to B.
+    Takes a Blackboard B. For each i,
     If B.term_defs[i] is of the form exp(c*t), will declare that it is equal to exp(t)**c
     """
     exp_inds = [i for i in range(B.num_terms) if (isinstance(B.term_defs[i], terms.FuncTerm)
-                                                  and B.term_defs[i].func_name == 'exp')]
+                                                  and B.term_defs[i].func == terms.exp)]
     for i in exp_inds:
         exponent = B.term_defs[i].args[0]
         if exponent.coeff != 1:
@@ -67,6 +65,22 @@ def exp_factor_constant(B):
             else:
                 #todo: handle this case:
                 raise Exception('Exponential module has tried to take a non-integer power')
+
+
+def log_factor_exponent(B):
+    """
+    Takes a Blackboard B. Looks for terms of the form log(t**e), and asserts that they are equal to
+    e*log(t).
+    """
+    log_inds = [i for i in range(B.num_terms) if (isinstance(B.term_defs[i], terms.FuncTerm)
+                                                  and B.term_defs[i].func == terms.log)]
+
+    for i in log_inds:
+        coeff, t = B.term_defs[i].args[0].coeff, B.term_defs[B.term_defs[i].args[0].term.index]
+        if (coeff == 1 and isinstance(t, terms.MulTerm)
+             and len(t.args) == 1 and t.args[0].exponent != 1 and t.args[0].exponent != 0):
+            B.assert_comparison(terms.IVar(i) == t.args[0].exponent * terms.log(t.args[0].term))
+
 
 
 # def factor_sum(B):
@@ -115,6 +129,19 @@ def exp_factor_sum(B):
                     v = t2**exp.numerator
                     B.assert_comparison(terms.IVar(i)**exp.denominator == v)
 
+def log_factor_product(B):
+    """
+    Takes a Blackboard and looks for terms of the form log(a*b*...).
+    Asserts that they are equal to log(a)+log(b)+...
+    """
+    log_inds = [i for i in range(B.num_terms) if (isinstance(B.term_defs[i], terms.FuncTerm)
+                                                  and B.term_defs[i].func == terms.log)]
+    for i in log_inds:
+        coeff, t = B.term_defs[i].args[0].coeff, B.term_defs[B.term_defs[i].args[0].term.index]
+        if coeff == 1 and isinstance(t, terms.MulTerm):
+            margs = [terms.log(p.term**p.exponent) for p in t.args]
+            t2 = reduce(lambda x, y: x+y, margs, 0).canonize()
+            B.assert_comparison(terms.IVar(i) == t2)
 
 class ExponentialModule:
 
@@ -125,18 +152,24 @@ class ExponentialModule:
         self.am = am
         x, y = terms.Vars('x y')
         self.am.add_axiom(formulas.Forall([x], terms.exp(x) > 0))
+        self.am.add_axiom(formulas.Forall([x], formulas.Implies(x >= 0, terms.exp(x) >= 1)))
+        self.am.add_axiom(formulas.Forall([x], formulas.Implies(x > 0, terms.exp(x) > 1)))
         self.am.add_axiom(formulas.Forall([x, y],
                                           formulas.Implies(x < y, terms.exp(x) < terms.exp(y))))
         self.am.add_axiom(formulas.Forall([x, y],
                                           formulas.Implies(x <= y, terms.exp(x) <= terms.exp(y))))
         self.am.add_axiom(formulas.Forall([x, y],
                                           formulas.Implies(x != y, terms.exp(x) != terms.exp(y))))
+        self.am.add_axiom(formulas.Forall([x], formulas.Implies(x >= 1, terms.log(x) >= 0)))
+        self.am.add_axiom(formulas.Forall([x], formulas.Implies(x > 1, terms.log(x) > 0)))
 
     def update_blackboard(self, B):
         timer.start(timer.EXP)
         messages.announce_module('exponential module')
         exp_factor_constant(B)
         exp_factor_sum(B)
+        log_factor_exponent(B)
+        log_factor_product(B)
         timer.stop(timer.EXP)
 
     def get_split_weight(self, B):
@@ -151,9 +184,9 @@ if __name__ == '__main__':
     # ExponentialModule(fm).update_blackboard(B)
     # ExponentialModule(fm).update_blackboard(B)
 
-    s = Solver()
-    s.add(z > exp(x), w > exp(y))
-    s.prove(z**3 * w**2 > exp(3 * x + 2 * y))
+    #s = Solver()
+    #s.add(z > exp(x), w > exp(y))
+    #s.prove(z**3 * w**2 > exp(3 * x + 2 * y))
 
     # s.add(0<x, x<y, u<v)
     # s.prove(2 * u + exp(1 + x + x**4) <= 2 * v + exp(1 + y + y**4))
