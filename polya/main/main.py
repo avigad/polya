@@ -37,7 +37,8 @@ from polya.modules.exponential_module import ExponentialModule
 from polya.modules.abs_module import AbsModule
 from polya.modules.minimum_module import MinimumModule
 from polya.modules.nth_root_module import NthRootModule
-from blackboard import Blackboard
+from polya.main.blackboard import Blackboard
+from polya.interface.example import run_examples
 
 
 ####################################################################################################

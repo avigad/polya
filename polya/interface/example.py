@@ -15,6 +15,7 @@
 
 import polya.interface.solve_util as solve_util
 import timeit
+import polya.main.messages as messages
 
 
 class Example:
@@ -46,6 +47,9 @@ class Example:
             print "(Omitted from 'test_all')"
         print
 
+    def set_solver_type(self, s):
+        self.solver = s
+
     def test(self):
         self.show()
         S = solve_util.Solver(self.split_depth, self.split_breadth, self.hyps, self.axioms,
@@ -63,3 +67,53 @@ class Example:
                 print 'Failed.'
         print 'Ran in', round(timeit.default_timer()-t, 3), 'seconds'
         print
+        
+def run_examples(examples, switches):
+    # handle switches
+    if '-v' in switches:
+        messages.set_verbosity(messages.normal)
+        switches.remove('-v')
+    else:
+        messages.set_verbosity(messages.quiet)
+    if '-fm' in switches:
+        for e in examples:
+            e.set_solver_type('fm')
+        switches.remove('-fm')
+
+    # perform command
+    if len(switches) == 1:
+        print "Use 'python sample_problems.py list' to list the examples."
+        print "Use 'python sample_problems.py 6 9 10' to run those examples."
+        print "Use 'python sample_problems.py test_all' to run them all."
+    else:
+        #show_configuration()
+        if switches[1] == 'list':
+            for i in range(len(examples)):
+                print '*** Example {0!s} ***'.format(i)
+                examples[i].show()
+        elif switches[1] == 'test_all':
+            t = timeit.default_timer()
+            for i in range(len(examples)):
+                if not examples[i].omit:
+                    print '*** Example {0!s} ***'.format(i)
+                    examples[i].test()
+            print 'Total:', round(timeit.default_timer()-t, 3), 'seconds'
+        # for a comparison of Fourier-Motzkin and polytope methods
+        elif switches[1] == 'test_all_comp':
+            t = timeit.default_timer()
+            for i in range(len(examples)):
+                if not examples[i].omit:
+                    print '*** Example {0!s} ***'.format(i)
+                    examples[i].set_solver_type('fm')
+                    print '[Fourier-Motzkin]'
+                    examples[i].test()
+                    examples[i].set_solver_type('poly')
+                    print '[Poly]'
+                    examples[i].test()
+            print 'Total:', round(timeit.default_timer()-t, 3), 'seconds'
+        else:
+            for i in range(1, len(switches)):
+                try:
+                    examples[int(switches[i])].test()
+                except ValueError:
+                    print 'No example {0}.'.format(switches[i])

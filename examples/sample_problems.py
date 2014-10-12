@@ -382,51 +382,51 @@ examples.append(Example(
 
 
 if __name__ == '__main__':
-
-    # handle switches
-    if '-v' in sys.argv:
-        messages.set_verbosity(messages.normal)
-        sys.argv.remove('-v')
-    else:
-        messages.set_verbosity(messages.quiet)
-    if '-fm' in sys.argv:
-        set_solver_type('fm')
-        sys.argv.remove('-fm')
-
-    # perform command
-    if len(sys.argv) == 1:
-        print "Use 'python sample_problems.py list' to list the examples."
-        print "Use 'python sample_problems.py 6 9 10' to run those examples."
-        print "Use 'python sample_problems.py test_all' to run them all."
-    else:
-        show_configuration()
-        if sys.argv[1] == 'list':
-            for i in range(len(examples)):
-                print '*** Example {0!s} ***'.format(i)
-                examples[i].show()
-        elif sys.argv[1] == 'test_all':
-            t = timeit.default_timer()
-            for i in range(len(examples)):
-                if not examples[i].omit:
-                    print '*** Example {0!s} ***'.format(i)
-                    examples[i].test()
-            print 'Total:', round(timeit.default_timer()-t, 3), 'seconds'
-        # for a comparison of Fourier-Motzkin and polytope methods
-        elif sys.argv[1] == 'test_all_comp':
-            t = timeit.default_timer()
-            for i in range(len(examples)):
-                if not examples[i].omit:
-                    print '*** Example {0!s} ***'.format(i)
-                    set_solver_type('fm')
-                    print '[Fourier-Motzkin]'
-                    examples[i].test()
-                    set_solver_type('poly')
-                    print '[Poly]'
-                    examples[i].test()
-            print 'Total:', round(timeit.default_timer()-t, 3), 'seconds'
-        else:
-            for i in range(1, len(sys.argv)):
-                try:
-                    examples[int(sys.argv[i])].test()
-                except ValueError:
-                    print 'No example {0}.'.format(sys.argv[i])
+    run_examples(examples, sys.argv)
+    # # handle switches
+    # if '-v' in sys.argv:
+    #     messages.set_verbosity(messages.normal)
+    #     sys.argv.remove('-v')
+    # else:
+    #     messages.set_verbosity(messages.quiet)
+    # if '-fm' in sys.argv:
+    #     set_solver_type('fm')
+    #     sys.argv.remove('-fm')
+    #
+    # # perform command
+    # if len(sys.argv) == 1:
+    #     print "Use 'python sample_problems.py list' to list the examples."
+    #     print "Use 'python sample_problems.py 6 9 10' to run those examples."
+    #     print "Use 'python sample_problems.py test_all' to run them all."
+    # else:
+    #     show_configuration()
+    #     if sys.argv[1] == 'list':
+    #         for i in range(len(examples)):
+    #             print '*** Example {0!s} ***'.format(i)
+    #             examples[i].show()
+    #     elif sys.argv[1] == 'test_all':
+    #         t = timeit.default_timer()
+    #         for i in range(len(examples)):
+    #             if not examples[i].omit:
+    #                 print '*** Example {0!s} ***'.format(i)
+    #                 examples[i].test()
+    #         print 'Total:', round(timeit.default_timer()-t, 3), 'seconds'
+    #     # for a comparison of Fourier-Motzkin and polytope methods
+    #     elif sys.argv[1] == 'test_all_comp':
+    #         t = timeit.default_timer()
+    #         for i in range(len(examples)):
+    #             if not examples[i].omit:
+    #                 print '*** Example {0!s} ***'.format(i)
+    #                 set_solver_type('fm')
+    #                 print '[Fourier-Motzkin]'
+    #                 examples[i].test()
+    #                 set_solver_type('poly')
+    #                 print '[Poly]'
+    #                 examples[i].test()
+    #         print 'Total:', round(timeit.default_timer()-t, 3), 'seconds'
+    #     else:
+    #         for i in range(1, len(sys.argv)):
+    #             try:
+    #                 examples[int(sys.argv[i])].test()
+    #             except ValueError:
+    #                 print 'No example {0}.'.format(sys.argv[i])
