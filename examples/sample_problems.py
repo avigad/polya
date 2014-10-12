@@ -19,48 +19,7 @@ import sys
 import timeit
 
 
-class Example:
 
-    def __init__(self, hyps=None, conc=None, axioms=None,
-                 modules=None, omit=False, comment=None):
-        self.hyps = hyps if hyps else list()
-        self.conc = conc
-        self.axioms = axioms if axioms else list()
-        self.modules = modules if modules else list()
-        self.comment=comment
-        self.omit = omit    # flag to omit from 'test_all'
-
-    def show(self):
-        for a in self.axioms:
-            print 'Axiom: {0!s}'.format(a)
-        for h in self.hyps:
-            print 'Hypothesis: {0!s}'.format(h)
-        if self.conc:
-            print 'Conclusion: {0!s}'.format(self.conc)
-        else:
-            print 'Conclusion: False'
-        if self.comment:
-            print 'Comment: {0}'.format(self.comment)
-        if self.omit:
-            print "(Omitted from 'test_all')"
-        print
-
-    def test(self):
-        self.show()
-        S = Solver(assertions=self.hyps, axioms=self.axioms, modules=self.modules)
-        t = timeit.default_timer()
-        if self.conc:
-            if S.prove(self.conc):
-                print 'Conclusion is valid.'
-            else:
-                print 'Failed.'
-        else:
-            if S.check():
-                print 'Refuted hypotheses.'
-            else:
-                print 'Failed.'
-        print 'Ran in', round(timeit.default_timer()-t, 3), 'seconds'
-        print
 
 
 ####################################################################################################
@@ -401,6 +360,19 @@ examples.append(Example(
     comment="Need a case split on y to solve this."
 ))
 
+examples.append(Example(
+    hyps=[-1 <= x, x <= 1],
+    conc=(-1 <= 4*x**3 -3*x),
+    comment="Need a case split on x. Along with the following, is equivalent to an example from" +
+    "McLaughlin and Harrison"
+))
+
+examples.append(Example(
+    hyps=[-1 <= x, x <= 1],
+    conc=(1 >= 4*x**3 -3*x),
+    comment="Need a case split on x. Along with the previous, is equivalent to an example from" +
+    "McLaughlin and Harrison"
+))
 
 ####################################################################################################
 #

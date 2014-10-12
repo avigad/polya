@@ -42,16 +42,16 @@ import polya.main.terms as terms
 import polya.main.messages as messages
 import polya.util.geometry as geometry
 
-default_seed = 0
-
-def set_default_seed(seed):
-    """Changes the default seed used in Split initialization
-    
-    Arguments:
-    - `seed`: an integer or None
-    """
-    global default_seed
-    default_seed = seed
+# default_seed = 0
+#
+# def set_default_seed(seed):
+#     """Changes the default seed used in Split initialization
+#
+#     Arguments:
+#     - `seed`: an integer or None
+#     """
+#     global default_seed
+#     default_seed = seed
 
 
 
@@ -104,36 +104,36 @@ class Tracker(object):
             self.updates[k].add(key)
 
 
-class Split(object):
-    """Implements case_split which takes as imput a
-    Blackboard and returns a list of statements to split on
-    """
-    
-    def __init__(self, seed=None):
-        """Initialize the split, and give an optional seed
-        
-        Arguments:
-        - `seed`:
-        """
-        self.seed = seed
-        random.seed(self.seed)
-
-    def case_split(self, bb):
-        """Return a list of statements [s0,...,sn] to split on:
-        if bb+s0, ..., bb+sn is inconsistent iff bb is inconsistent.
-        
-        Arguments:
-        - `bb`: an instance of Blackboard
-        """
-        no_sign = []
-        for i in range(0, bb.num_terms):
-            if not (i in bb.zero_inequalities):
-                no_sign.append(bb.term_defs[i])
-        if len(no_sign) == 0:
-            return []
-        else:
-            x = random.choice(no_sign)
-            return [x == 0, x < 0, x > 0]
+# class Split(object):
+#     """Implements case_split which takes as imput a
+#     Blackboard and returns a list of statements to split on
+#     """
+#
+#     def __init__(self, seed=None):
+#         """Initialize the split, and give an optional seed
+#
+#         Arguments:
+#         - `seed`:
+#         """
+#         self.seed = seed
+#         random.seed(self.seed)
+#
+#     def case_split(self, bb):
+#         """Return a list of statements [s0,...,sn] to split on:
+#         if bb+s0, ..., bb+sn is inconsistent iff bb is inconsistent.
+#
+#         Arguments:
+#         - `bb`: an instance of Blackboard
+#         """
+#         no_sign = []
+#         for i in range(0, bb.num_terms):
+#             if not (i in bb.zero_inequalities):
+#                 no_sign.append(bb.term_defs[i])
+#         if len(no_sign) == 0:
+#             return []
+#         else:
+#             x = random.choice(no_sign)
+#             return [x == 0, x < 0, x > 0]
 
 
 
@@ -157,7 +157,7 @@ class Blackboard(object):
         self.zero_disequalities = set([])  # Set of IVar indices not equal to 0
 
         self.clauses = set()  # List of Clauses
-        self.split = Split(seed=default_seed)  # This object determines how to perform case splits
+        #self.split = Split(seed=default_seed)  # This object determines how to perform case splits
 
         self.tracker = Tracker(self)
 
