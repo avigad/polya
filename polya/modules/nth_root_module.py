@@ -62,6 +62,9 @@ class NthRootModule:
             else:
                 self.am.add_axiom(formulas.Forall([x], terms.root(n, x) ** n == x))
 
+    def get_split_weight(self, B):
+        return None
+
 if __name__ == '__main__':
     pass
     # S = Solver()

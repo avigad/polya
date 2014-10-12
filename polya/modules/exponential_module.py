@@ -17,7 +17,18 @@ import polya.util.timer as timer
 #import polya.util.num_util as num_util
 import fractions
 #import copy
-from polya import *
+#from polya import *
+
+
+def find_logs_with_arg(B, i):
+    """
+    B is a blackboard, i is an IVar index.
+    Returns a list of pairs [(j, c)] such that t_j = exp(c*t_i) in B.
+    """
+    return [(i, B.term_defs[i].args[0].coeff) for i in range(B.num_terms)
+            if (isinstance(B.term_defs[i], terms.FuncTerm)
+                and B.term_defs[i].func_name == 'log'
+                and B.term_defs[i].args[0].term.index == i)]
 
 
 def find_exps_with_arg(B, i):
@@ -31,7 +42,7 @@ def find_exps_with_arg(B, i):
                 and B.term_defs[i].args[0].term.index == i)]
 
 
-def factor_constant(B):
+def exp_factor_constant(B):
     """
     Takes a Blackboard and a list of IVar indices, s.t. i in exp_inds implies B.term_defs[i] is an
     exponential function.
@@ -76,7 +87,7 @@ def factor_constant(B):
 #             n = B.term_name(t2.term)
 #             B.assert_comparison(terms.IVar(i) == t2.coeff * n)
 
-def factor_sum(B):
+def exp_factor_sum(B):
     """
     Takes a Blackboard and a list of IVar indices, s.t. i in exp_inds implies B.term_defs[i] is an
     exponential function.
@@ -124,8 +135,8 @@ class ExponentialModule:
     def update_blackboard(self, B):
         timer.start(timer.EXP)
         messages.announce_module('exponential module')
-        factor_constant(B)
-        factor_sum(B)
+        exp_factor_constant(B)
+        exp_factor_sum(B)
         timer.stop(timer.EXP)
 
     def get_split_weight(self, B):

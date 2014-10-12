@@ -152,12 +152,13 @@ def saturate_modules(B, modules):
             m.update_blackboard(B)
 
 
-def knows_split(B, i, j, c):
+def knows_split(B, i, j, comp, c):
     """
     Returns True if B knows either t_i = c*t_j, t_i > c*t_j, or t_i < c*t_j
     """
-    return B.implies(i, terms.EQ, c, j) or B.implies(i, terms.GT, c, j) \
-        or B.implies(i, terms.LT, c, j)
+    return B.implies(i, comp, c, j) or B.implies(i, terms.comp_negate(comp), c, j)
+    #return B.implies(i, terms.EQ, c, j) or B.implies(i, terms.GT, c, j) \
+    #    or B.implies(i, terms.LT, c, j)
 
 
 def get_splits(B, modules):
@@ -170,11 +171,11 @@ def get_splits(B, modules):
     for m in modules:
         l = m.get_split_weight(B)
         if l is not None:
-            for (i, j, c, w) in l:
-                splits[i, j, c] = splits.get((i, j, c), 0) + w
+            for (i, j, c, comp, w) in l:
+                splits[i, j, comp, c] = splits.get((i, j, comp, c), 0) + w
 
     slist = [q for q in sorted(splits.keys(), key=lambda p: (-splits[p], p[0]))
-             if splits[q] > 0 and not knows_split(B, q[0], q[1], q[2])]
+             if splits[q] > 0 and not knows_split(B, q[0], q[1], q[2], q[3])]
 
     return slist
 
@@ -199,41 +200,45 @@ def split_modules(B, modules, depth, breadth, saturate=True):
         backup_modules = {}
         candidates = get_splits(B, modules)[:breadth]
         for i in range(len(candidates)):
-            ti, tj = terms.IVar(candidates[i][0]), candidates[i][2]*terms.IVar(candidates[i][1])
+            can = candidates[i]
+            print 'Assuming:t{0} {1} {2}*{3}'.format(can[0], terms.comp_str[can[2]], can[3], can[1])
+            ti, tj = terms.IVar(can[0]), can[3]*terms.IVar(can[1])
+            comp = can[2]
 
-            backup_bbds[i, terms.GT] = copy.deepcopy(B)
-            backup_modules[i, terms.GT] = copy.deepcopy(modules)
+            backup_bbds[i, comp] = copy.deepcopy(B)
+            backup_modules[i, comp] = copy.deepcopy(modules)
             gtsplit = False
             try:
                 #print 'ASSUMING {0} > {1}, where {0} is {2}'.format(ti, tj, B.term_defs[ti.index])
-                backup_bbds[i, terms.GT].assert_comparison(ti > tj)
-                gtsplit = run_modules(backup_bbds[i, terms.GT], backup_modules[i, terms.GT], 0, 0)
+                backup_bbds[i, comp].assert_comparison(terms.comp_eval[comp](ti, tj))
+                gtsplit = run_modules(backup_bbds[i, comp], backup_modules[i, comp], 0, 0)
             except Contradiction:
                 gtsplit = True
 
             if gtsplit:
                 #print 'DETERMINED {0} <= {1}'.format(ti, tj)
-                B.assert_comparison(ti <= tj)
+                B.assert_comparison(terms.comp_eval[terms.comp_negate(comp)](ti, tj))
                 return split_modules(B, modules, depth, breadth)
 
-            # no contradiction was found assuming >.
-            backup_bbds[i, terms.LT] = copy.deepcopy(B)
-            backup_modules[i, terms.LT] = copy.deepcopy(modules)
-            ltsplit = False
-            try:
-                #print 'ASSUMING {0} < {1}, where {0} is {2}'.format(ti, tj, B.term_defs[ti.index])
-                backup_bbds[i, terms.LT].assert_comparison(ti < tj)
-                ltsplit = run_modules(backup_bbds[i, terms.LT], backup_modules[i, terms.LT], 0, 0)
-            except Contradiction:
-                ltsplit = True
-
-            if ltsplit:
-                #print 'DETERMINED {0} >= {1}'.format(ti, tj)
-                B.assert_comparison(ti >= tj)
-                return split_modules(B, modules, depth, breadth)
+            # # no contradiction was found assuming >.
+            # backup_bbds[i, terms.LT] = copy.deepcopy(B)
+            # backup_modules[i, terms.LT] = copy.deepcopy(modules)
+            # ltsplit = False
+            # try:
+            #     #print 'ASSUMING {0} < {1}, where {0} is {2}'.format(ti, tj, B.term_defs[ti.index])
+            #     backup_bbds[i, terms.LT].assert_comparison(ti < tj)
+            #     ltsplit = run_modules(backup_bbds[i, terms.LT], backup_modules[i, terms.LT], 0, 0)
+            # except Contradiction:
+            #     ltsplit = True
+            #
+            # if ltsplit:
+            #     #print 'DETERMINED {0} >= {1}'.format(ti, tj)
+            #     B.assert_comparison(ti >= tj)
+            #     return split_modules(B, modules, depth, breadth)
 
         # at this point, none of the depth-1 splits have returned any useful information.
-        for (i, c) in itertools.product(range(len(candidates)), [terms.GT, terms.LT]):
+        for (i, c) in backup_bbds.keys():
+            #itertools.product(range(len(candidates)), [terms.GT, terms.LT]):
             # print i, c
             # print backup_bbds[i, c]
             # print backup_modules[i, c]
@@ -290,7 +295,8 @@ class Solver:
         self.fm = None
         if len(modules) == 0:
             self.fm = AxiomModule(axioms)
-            modules = [self.fm, CongClosureModule(), ExponentialModule(self.fm)]
+            modules = [CongClosureModule(), ExponentialModule(self.fm)]
+            modules.extend([AbsModule(self.fm), MinimumModule(), NthRootModule(self.fm), self.fm])
             if default_solver == 'poly':
                 pa = poly_add_module.PolyAdditionModule()
                 pm = poly_mult_module.PolyMultiplicationModule()
@@ -304,7 +310,6 @@ class Solver:
                 raise Exception
 
             modules.extend([pa, pm])
-            modules.extend([AbsModule(self.fm), MinimumModule(), NthRootModule(self.fm)])
 
         self.contradiction = False
         self.assume(*assertions)

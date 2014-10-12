@@ -265,9 +265,14 @@ def derive_info_from_definitions(B):
     #     else:
     #         return B.weak_sign(p.term.index)
 
+
     for key in (k for k in B.term_defs if isinstance(B.term_defs[k], terms.MulTerm)):
         #signs = [mulpair_sign(p) for p in B.term_defs[key].args]
         #s = reduce(lambda x, y: x*y, signs)
+
+        if any((B.implies(p.term.index, terms.EQ, 0, 0) and p.exponent >= 0)
+               for p in B.term_defs[key].args):  # This term is 0 * something else.
+            B.assert_comparison(terms.IVar(key) == 0)
 
         if B.implies(key, terms.NE, 0, 0):
             # we have strict information about key already. So everything must have a strict sign.
@@ -329,6 +334,29 @@ def preprocess_cancellations(B):
 
         if B.has_name(lterm)[0] and B.has_name(rterm)[0]:
             B.assert_comparison(terms.comp_eval[comp](lterm, coeff * rterm))
+
+def get_split_weight(B):
+    """
+    returns a list of tuples (i, j, c, <>. w). A tuple represents that this module would like
+    interested to assume the comparison t_i <> c*t_j, with weight w.
+    """
+    def occurs_in_mul_term(i):
+        for k in [j for j in range(B.num_terms) if isinstance(B.term_defs[j], terms.MulTerm)]:
+            if i in [t.term.index for t in B.term_defs[k].args]:
+                return True
+        return False
+
+    def no_sign_info(i):
+        if not (B.implies_zero_comparison(i, terms.GT)) and \
+                not (B.implies_zero_comparison(i, terms.LT)) and \
+                not (B.implies_zero_comparison(i, terms.EQ)):
+            return True
+        else:
+            return False
+
+    return [(i, 0, 0, comp, 1) for i in range(B.num_terms) if (occurs_in_mul_term(i)
+                                                               and no_sign_info(i))
+            for comp in [terms.GT, terms.LT]]
 
 
 

@@ -225,49 +225,10 @@ class PolyMultiplicationModule:
                 B.assert_comparison(c)
         timer.stop(timer.PMUL)
 
+
     def get_split_weight(self, B):
-        """
-        returns a list of tuples (i, j, c, w). A tuple represents that this module would be
-        interested to know the direction of the comparison t_i <> c*t_j, with weight w.
-        """
-        def occurs_in_mul_term(i):
-            for k in [j for j in range(B.num_terms) if isinstance(B.term_defs[j], terms.MulTerm)]:
-                if i in [t.term.index for t in B.term_defs[k].args]:
-                    return True
-            return False
+        return mul_util.get_split_weight(B)
 
-        def no_sign_info(i):
-            if not (B.implies_zero_comparison(i, terms.GT)) and \
-                    not (B.implies_zero_comparison(i, terms.LT)) and \
-                    not (B.implies_zero_comparison(i, terms.EQ)):
-                return True
-            else:
-                return False
-
-        return [(i, 0, 0, 1) for i in range(B.num_terms) if (occurs_in_mul_term(i)
-                                                             and no_sign_info(i))]
-
-    # def get_split_weight(self, B):
-    #     """
-    #     Returns a function mapping a term index i to a dictionary d.
-    #     d maps term indices j to pairs (weight, coeff). This dictionary represents that this module
-    #     could find information about how t_i compares to coeff*t_j interesting. weight represents
-    #     how interesting the module expects it to be.
-    #     """
-    #     def occurs_in_mul_term(i):
-    #         for k in [j for j in range(B.num_terms) if isinstance(B.term_defs[j], terms.MulTerm)]:
-    #             if i in [t.term.index for t in B.term_defs[k].args]:
-    #                 return 1
-    #         return 0
-    #
-    #     def no_sign_info(i):
-    #         if not (B.implies_zero_comparison(i, terms.GE)) and \
-    #         not (B.implies_zero_comparison(i, terms.LE)):
-    #             return 1
-    #         else:
-    #             return 0
-    #
-    #     return lambda i: {0: (occurs_in_mul_term(i)*no_sign_info(i), 0)}
 
 
 ####################################################################################################
