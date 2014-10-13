@@ -28,7 +28,7 @@ r, s, t, u, v, w, x, y, z = Vars('r, s, t, u, v, w, x, y, z')
 eps = Var('eps')
 
 f = Func('f')
-exp = Func('exp')
+#exp = Func('exp')
 ceil = Func('ceil')
 
 examples = list()
@@ -372,6 +372,11 @@ examples.append(Example(
     "McLaughlin and Harrison",
     split_depth=2,
     split_breadth=10
+))
+
+examples.append(Example(
+    hyps=[z > exp(x), w > exp(y)],
+    conc=(z**3 * w**2 > exp(3 * x + 2 * y))
 ))
 
 ####################################################################################################

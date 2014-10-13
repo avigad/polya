@@ -52,19 +52,19 @@ def exp_factor_constant(B):
     for i in exp_inds:
         exponent = B.term_defs[i].args[0]
         if exponent.coeff != 1:
-            if exponent.coeff % 1 == 0:
-                term2 = (terms.exp(exponent.term)**exponent.coeff).canonize()
-                n = B.term_name(term2.term)
-                B.assert_comparison(terms.IVar(i) == term2.coeff * n)
-            elif isinstance(exponent.coeff, fractions.Fraction):
-                term2 = (terms.exp(
-                    fractions.Fraction(1, exponent.coeff.denominator)*exponent.term
-                )**exponent.coeff.numerator).canonize()
-                n = B.term_name(term2.term)
-                B.assert_comparison(terms.IVar(i) == term2.coeff * n)
-            else:
-                #todo: handle this case:
-                raise Exception('Exponential module has tried to take a non-integer power')
+            # if exponent.coeff % 1 == 0:
+            term2 = (terms.exp(exponent.term)**exponent.coeff).canonize()
+            n = B.term_name(term2.term)
+            B.assert_comparison(terms.IVar(i) == term2.coeff * n)
+            # elif isinstance(exponent.coeff, fractions.Fraction):
+            #     term2 = (terms.exp(
+            #         fractions.Fraction(1, exponent.coeff.denominator)*exponent.term
+            #     )**exponent.coeff.numerator).canonize()
+            #     n = B.term_name(term2.term)
+            #     B.assert_comparison(terms.IVar(i) == term2.coeff * n)
+            # else:
+            #     #todo: handle this case:
+            #     raise Exception('Exponential module has tried to take a non-integer power')
 
 
 def log_factor_exponent(B):
@@ -82,8 +82,27 @@ def log_factor_exponent(B):
             B.assert_comparison(terms.IVar(i) == t.args[0].exponent * terms.log(t.args[0].term))
 
 
+def exp_factor_sum(B):
+    """
+    Takes a Blackboard and a list of IVar indices, s.t. i in exp_inds implies B.term_defs[i] is an
+    exponential function.
+    Asserts a number of comparisons to B.
+    If B.term_defs[i] is of the form exp(t_1 + ct_2 + ...), will declare that it is equal to
+    exp(t_1)*exp(ct_2)*...
+    """
+    exp_inds = [i for i in range(B.num_terms) if (isinstance(B.term_defs[i], terms.FuncTerm)
+                                                  and B.term_defs[i].func == terms.exp)]
+    for i in exp_inds:
+        coeff, t = B.term_defs[i].args[0].coeff, B.term_defs[B.term_defs[i].args[0].term.index]
+        if isinstance(t, terms.AddTerm) and coeff == 1:
+            margs = [B.term_name(terms.exp(a).canonize().term) for a in t.args]
+            t2 = reduce(lambda x, y: x*y, margs, 1).canonize()
+            n = B.term_name(t2.term)
+            B.assert_comparison(terms.IVar(i) == t2.coeff * n)
 
-# def factor_sum(B):
+
+# This was necessary before nth roots were added
+# def exp_factor_sum(B):
 #     """
 #     Takes a Blackboard and a list of IVar indices, s.t. i in exp_inds implies B.term_defs[i] is an
 #     exponential function.
@@ -96,38 +115,20 @@ def log_factor_exponent(B):
 #     for i in exp_inds:
 #         coeff, t = B.term_defs[i].args[0].coeff, B.term_defs[B.term_defs[i].args[0].term.index]
 #         if isinstance(t, terms.AddTerm):
-#             margs = [B.term_name(terms.exp(coeff*a).canonize().term) for a in t.args]
-#             t2 = reduce(lambda x, y: x*y, margs, 1).canonize()
-#             n = B.term_name(t2.term)
-#             B.assert_comparison(terms.IVar(i) == t2.coeff * n)
-
-def exp_factor_sum(B):
-    """
-    Takes a Blackboard and a list of IVar indices, s.t. i in exp_inds implies B.term_defs[i] is an
-    exponential function.
-    Asserts a number of comparisons to B.
-    If B.term_defs[i] is of the form exp(t_1 + ct_2 + ...), will declare that it is equal to
-    exp(t_1)*exp(ct_2)*...
-    """
-    exp_inds = [i for i in range(B.num_terms) if (isinstance(B.term_defs[i], terms.FuncTerm)
-                                                  and B.term_defs[i].func_name == 'exp')]
-    for i in exp_inds:
-        coeff, t = B.term_defs[i].args[0].coeff, B.term_defs[B.term_defs[i].args[0].term.index]
-        if isinstance(t, terms.AddTerm):
-            cset = {coeff}
-            for a in t.args:
-                cset.update([fractions.Fraction(c, a.term.index)
-                             for (i, c) in find_exps_with_arg(B, a.term.index)])
-
-            for c in cset:
-                margs = [terms.exp(c*a) for a in t.args]
-                t2 = reduce(lambda x, y: x*y, margs, 1).canonize()
-                exp = fractions.Fraction(coeff, c)
-                if exp.denominator == 1:
-                    B.assert_comparison(terms.IVar(i) == t2**exp)
-                else:
-                    v = t2**exp.numerator
-                    B.assert_comparison(terms.IVar(i)**exp.denominator == v)
+#             cset = {coeff}
+#             for a in t.args:
+#                 cset.update([fractions.Fraction(c, a.term.index)
+#                              for (i, c) in find_exps_with_arg(B, a.term.index)])
+#
+#             for c in cset:
+#                 margs = [terms.exp(c*a) for a in t.args]
+#                 t2 = reduce(lambda x, y: x*y, margs, 1).canonize()
+#                 exp = fractions.Fraction(coeff, c)
+#                 if exp.denominator == 1:
+#                     B.assert_comparison(terms.IVar(i) == t2**exp)
+#                 else:
+#                     v = t2**exp.numerator
+#                     B.assert_comparison(terms.IVar(i)**exp.denominator == v)
 
 def log_factor_product(B):
     """
