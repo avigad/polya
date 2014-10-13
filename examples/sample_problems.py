@@ -108,14 +108,14 @@ examples.append(Example(
 ))
 
 examples.append(Example(
-    axioms=[Forall([x, y], Implies(x < y, exp(x) < exp(y)))],
+    #axioms=[Forall([x, y], Implies(x < y, exp(x) < exp(y)))],
     hyps=[0 < x, x < y, u < v],
     conc=(2 * u + exp(1 + x + x**4) <= 2 * v + exp(1 + y + y**4)),
     comment='Discussed in Avigad, Lewis, and Roux (2014)'
 ))
 
 examples.append(Example(
-    axioms=[Forall([x, y], Implies(x < y, exp(x) < exp(y)))],
+    #axioms=[Forall([x, y], Implies(x < y, exp(x) < exp(y)))],
     hyps=[0 < x, 3 < y, u < v],
     conc=(2 * u + exp(10) <= 2 * v + exp(1 + y**2))
 ))
@@ -147,7 +147,7 @@ examples.append(Example(
 ))
 
 examples.append(Example(
-    axioms=[Forall([x, y], And(Implies(x < y, exp(x) < exp(y)), exp(x) > 0))],
+    #axioms=[Forall([x, y], And(Implies(x < y, exp(x) < exp(y)), exp(x) > 0))],
     hyps=[0 < x, x < y],
     conc=((1 + x**2) / (2 + exp(y)) < (2 + y**2) / (1 + exp(x))),
     comment='From Avigad and Friedman (2006).'
