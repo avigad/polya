@@ -102,7 +102,7 @@ examples.append(Example(
 examples.append(Example(
     axioms=[Forall([x, y], Implies(x >= y, f(x) >= f(y)))],
     hyps=[u < v, 1 < w, 2 < s, (w + s) / 3 < v, x <= y],
-    conc=(f(x) + u < v + f(y)),
+    conc=(f(x) + u < v**2 + f(y)),
     comment='Discussed in Avigad, Lewis, and Roux (2014)'
 ))
 
