@@ -78,7 +78,8 @@ def log_factor_exponent(B):
     for i in log_inds:
         coeff, t = B.term_defs[i].args[0].coeff, B.term_defs[B.term_defs[i].args[0].term.index]
         if (coeff == 1 and isinstance(t, terms.MulTerm)
-             and len(t.args) == 1 and t.args[0].exponent != 1 and t.args[0].exponent != 0):
+             and len(t.args) == 1 and t.args[0].exponent != 1 and t.args[0].exponent != 0
+            and B.implies_zero_comparison(t.args[0].term.index, terms.GT)):
             B.assert_comparison(terms.IVar(i) == t.args[0].exponent * terms.log(t.args[0].term))
 
 
@@ -135,11 +136,19 @@ def log_factor_product(B):
     Takes a Blackboard and looks for terms of the form log(a*b*...).
     Asserts that they are equal to log(a)+log(b)+...
     """
+    def is_pos(mulpair):
+        return (B.implies_zero_comparison(mulpair.term.index, terms.GT) or
+            (mulpair.exponent % 2 == 0 and B.implies_zero_comparison(mulpair.term.index, terms.NE)))
+
     log_inds = [i for i in range(B.num_terms) if (isinstance(B.term_defs[i], terms.FuncTerm)
                                                   and B.term_defs[i].func == terms.log)]
     for i in log_inds:
+        print i, '!!!'
         coeff, t = B.term_defs[i].args[0].coeff, B.term_defs[B.term_defs[i].args[0].term.index]
-        if coeff == 1 and isinstance(t, terms.MulTerm):
+        for a in t.args:
+            print a, is_pos(a)
+        if coeff == 1 and isinstance(t, terms.MulTerm) and all(is_pos(a) for a in t.args):
+            print '!!', i
             margs = [terms.log(p.term**p.exponent) for p in t.args]
             t2 = reduce(lambda x, y: x+y, margs, 0).canonize()
             B.assert_comparison(terms.IVar(i) == t2)
@@ -163,6 +172,12 @@ class ExponentialModule:
                                           formulas.Implies(x != y, terms.exp(x) != terms.exp(y))))
         self.am.add_axiom(formulas.Forall([x], formulas.Implies(x >= 1, terms.log(x) >= 0)))
         self.am.add_axiom(formulas.Forall([x], formulas.Implies(x > 1, terms.log(x) > 0)))
+        self.am.add_axiom(formulas.Forall([x, y], formulas.Implies(formulas.And(x > 0, x < y),
+                                                                   terms.log(x) < terms.log(y))))
+        self.am.add_axiom(formulas.Forall([x, y], formulas.Implies(formulas.And(x > 0, x <= y),
+                                                                   terms.log(x) <= terms.log(y))))
+        self.am.add_axiom(formulas.Forall([x, y], formulas.Implies(formulas.And(x > 0, y > 0, x != y),
+                                                                   terms.log(x) != terms.log(y))))
 
     def update_blackboard(self, B):
         timer.start(timer.EXP)

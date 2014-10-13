@@ -379,6 +379,11 @@ examples.append(Example(
     conc=(z**3 * w**2 > exp(3 * x + 2 * y))
 ))
 
+examples.append(Example(
+    hyps=[a>1, c>0, log(b**2)>4, log(c)>1, b!=0],
+    conc=(log(a*b**2*c**3) > 7)
+))
+
 ####################################################################################################
 #
 # To run from the command line

@@ -983,8 +983,10 @@ class Clause:
             if len(self.zero_comparisons[i]) == 0:
                 del self.zero_comparisons[i]
 
-        for (j, k) in (key for key in self.comparisons if key[0] == i or key[1] == i):
-            self.update_on_indices(i, j, B)
+        for (j, k) in self.comparisons.keys():
+         #(key for key in self.comparisons if key[0] == i or key[1] == i):
+            if j==i or k==i:
+                self.update_on_indices(i, j, B)
 
     def update_on_indices(self, i, j, B):
         """

@@ -83,6 +83,3 @@ if __name__ == '__main__':
     # S.assume(x > y)
     # S.assume((w * z) ** fractions.Fraction(2, 3) < u)
     # S.prove(terms.root(3, x) > terms.root(3, y))
-
-
-
