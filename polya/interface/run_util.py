@@ -93,7 +93,6 @@ def split_modules(B, modules, depth, breadth, saturate=True):
         candidates = get_splits(B, modules)[:breadth]
         for i in range(len(candidates)):
             can = candidates[i]
-            print 'Assuming:t{0} {1} {2}*{3}'.format(can[0], terms.comp_str[can[2]], can[3], can[1])
             ti, tj = terms.IVar(can[0]), can[3]*terms.IVar(can[1])
             comp = can[2]
 
@@ -101,8 +100,9 @@ def split_modules(B, modules, depth, breadth, saturate=True):
             backup_modules[i, comp] = copy.deepcopy(modules)
             gtsplit = False
             try:
-                #print 'ASSUMING {0} > {1}, where {0} is {2}'.format(ti, tj, B.term_defs[ti.index])
-                backup_bbds[i, comp].assert_comparison(terms.comp_eval[comp](ti, tj))
+                newcomp = terms.comp_eval[comp](ti, tj)
+                messages.announce("Case split: assuming {0}".format(newcomp), messages.ASSERTION)
+                backup_bbds[i, comp].assert_comparison(newcomp)
                 gtsplit = run_modules(backup_bbds[i, comp], backup_modules[i, comp], 0, 0)
             except terms.Contradiction:
                 gtsplit = True

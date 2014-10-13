@@ -50,6 +50,9 @@ class Example:
     def set_solver_type(self, s):
         self.solver = s
 
+    def set_split(self, depth, breadth):
+        self.split_depth, self.split_breadth = depth, breadth
+
     def test(self):
         self.show()
         S = solve_util.Solver(self.split_depth, self.split_breadth, self.hyps, self.axioms,
@@ -79,6 +82,7 @@ def run_examples(examples, switches):
         for e in examples:
             e.set_solver_type('fm')
         switches.remove('-fm')
+
 
     # perform command
     if len(switches) == 1:

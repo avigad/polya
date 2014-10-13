@@ -13,13 +13,8 @@
 #
 ####################################################################################################
 
-
 from polya import *
 import sys
-import timeit
-
-
-
 
 
 ####################################################################################################
@@ -199,8 +194,7 @@ examples.append(Example(
 
 examples.append(Example(
     hyps=[0 < x, y < z],
-    conc=(x * y < x * z),
-    comment='Polya fails here. Splitting on y and z will solve this.'
+    conc=(x * y < x * z)
 ))
 
 examples.append(Example(
@@ -215,8 +209,7 @@ examples.append(Example(
 
 examples.append(Example(
     hyps=[x > 1],
-    conc=(1 + y**2 * x >= 1 + y**2),
-    comment='Polya fails here. Splitting on y will solve this. See also the next example.'
+    conc=(1 + y**2 * x >= 1 + y**2)
 ))
 
 examples.append(Example(
@@ -230,7 +223,9 @@ examples.append(Example(
 examples.append(Example(
     axioms=[Forall([x, y], f((x * y) / 2) <= (f(x) * f(y)) / 2)],
     hyps=[z > 0, z * f(x) * f(y) < 0, 4 * z * f(x * y / 2) > 0],
-    comment='Polya fails here. Need a split on f(x).'
+    comment='Polya needs a split on f(x).',
+    split_depth=3,
+    split_breadth=10
 ))
 
 examples.append(Example(
@@ -357,21 +352,27 @@ examples.append(Example(
 examples.append(Example(
     hyps=[x > 0, x*y*z < 0, x*w > 0],
     conc=(w > y*z),
-    comment="Need a case split on y to solve this."
+    comment="Need a case split on y to solve this.",
+    split_depth=2,
+    split_breadth=10
 ))
 
 examples.append(Example(
     hyps=[-1 <= x, x <= 1],
-    conc=(-1 <= 4*x**3 -3*x),
+    conc=(-1 <= 4*x**3 - 3*x),
     comment="Need a case split on x. Along with the following, is equivalent to an example from" +
-    "McLaughlin and Harrison"
+    "McLaughlin and Harrison",
+    split_depth=2,
+    split_breadth=10
 ))
 
 examples.append(Example(
     hyps=[-1 <= x, x <= 1],
-    conc=(1 >= 4*x**3 -3*x),
+    conc=(1 >= 4*x**3 - 3*x),
     comment="Need a case split on x. Along with the previous, is equivalent to an example from" +
-    "McLaughlin and Harrison"
+    "McLaughlin and Harrison",
+    split_depth=2,
+    split_breadth=10
 ))
 
 ####################################################################################################
@@ -383,6 +384,7 @@ examples.append(Example(
 
 if __name__ == '__main__':
     run_examples(examples, sys.argv)
+
     # # handle switches
     # if '-v' in sys.argv:
     #     messages.set_verbosity(messages.normal)
