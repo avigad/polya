@@ -144,6 +144,10 @@ def get_2d_comparisons(vertices, lin_set):
 
         #messages.announce('vertices:'+str(i_j_vertices), messages.DEBUG)
 
+        if len(i_j_vertices) == 0:
+            learned_comparisons.extend([terms.IVar(i) == 0, terms.IVar(j) == 0])
+            continue
+
         # Find the extremal vertices.
         try:
             bound1, bound2 = get_boundary_vertices(i_j_vertices)
@@ -259,6 +263,7 @@ class PolyAdditionModule:
 
         for c in new_comparisons:
             B.assert_comparison(c)
+
         timer.stop(timer.PADD)
 
     def get_split_weight(self, B):

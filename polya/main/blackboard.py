@@ -338,8 +338,8 @@ class Blackboard(object):
 
         # All equality info is stored, so see if we know this equality.
         elif comp == terms.EQ:
-            return coeff == self.equalities.get((i, j), None) or\
-                   (i in self.zero_equalities and j in self.zero_equalities)
+            return coeff == self.equalities.get((i, j), None) #or\
+#                   (i in self.zero_equalities and j in self.zero_equalities)
 
         # See if we know this disequality, or if the disequality is implied by an inequality.
         elif comp == terms.NE:
@@ -624,11 +624,14 @@ class Blackboard(object):
         """
         Adds the equality "ti = 0"
         """
+        for k in self.zero_equalities:
+            self.assert_comparison(terms.IVar(i) == terms.IVar(k))
         self.zero_equalities.add(i)
         # todo: there's a lot of simplification that could happen if a term is equal to 0
         self.announce_zero_comparison(i, terms.EQ)
         self.update_clause(i)
         self.tracker.update(i)
+
 
     def assert_disequality(self, i, coeff, j):
         """

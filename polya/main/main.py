@@ -121,6 +121,7 @@ def Solver(assertions=list(), axioms=list(), modules=list(), split_depth=default
     return solve_util.Solver(split_depth, split_breadth, assertions, axioms, modules, solver_type)
 
 
-def Example(hyps=None, conc=None, axioms=None, modules=None, omit=False, comment=None):
+def Example(hyps=None, conc=None, axioms=None, modules=None, omit=False, comment=None,
+            split_depth=default_split_depth, split_breadth=default_split_breadth):
     return example.Example(hyps, conc, axioms, modules, omit, comment,
-                           default_split_depth, default_split_breadth, default_solver)
+                           split_depth, split_breadth, default_solver)
