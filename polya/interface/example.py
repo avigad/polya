@@ -9,13 +9,13 @@
 #
 # Class to easily construct examples.
 #
-# TODO: improve command line interface
 #
 ####################################################################################################
 
 import polya.interface.solve_util as solve_util
 import timeit
 import polya.main.messages as messages
+import polya.util.timer as timer
 
 
 class Example:
@@ -121,3 +121,6 @@ def run_examples(examples, switches):
                     examples[int(switches[i])].test()
                 except ValueError:
                     print 'No example {0}.'.format(switches[i])
+        messages.set_verbosity(messages.debug)
+
+        timer.announce_times()

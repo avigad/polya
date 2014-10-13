@@ -16,9 +16,10 @@ import polya.main.formulas as formulas
 import polya.main.blackboard as blackboard
 import polya.modules.axiom_module as function_module
 import polya.main.messages as messages
+import polya.util.timer as timer
 
 #from polya.main.main import Solver    # TODO: delete this after testing
-import fractions
+#import fractions
 
 
 class NthRootModule:
@@ -35,6 +36,7 @@ class NthRootModule:
         Adds axioms corresponding to each nth root function present.
         """
         messages.announce_module('nth root value module')
+        timer.start(timer.ROOT)
 
         nth_roots = []
 
@@ -61,6 +63,8 @@ class NthRootModule:
                                                         terms.root(n, x) >= 0)))
             else:
                 self.am.add_axiom(formulas.Forall([x], terms.root(n, x) ** n == x))
+
+        timer.stop(timer.ROOT)
 
     def get_split_weight(self, B):
         return None

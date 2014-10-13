@@ -1,8 +1,8 @@
 import timeit
 import polya.main.messages as messages
-PMUL, PADD, FMMUL, FMADD, FUN, CCM, EXP, MINM = range(8)
+PMUL, PADD, FMMUL, FMADD, FUN, CCM, EXP, MINM, ABS, ROOT = range(10)
 mod_names = {0: "Poly mult", 1: "Poly add", 2: "FM mult", 3: "FM add", 4: "Function", 5: "CCM",
-             6: 'Exponential', 7:'Minimum'}
+             6: 'Exponential', 7: 'Minimum', 8: 'Abs', 9: 'Roots'}
 
 runs = {}
 time_total = {}
@@ -34,7 +34,8 @@ def announce_times():
     messages.announce("Average run times:", messages.DEBUG)
     for i in time_total:
         messages.announce(
-            "{0!s} module: {1!s} over {2!s} runs".format(mod_names[i],
+            "{0!s} module: {1!s} over {2!s} runs. {3!s} total.".format(mod_names[i],
                                                          str(round(time_total[i]/runs[i], 3)),
-                                                         runs[i]),
+                                                         runs[i],
+                                                         round(time_total[i], 3)),
             messages.DEBUG)

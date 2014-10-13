@@ -15,6 +15,7 @@ import polya.main.formulas as formulas
 import polya.main.blackboard as blackboard
 import polya.modules.axiom_module as function_module
 import polya.main.messages as messages
+import polya.util.timer as timer
 
 
 
@@ -45,6 +46,7 @@ class AbsModule:
 
         """
         messages.announce_module('absolute value module')
+        timer.start(timer.ABS)
 
         def is_abs_term(i):
             """
@@ -104,6 +106,8 @@ class AbsModule:
                 B.assert_comparison(terms.IVar(i) <= sum_of_abs_of_args)
                 for a in abs_of_args:
                     B.assert_comparison(terms.IVar(i) >= a * 2 - sum_of_abs_of_args)
+
+        timer.stop(timer.ABS)
 
     def get_split_weight(self, B):
         return None

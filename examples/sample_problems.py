@@ -9,7 +9,6 @@
 #
 # Examples for Polya.
 #
-# TODO: improve command line interface
 #
 ####################################################################################################
 
@@ -360,7 +359,7 @@ examples.append(Example(
 examples.append(Example(
     hyps=[-1 <= x, x <= 1],
     conc=(-1 <= 4*x**3 - 3*x),
-    comment="Need a case split on x. Along with the following, is equivalent to an example from" +
+    comment="Need a case split on x. Along with the following, is equivalent to an example from " +
     "McLaughlin and Harrison",
     split_depth=2,
     split_breadth=10
@@ -369,7 +368,7 @@ examples.append(Example(
 examples.append(Example(
     hyps=[-1 <= x, x <= 1],
     conc=(1 >= 4*x**3 - 3*x),
-    comment="Need a case split on x. Along with the previous, is equivalent to an example from" +
+    comment="Need a case split on x. Along with the previous, is equivalent to an example from " +
     "McLaughlin and Harrison",
     split_depth=2,
     split_breadth=10
