@@ -800,6 +800,10 @@ def comp_negate(i):
     return (i+3) % 6
 
 
+def comp_weaken(i):
+    return i + 1 if i in [GT, LT] else i
+
+
 # evaluations
 comp_eval = {GT: lambda x, y: x > y, GE: lambda x, y: x >= y, EQ: lambda x, y: x == y,
              LE: lambda x, y: x <= y, LT: lambda x, y: x < y, NE: lambda x, y: x != y}

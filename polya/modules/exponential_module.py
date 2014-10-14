@@ -143,12 +143,8 @@ def log_factor_product(B):
     log_inds = [i for i in range(B.num_terms) if (isinstance(B.term_defs[i], terms.FuncTerm)
                                                   and B.term_defs[i].func == terms.log)]
     for i in log_inds:
-        print i, '!!!'
         coeff, t = B.term_defs[i].args[0].coeff, B.term_defs[B.term_defs[i].args[0].term.index]
-        for a in t.args:
-            print a, is_pos(a)
         if coeff == 1 and isinstance(t, terms.MulTerm) and all(is_pos(a) for a in t.args):
-            print '!!', i
             margs = [terms.log(p.term**p.exponent) for p in t.args]
             t2 = reduce(lambda x, y: x+y, margs, 0).canonize()
             B.assert_comparison(terms.IVar(i) == t2)

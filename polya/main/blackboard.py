@@ -327,6 +327,8 @@ class Blackboard(object):
                 # If we reach here, then new_comp is not equidirectional with anything in old_comps
                 if len(old_comps) < 2:
                     return False
+                if all(not o.strong for o in old_comps) and new_comp.strong:
+                    return False
                 return (new_comp.compare_hp(old_comps[0]) > 0
                         and old_comps[1].compare_hp(new_comp) > 0)
                 # We know that b is clockwise from a.
@@ -499,6 +501,11 @@ class Blackboard(object):
                 # we should never reach this point.
                 assert(False)
         else:
+            if new_comp.strong and self.implies(i, terms.comp_weaken(comp), coeff, j):
+                self.assert_comparison(terms.IVar(i) != 0)
+                self.assert_comparison(terms.IVar(j) != 0)
+                return
+
             #a, b = old_comps[0], old_comps[1]
             # We know that b is clockwise from a.
             # If new_comp is cw from a, and b is cw from new_comp, then new_comp is redundant:
