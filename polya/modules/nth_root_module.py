@@ -13,8 +13,8 @@
 
 import polya.main.terms as terms
 import polya.main.formulas as formulas
-import polya.main.blackboard as blackboard
-import polya.modules.axiom_module as function_module
+#import polya.main.blackboard as blackboard
+#import polya.modules.axiom_module as function_module
 import polya.main.messages as messages
 import polya.util.timer as timer
 
@@ -23,7 +23,6 @@ import polya.util.timer as timer
 
 
 class NthRootModule:
-
 
     def __init__(self, am):
         """
@@ -38,7 +37,7 @@ class NthRootModule:
         messages.announce_module('nth root value module')
         timer.start(timer.ROOT)
 
-        nth_roots = []
+        #nth_roots = []
 
         def is_nth_root_term(i):
             """

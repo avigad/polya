@@ -534,6 +534,7 @@ def abs_canonize(func_term):
 
 abs_val = Func('abs', 1, abs_canonize)
 
+
 def min_canonize(func_term):
     cargs = sorted([arg.canonize() for arg in func_term.args], key=lambda a: a.key)
     # todo: remove duplicates?
@@ -549,6 +550,7 @@ def min_canonize(func_term):
 
 minm = Func('minm', None, min_canonize)
 
+
 def max_canonize(func_term):
     # replace max(t1,...,tn) by -min(-t1,...,tn)
     cargs = [arg * -1 for arg in func_term.args]
@@ -557,6 +559,7 @@ def max_canonize(func_term):
 maxm = Func('maxm', None, max_canonize)
 
 floor = Func('floor', 1)
+
 
 def ceil_canonize(func_term):
     # replace ceil(t) by -floor(-t)
@@ -567,13 +570,12 @@ ceil = Func('ceil', 1, ceil_canonize)
 
 exp, log = Func('exp', 1), Func('log', 1)
 
+
 def root(n, t):
     """
     Returns the nth root of t.
     """
     return NthRoot(n)(t)
-
-
 
 ####################################################################################################
 #
@@ -989,7 +991,7 @@ class Clause:
 
         for (j, k) in self.comparisons.keys():
          #(key for key in self.comparisons if key[0] == i or key[1] == i):
-            if j==i or k==i:
+            if j == i or k == i:
                 self.update_on_indices(i, j, B)
 
     def update_on_indices(self, i, j, B):
@@ -1021,4 +1023,3 @@ class Clause:
 
 one = One()
 zero = STerm(0, One())
-

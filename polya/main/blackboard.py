@@ -37,22 +37,10 @@
 ####################################################################################################
 
 
-import random
+#import random
 import polya.main.terms as terms
 import polya.main.messages as messages
 import polya.util.geometry as geometry
-
-# default_seed = 0
-#
-# def set_default_seed(seed):
-#     """Changes the default seed used in Split initialization
-#
-#     Arguments:
-#     - `seed`: an integer or None
-#     """
-#     global default_seed
-#     default_seed = seed
-
 
 
 class Error(Exception):
@@ -102,39 +90,6 @@ class Tracker(object):
     def update(self, key):
         for k in self.updates:
             self.updates[k].add(key)
-
-
-# class Split(object):
-#     """Implements case_split which takes as imput a
-#     Blackboard and returns a list of statements to split on
-#     """
-#
-#     def __init__(self, seed=None):
-#         """Initialize the split, and give an optional seed
-#
-#         Arguments:
-#         - `seed`:
-#         """
-#         self.seed = seed
-#         random.seed(self.seed)
-#
-#     def case_split(self, bb):
-#         """Return a list of statements [s0,...,sn] to split on:
-#         if bb+s0, ..., bb+sn is inconsistent iff bb is inconsistent.
-#
-#         Arguments:
-#         - `bb`: an instance of Blackboard
-#         """
-#         no_sign = []
-#         for i in range(0, bb.num_terms):
-#             if not (i in bb.zero_inequalities):
-#                 no_sign.append(bb.term_defs[i])
-#         if len(no_sign) == 0:
-#             return []
-#         else:
-#             x = random.choice(no_sign)
-#             return [x == 0, x < 0, x > 0]
-
 
 
 class Blackboard(object):
@@ -195,7 +150,7 @@ class Blackboard(object):
                                          for a in t.args])
             elif isinstance(t, terms.FuncTerm):
                 new_def = t.func(*[terms.STerm(a.coeff, self.term_name(a.term)) for a in t.args])
-                # new_def = terms.FuncTerm(t.func_name, [terms.STerm(a.coeff, self.term_name(a.term))
+                #new_def = terms.FuncTerm(t.func_name, [terms.STerm(a.coeff, self.term_name(a.term))
                 #                                        for a in t.args])
             else:
                 print isinstance(t, terms.STerm)
@@ -340,7 +295,7 @@ class Blackboard(object):
 
         # All equality info is stored, so see if we know this equality.
         elif comp == terms.EQ:
-            return coeff == self.equalities.get((i, j), None) #or\
+            return coeff == self.equalities.get((i, j), None)  # or\
 #                   (i in self.zero_equalities and j in self.zero_equalities)
 
         # See if we know this disequality, or if the disequality is implied by an inequality.
@@ -393,7 +348,6 @@ class Blackboard(object):
             return self.implies(term1.index, comp, coeff, term2.index)
         else:
             return False
-
 
     def assert_comparison(self, c):
         """
@@ -639,7 +593,6 @@ class Blackboard(object):
         self.update_clause(i)
         self.tracker.update(i)
 
-
     def assert_disequality(self, i, coeff, j):
         """
         Adds the equality "ti != coeff * tj"
@@ -774,11 +727,6 @@ class Blackboard(object):
             elif comp in (terms.LT, terms.LE):
                 return -1
         return 0
-
-    def case_split(self):
-        """Performs a case split depending on the current state
-        """
-        return self.split.case_split(self)
 
     def info_dump(self):
         """
