@@ -515,11 +515,9 @@ class NthRoot(Func):
     """
 
     def __init__(self, n):
-        self.name = 'root_{0!s}'.format(n)
+        name = 'root_{0!s}'.format(n)
+        Func.__init__(self, name, arity=1)
         self.n = n
-        self.arity = 1
-        self.canonize = self.default_canonize
-
 
 ####################################################################################################
 #
