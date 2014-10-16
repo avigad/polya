@@ -81,6 +81,20 @@ def abs_le_one(B, i):
     return le_one(B, i) and ge_neg_one(B, i)
 
 
+def reduce_mul_term(t):
+    """
+    Takes a MulTerm t in which variables t_j could appear multiple times: t_j^3 * t_j^-2 * t_j^-1
+    Since t_j is assumed to be positive, combines these so that each t_j appears once
+    """
+    inds = set(a.term.index for a in t.args)
+    ind_lists = [[i for i in range(len(t.args)) if t.args[i].term.index == j] for j in inds]
+    rt = terms.One()
+    for l in ind_lists:
+        exp = sum(t.args[k].exponent for k in l)
+        rt *= t.args[l[0]].term ** exp
+    return rt
+
+
 def process_mul_comp(m1, m2, coeff1, comp1, B):
     """
     Returns an IVar TermComparison implied by m1 * m2 * coeff comp 1, where m1 and m2 are mulpairs.
@@ -213,7 +227,7 @@ def get_multiplicative_information(B):
         if (isinstance(B.term_defs[key], terms.MulTerm) and B.sign(key) != 0 and
                 all(B.sign(p.term.index) != 0 for p in B.term_defs[key].args)):
             comparisons.append(
-                terms.TermComparison(B.term_defs[key], terms.EQ, terms.IVar(key))
+                terms.TermComparison(reduce_mul_term(B.term_defs[key]), terms.EQ, terms.IVar(key))
             )
 
     return comparisons

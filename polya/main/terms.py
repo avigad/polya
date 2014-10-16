@@ -442,7 +442,7 @@ class MulTerm(AppTerm):
         # multiply args by each argument in args2
         for b in args2:
             for a in args:
-                if b.term.key == a.term.key:
+                if b.term.key == a.term.key and a.exponent > 0 and b.exponent > 0:
                     args.remove(a)
                     if a.exponent != -b.exponent:
                         args.append(MulPair(a.term, a.exponent + b.exponent))
@@ -766,7 +766,10 @@ class MulPair(object):
         return self.__str__()
 
     def __pow__(self, n):
-        return MulPair(self.term, self.exponent * n)
+        if n > 0 and self.exponent > 0:
+            return MulPair(self.term, self.exponent * n)
+        else:
+            return MulPair(MulTerm([self]), n)
 
     def substitute(self, assn):
         return MulPair(self.term.substitute(assn), self.exponent)

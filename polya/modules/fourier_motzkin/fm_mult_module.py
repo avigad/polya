@@ -202,8 +202,6 @@ def elim_ineq_ineq(c1, c2, v):
     scale2 = -(exp1 * scale1) / exp2
     if scale2 < 0:
         raise Error('ineq_ineq_elim: exponents of {0!s} have the same sign'.format(v))
-    # TODO: for debugging, remove
-    # result = OneComparison(t1 ** scale1 * t2 ** scale2, c1.strong or c2.strong)
     return OneComparison(t1 ** scale1 * t2 ** scale2, c1.strong or c2.strong)
 
 

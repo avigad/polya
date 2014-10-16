@@ -193,7 +193,9 @@ examples.append(Example(
 
 examples.append(Example(
     hyps=[0 < x, y < z],
-    conc=(x * y < x * z)
+    conc=(x * y < x * z),
+    split_depth=1,
+    split_breadth=10
 ))
 
 examples.append(Example(
@@ -208,7 +210,9 @@ examples.append(Example(
 
 examples.append(Example(
     hyps=[x > 1],
-    conc=(1 + y**2 * x >= 1 + y**2)
+    conc=(1 + y**2 * x >= 1 + y**2),
+    split_depth=1,
+    split_breadth=10
 ))
 
 examples.append(Example(
