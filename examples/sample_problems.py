@@ -9,6 +9,11 @@
 #
 # Examples for Polya.
 #
+# Use 'python sample_problems.py list' to list the examples.
+# Use 'python sample_problems.py 6 9 10' to run those examples.
+# Use 'python sample_problems.py test_all' to run them all.
+#
+# Use -v for verbose output.
 #
 ####################################################################################################
 

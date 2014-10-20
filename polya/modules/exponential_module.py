@@ -119,7 +119,7 @@ class ExponentialModule:
         self.am = am
         x, y = terms.Vars('x y')
         self.am.add_axiom(formulas.Forall([x], terms.exp(x) > 0))
-        self.am.add_axiom(formulas.Forall([x], terms.exp(x) > x))
+#        self.am.add_axiom(formulas.Forall([x], terms.exp(x) > x))
         self.am.add_axiom(formulas.Forall([x], formulas.Implies(x >= 0, terms.exp(x) >= 1)))
         self.am.add_axiom(formulas.Forall([x], formulas.Implies(x > 0, terms.exp(x) > 1)))
         self.am.add_axiom(formulas.Forall([x, y],
