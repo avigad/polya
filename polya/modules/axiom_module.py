@@ -506,7 +506,7 @@ class AxiomModule:
 
     def update_blackboard(self, B):
         timer.start(timer.FUN)
-        messages.announce_module('function axiom module')
+        messages.announce_module('axiom module')
         for a in self.axioms:
             messages.announce("Instantiating axiom: {}".format(a), messages.DEBUG)
             clauses = instantiate(a, B)
