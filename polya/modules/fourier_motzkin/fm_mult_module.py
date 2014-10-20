@@ -313,7 +313,11 @@ def one_comparison_to_comparison(c, B):
     comp = terms.GT if c.strong else terms.GE
     if l == 0:
         #print c
-        return terms.comp_eval[comp](p.coeff * terms.IVar(0), terms.IVar(0))
+        #return mul_util.process_mul_comp(mulpair_one, mulpair_one, p.coeff, comp, B)
+        return terms.comp_eval[comp](
+            terms.IVar(0),
+            mul_util.round_coeff(fractions.Fraction(1, p.coeff), comp) * terms.IVar(0)
+        )
 
         #assert c.strong  # comparisons 1 >= 1 should have been eliminated
         #return p.coeff*terms.IVar(0) > 0
@@ -370,6 +374,7 @@ class FMMultiplicationModule:
                 # determine all comparisons between IVar(i) and IVar(j)
                 for k in range(j + 1, B.num_terms):
                     ij_eqs, ij_comps = elim(ij_eqs, ij_comps, k)
+                #print 'comps:', ij_comps
                 assert_comparisons_to_blackboard(ij_eqs, ij_comps, B)
                 # done with IVar(j)
                 i_eqs, i_comps = elim(i_eqs, i_comps, j)

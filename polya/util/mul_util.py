@@ -144,9 +144,9 @@ def process_mul_comp(m1, m2, coeff1, comp1, B):
         if p:
             ei, ej, coeff = 1, 1, p
         else:
-            ei, ej, coeff = 1, 1, coeff ** cexp
+            ei, ej, coeff = 1, 1, fractions.Fraction(coeff ** cexp)
         # ei, ej, coeff = 1, 1, coeff ** fractions.Fraction(1, ei)
-        coeff = round_coeff(coeff, comp)
+        #coeff = round_coeff(coeff, comp)
         comp, coeff = make_term_comparison_unabs(i, j, ei, ej, comp, coeff, B)
         return terms.comp_eval[comp](terms.IVar(i), coeff * terms.IVar(j))
 

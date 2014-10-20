@@ -41,6 +41,7 @@
 import polya.main.terms as terms
 import polya.main.messages as messages
 import polya.util.geometry as geometry
+import polya.util.mul_util as mul_util
 
 
 class Error(Exception):
@@ -367,6 +368,7 @@ class Blackboard(object):
             if coeff == 0:
                 term2 = terms.IVar(0)
 
+        coeff = mul_util.round_coeff(coeff, comp)
         if self.implies(term1.index, comp, coeff, term2.index):
             return
         elif self.implies(term1.index, terms.comp_negate(comp), coeff, term2.index):
