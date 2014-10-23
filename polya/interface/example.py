@@ -71,31 +71,34 @@ class Example:
         print 'Ran in', round(timeit.default_timer()-t, 3), 'seconds'
         print
         
-def run_examples(examples, switches):
+def run_examples(examples, args):
     # handle switches
-    if '-v' in switches:
+    if '-v' in args:
         messages.set_verbosity(messages.normal)
-        switches.remove('-v')
+        args.remove('-v')
     else:
         messages.set_verbosity(messages.quiet)
-    if '-fm' in switches:
+    if '-fm' in args:
         for e in examples:
             e.set_solver_type('fm')
-        switches.remove('-fm')
+        args.remove('-fm')
 
 
     # perform command
-    if len(switches) == 1:
-        print "Use 'python sample_problems.py list' to list the examples."
-        print "Use 'python sample_problems.py 6 9 10' to run those examples."
-        print "Use 'python sample_problems.py test_all' to run them all."
+    if len(args) == 1 or '-h' in args:
+        script_name = args[0]
+        print "Use 'python {0} list' to list the examples.".format(script_name)
+        print "Use 'python {0} 6 9 10' to run those examples.".format(script_name)
+        print "Use 'python {0} test_all' to run them all.".format(script_name)
+        print "Use switch -v to produce verbose output."
+        print "Use switch -fm to use Fourier Motzkin"
     else:
         #show_configuration()
-        if switches[1] == 'list':
+        if args[1] == 'list':
             for i in range(len(examples)):
                 print '*** Example {0!s} ***'.format(i)
                 examples[i].show()
-        elif switches[1] == 'test_all':
+        elif args[1] == 'test_all':
             t = timeit.default_timer()
             for i in range(len(examples)):
                 if not examples[i].omit:
@@ -103,7 +106,7 @@ def run_examples(examples, switches):
                     examples[i].test()
             print 'Total:', round(timeit.default_timer()-t, 3), 'seconds'
         # for a comparison of Fourier-Motzkin and polytope methods
-        elif switches[1] == 'test_all_comp':
+        elif args[1] == 'test_all_comp':
             t = timeit.default_timer()
             for i in range(len(examples)):
                 if not examples[i].omit:
@@ -116,11 +119,11 @@ def run_examples(examples, switches):
                     examples[i].test()
             print 'Total:', round(timeit.default_timer()-t, 3), 'seconds'
         else:
-            for i in range(1, len(switches)):
+            for i in range(1, len(args)):
                 try:
-                    examples[int(switches[i])].test()
+                    examples[int(args[i])].test()
                 except ValueError:
-                    print 'No example {0}.'.format(switches[i])
+                    print 'No example {0}.'.format(args[i])
         messages.set_verbosity(messages.debug)
 
         timer.announce_times()
