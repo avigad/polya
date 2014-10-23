@@ -91,7 +91,8 @@ def reduce_mul_term(t):
     rt = terms.One()
     for l in ind_lists:
         exp = sum(t.args[k].exponent for k in l)
-        rt *= t.args[l[0]].term ** exp
+        if exp != 0:
+            rt *= t.args[l[0]].term ** exp
     return rt
 
 
