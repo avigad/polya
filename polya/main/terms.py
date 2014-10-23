@@ -421,6 +421,7 @@ class MulTerm(AppTerm):
     def __mul__(self, other):
         args = list(self.args)
         scalar = 1
+
         # determine the list of MulPairs to multiply, and possibly a scalar
         if isinstance(other, fractions.Rational):
             scalar = other
@@ -439,21 +440,20 @@ class MulTerm(AppTerm):
                 args2 = [MulPair(other.term, 1)]
         else:
             raise Error('Cannot multiply MulTerm {0!s} by {1!s}'.format(self, other))
-        # multiply args by each argument in args2
-        for b in args2:
-            for a in args:
-                if b.term.key == a.term.key and a.exponent > 0 and b.exponent > 0:
-                    args.remove(a)
-                    if a.exponent != -b.exponent:
-                        args.append(MulPair(a.term, a.exponent + b.exponent))
-                    break
-            else:
-                args.append(b)
+
         if scalar == 0:
             return zero
-        else:
-            result = MulTerm(args) if args else One()
-            return result if scalar == 1 else STerm(scalar, result)
+
+        # combine arguments same base and positive exponents
+        args_pos_exp = [a for a in args if a.exponent > 0] + [a for a in args2 if a.exponent > 0]
+        base_keys = set([a.term.key for a in args_pos_exp])
+        base_lists = [[a for a in args_pos_exp if a.term.key == k] for k in base_keys]
+        args_pos_exp = [MulPair(l[0].term, sum(a.exponent for a in l)) for l in base_lists]
+
+        # collect all the other arguments
+        result = MulTerm(args_pos_exp + [a for a in args if a.exponent <= 0] +
+                 [a for a in args2 if a.exponent <= 0])
+        return result if scalar == 1 else STerm(scalar, result)
 
     def __pow__(self, n):
         if isinstance(n, numbers.Rational):
