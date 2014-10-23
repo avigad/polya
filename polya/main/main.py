@@ -100,6 +100,10 @@ def set_solver_type(s):
                           messages.INFO)
         messages.announce('solver options = {0!s}'.format(solver_options), messages.INFO)
 
+def set_split_defaults(split_depth, split_breadth):
+    global default_split_depth, default_split_breadth
+    default_split_depth, default_split_breadth = split_depth, split_breadth
+
 
 ####################################################################################################
 #
