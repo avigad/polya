@@ -10,7 +10,8 @@ import math
 ####################################################################################################
 
 
-precision = 1000
+precision = 10000
+max_coeff = 1000000
 
 
 def round_down(f):
@@ -105,6 +106,8 @@ def process_mul_comp(m1, m2, coeff1, comp1, B):
         return terms.comp_eval[terms.comp_reverse(comp1)](terms.one, 0)
 
     i, j, ei, ej = m1.term.index, m2.term.index, m1.exponent, -m2.exponent
+    if i > j:
+        i, j, ei, ej = j, i, -ej, -ei
     comp = comp1 if coeff1 > 0 else terms.comp_reverse(comp1)
     coeff = 1/fractions.Fraction(coeff1)
 
@@ -147,7 +150,13 @@ def process_mul_comp(m1, m2, coeff1, comp1, B):
         else:
             ei, ej, coeff = 1, 1, fractions.Fraction(coeff ** cexp)
         # ei, ej, coeff = 1, 1, coeff ** fractions.Fraction(1, ei)
-        #coeff = round_coeff(coeff, comp)
+        if coeff > max_coeff:
+            if comp in [terms.GE, terms.GT]:
+                coeff = max_coeff
+            else:
+                return None
+        else:
+            coeff = round_coeff(coeff, comp)
         comp, coeff = make_term_comparison_unabs(i, j, ei, ej, comp, coeff, B)
         return terms.comp_eval[comp](terms.IVar(i), coeff * terms.IVar(j))
 

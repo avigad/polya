@@ -368,7 +368,6 @@ class Blackboard(object):
             if coeff == 0:
                 term2 = terms.IVar(0)
 
-        coeff = mul_util.round_coeff(coeff, comp)
         if self.implies(term1.index, comp, coeff, term2.index):
             return
         elif self.implies(term1.index, terms.comp_negate(comp), coeff, term2.index):

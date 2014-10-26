@@ -34,15 +34,9 @@ def run(B, split_depth, split_breadth, solver_type):
     found or no new information is learned.
     Returns True if a contradiction is found, False otherwise.
     """
-    if solver_type == 'poly':
-        pa, pm = poly_add_module.PolyAdditionModule(), poly_mult_module.PolyMultiplicationModule()
-    elif solver_type == 'fm':
-        pa, pm = fm_add_module.FMAdditionModule(), fm_mult_module.FMMultiplicationModule()
-    else:
-        messages.announce('Unsupported option: {0}'.format(solver_type), messages.INFO)
-        return
-    cm = cc_module.CongClosureModule()
-    return run_util.run_modules(B, [cm, pa, pm], split_depth, split_breadth)
+    s = Solver(split_depth, split_breadth, [], [], [], solver_type)
+    s.B = B
+    return s.check()
 
 
 def solve(split_depth, split_breadth, solver_type, *assertions):
