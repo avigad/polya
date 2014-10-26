@@ -137,6 +137,8 @@ class ExponentialModule:
                                                                    terms.log(x) <= terms.log(y))))
         self.am.add_axiom(formulas.Forall([x, y], formulas.Implies(formulas.And(x > 0, y > 0, x != y),
                                                                    terms.log(x) != terms.log(y))))
+        self.am.add_axiom(formulas.Forall([x], formulas.Implies(x > 0, terms.exp(terms.log(x)) == x)))
+        self.am.add_axiom(formulas.Forall([x], terms.log(terms.exp(x)) == x))
 
     def update_blackboard(self, B):
         timer.start(timer.EXP)

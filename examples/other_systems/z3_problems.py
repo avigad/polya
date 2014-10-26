@@ -69,6 +69,7 @@ eps = z3.Real('eps')
 
 f = z3.Function('f', z3.RealSort(), z3.RealSort())
 g = z3.Function('g', z3.RealSort(), z3.RealSort(), z3.RealSort(), z3.RealSort())
+log = z3.Function('log', z3.RealSort(), z3.RealSort())
 exp = z3.Function('exp', z3.RealSort(), z3.RealSort())
 ceil = z3.Function('ceil', z3.RealSort(), z3.RealSort())
 abs2 = z3.Function('abs', z3.RealSort(), z3.RealSort())
@@ -240,6 +241,19 @@ examples.append(Example(
     conc=(f(ceil(m)) < x),
     comment='Discussed in Avigad, Lewis, and Roux (2014)'
 
+))
+
+examples.append(Example(
+    axioms=[Forall([x, y], Implies(x < y, exp(x) < exp(y))), Forall([x, y], exp(x+y) == exp(x)*exp(y))],
+    hyps=[z > exp(x), w > exp(y)],
+    conc=(z**3 * w**2 > exp(3 * x + 2 * y)),
+    omit=True
+))
+
+examples.append(Example(
+    axioms=[Forall([x, y], Implies(x < y, log(x) < log(y)))],
+    hyps=[a>1, c>0, log(b**2)>4, log(c)>1, b!=0],
+    conc=(log(a*b**2*c**3) > 7)
 ))
 
 

@@ -116,6 +116,31 @@ examples.append(Example(
     conc=(y > 0)))
 
 
+# Follows by x > log(x) >= minm(...) > 1
+examples.append(Example(
+    hyps=[minm(exp(3*x), exp(9*x**2-2), log(x))>1, x>0],
+    conc=(x>1)
+))
+
+examples.append(Example(
+    hyps=[y>maxm(2, 3*x), x>0],
+    conc=(exp(4*y-3*x)>exp(6))
+))
+
+examples.append(Example(
+    hyps=[x!=0, y!=0, log(abs(x)+2*abs(y)) > 5, log(abs(y)) < root(2, 2)],
+    conc=(log(exp(x)) > exp(-2))
+))
+
+# The Pythagorean Theorem. We shouldn't be able to prove this, just checking.
+a1, a2, a3, b1, b2, b3 = Vars('a1 a2 a3 b1 b2 b3')
+examples.append(Example(
+    hyps=[(b2-b1)/(a2-a1) == -(a3-a2)/(b3-b2)],
+    conc=(root(2, (b3-b1)**2 + (a3-a1)**2) == root(2, (b2-b1)**2 + (a2 - a1)**2) + root(2, (b3-b2)**2 - (a3-a2)**2)),
+    split_depth=6, split_breadth=10,
+    omit=True
+))
+
 
 ####################################################################################################
 #
