@@ -67,7 +67,7 @@ else:
 
 def show_configuration():
     """
-    Tell the user what components are present.
+    Prints information about the present components at verbosity level INFO.
     """
     messages.announce('', messages.INFO)
     messages.announce('Welcome to the Polya inequality prover.', messages.INFO)
@@ -89,7 +89,7 @@ def show_configuration():
 
 def set_solver_type(s):
     """
-    Set the solver to a given method, s, in solver_options.
+    Sets the solver to a given method, s, in solver_options.
     """
     if s in solver_options:
         messages.announce('Setting solver type: {0!s}'.format(s), messages.INFO)
@@ -101,6 +101,9 @@ def set_solver_type(s):
         messages.announce('solver options = {0!s}'.format(solver_options), messages.INFO)
 
 def set_split_defaults(split_depth, split_breadth):
+    """
+    Sets the default split depth and breadth.
+    """
     global default_split_depth, default_split_breadth
     default_split_depth, default_split_breadth = split_depth, split_breadth
 
@@ -113,19 +116,52 @@ def set_split_defaults(split_depth, split_breadth):
 
 
 def solve(*assertions):
+    """
+    Runs the default modules on the given assertions, using default solver and split settings.
+    Arguments:
+     -- assertions: a list of TermComparisons, ie 5*x < 3*y
+
+    Returns True if the assertions are contradictory, False otherwise.
+    """
     return solve_util.solve(default_split_depth, default_split_breadth, default_solver, *assertions)
 
 
 def run(B):
+    """
+    Runs the default modules on the given Blackboard object, using default solver and split
+    settings.
+    """
     return solve_util.run(B, default_split_depth, default_split_breadth, default_solver)
 
 
 def Solver(assertions=list(), axioms=list(), modules=list(), split_depth=default_split_depth,
            split_breadth=default_split_breadth, solver_type=default_solver):
+    """
+    Instantiates a Solver object.
+    Arguments:
+     -- assertions: a list of TermComparisons to assert to the new Solver. Defaults to empty.
+     -- axioms: a list of Axioms to assert to the Solver's axiom module. Defaults to empty.
+     -- modules: a list of modules for the solver to use. Defaults to all available modules.
+     -- split_depth: How many successive (cumulative) case splits to try.
+     -- split_breadth: How many split options to consider.
+     -- solver_type: 'fm' or 'poly' arithmetic.
+    """
     return solve_util.Solver(split_depth, split_breadth, assertions, axioms, modules, solver_type)
 
 
 def Example(hyps=None, conc=None, axioms=None, modules=None, omit=False, comment=None,
             split_depth=default_split_depth, split_breadth=default_split_breadth):
+    """
+    Instantiates an Example object. Used to create lists of test problems.
+    Arguments:
+     -- hyps: a list of TermComparisons, the hypotheses
+     -- conclusion: a TermComparison, to try to derive. Defaults to False, ie, show hyps
+       is contradictory.
+     -- axioms: a list of extra axioms to use.
+     -- modules: a list of modules to use. Defaults to all available modules.
+     -- omit: the example will not run if omit=True. Defaults to False.
+     -- comment: prints comment when the example is run.
+     -- split_depth, split_depth: as in Solver.
+    """
     return example.Example(hyps, conc, axioms, modules, omit, comment,
                            split_depth, split_breadth, default_solver)

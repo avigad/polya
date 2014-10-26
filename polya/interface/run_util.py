@@ -34,8 +34,8 @@ def saturate_modules(B, modules):
     """Run the modules in succession on B until saturation
 
     Arguments:
-    - `B`: a blackboard
-    - `modules`: a list of modules
+    -- B: a blackboard
+    -- modules: a list of modules
     """
     mid = B.identify()
     while len(B.get_new_info(mid)) > 0:
@@ -46,7 +46,7 @@ def saturate_modules(B, modules):
 
 def knows_split(B, i, j, comp, c):
     """
-    Returns True if B knows either t_i = c*t_j, t_i > c*t_j, or t_i < c*t_j
+    Returns True if B knows either t_i comp c*t_j or its negation.
     """
     return B.implies(i, comp, c, j) or B.implies(i, terms.comp_negate(comp), c, j)
     #return B.implies(i, terms.EQ, c, j) or B.implies(i, terms.GT, c, j) \
@@ -82,7 +82,6 @@ def split_modules(B, modules, depth, breadth, saturate=True):
      will try the three most promising splits separately. If depth=2, breadth=3, will try the three
      most promising splits determined after each of the three most promising preliminary splits.
     """
-    #print 'SPLITTING: depth=', depth
     if saturate:
         saturate_modules(B, modules)
     if depth <= 0:
@@ -112,28 +111,8 @@ def split_modules(B, modules, depth, breadth, saturate=True):
                 B.assert_comparison(terms.comp_eval[terms.comp_negate(comp)](ti, tj))
                 return split_modules(B, modules, depth, breadth)
 
-            # # no contradiction was found assuming >.
-            # backup_bbds[i, terms.LT] = copy.deepcopy(B)
-            # backup_modules[i, terms.LT] = copy.deepcopy(modules)
-            # ltsplit = False
-            # try:
-            #     print 'ASSUMING {0} < {1}, where {0} is {2}'.format(ti, tj, B.term_defs[ti.index])
-            #     backup_bbds[i, terms.LT].assert_comparison(ti < tj)
-            #     ltsplit = run_modules(backup_bbds[i, terms.LT], backup_modules[i, terms.LT], 0, 0)
-            # except Contradiction:
-            #     ltsplit = True
-            #
-            # if ltsplit:
-            #     #print 'DETERMINED {0} >= {1}'.format(ti, tj)
-            #     B.assert_comparison(ti >= tj)
-            #     return split_modules(B, modules, depth, breadth)
-
         # at this point, none of the depth-1 splits have returned any useful information.
         for (i, c) in backup_bbds.keys():
-            #itertools.product(range(len(candidates)), [terms.GT, terms.LT]):
-            # print i, c
-            # print backup_bbds[i, c]
-            # print backup_modules[i, c]
             split_modules(backup_bbds[i, c], backup_modules[i, c], depth-1, breadth, saturate=False)
 
 

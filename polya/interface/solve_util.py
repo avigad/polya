@@ -57,9 +57,14 @@ class Solver:
 
     def __init__(self, split_depth, split_breadth, assertions, axioms, modules, default_solver):
         """
-        assertions: a list of TermComparisons to be asserted to the blackboard.
-        axioms: a list of Axioms
-        poly: True if the Solver should try to use the polyhedron modules
+        Instantiates a Solver object.
+        Arguments:
+         -- split_depth: How many successive (cumulative) case splits to try.
+         -- split_breadth: How many split options to consider.
+         -- assertions: a list of TermComparisons to assert to the new Solver. Defaults to empty.
+         -- axioms: a list of Axioms to assert to the Solver's axiom module. Defaults to empty.
+         -- modules: a list of modules for the solver to use. Defaults to all available modules.
+         -- default_solver: 'fm' or 'poly' arithmetic.
         """
         if not isinstance(assertions, list) or not isinstance(axioms, list):
             messages.announce(
@@ -120,6 +125,8 @@ class Solver:
         """
         Tries to establish the truth of TermComparison claim from what is already known.
         Returns true if claim follows from the current blackboard, false otherwise.
+        Argument:
+         -- claim: a TermComparison, ie 3*x > 2*y**2
         """
         if self.contradiction:
             return True
@@ -157,6 +164,9 @@ class Solver:
                     messages.announce(e.msg, messages.ASSERTION)
 
     def assume(self, *c):
+        """
+        Alias for add
+        """
         self.add(*c)
 
     def add_axiom(self, a):

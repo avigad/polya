@@ -22,6 +22,19 @@ class Example:
 
     def __init__(self, hyps, conc, axioms, modules, omit, comment,
                  split_depth, split_breadth, solver):
+        """
+        Instantiates an Example object. Used to create lists of test problems.
+        Arguments:
+         -- hyps: a list of TermComparisons, the hypotheses
+         -- conclusion: a TermComparison, to try to derive. Defaults to False, ie, show hyps
+           is contradictory.
+         -- axioms: a list of extra axioms to use.
+         -- modules: a list of modules to use. Defaults to all available modules.
+         -- omit: the example will not run if omit=True. Defaults to False.
+         -- comment: prints comment when the example is run.
+         -- split_depth, split_depth: as in Solver.
+         -- solver: 'fm' or 'poly' arithmetic
+        """
         self.hyps = hyps if hyps else list()
         self.conc = conc
         self.axioms = axioms if axioms else list()
@@ -33,6 +46,9 @@ class Example:
         self.solver = solver
 
     def show(self):
+        """
+        Prints the example.
+        """
         for a in self.axioms:
             print 'Axiom: {0!s}'.format(a)
         for h in self.hyps:
@@ -54,6 +70,9 @@ class Example:
         self.split_depth, self.split_breadth = depth, breadth
 
     def test(self):
+        """
+        Creates a Solver object with the stored values, and runs check().
+        """
         self.show()
         S = solve_util.Solver(self.split_depth, self.split_breadth, self.hyps, self.axioms,
                               self.modules, self.solver)
@@ -72,6 +91,10 @@ class Example:
         print
         
 def run_examples(examples, args):
+    """
+    Takes a list of Example objects, tests each one in succession, and prints data.
+    Used from the command line, as in sample_problems.py
+    """
     # handle switches
     if '-v' in args:
         messages.set_verbosity(messages.normal)

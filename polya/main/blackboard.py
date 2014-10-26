@@ -59,6 +59,7 @@ class Tracker(object):
     """
     Allows modules to query for only the information that has been updated since the last time they
     were called.
+    Modules will never interact directly with a Tracker.
     """
 
     def __init__(self, bb):
@@ -118,20 +119,27 @@ class Blackboard(object):
         self.tracker = Tracker(self)
 
     def has_name(self, term):
+        """
+        Takes a Term.
+        Returns True if term is syntactically equal to a term defined in the Blackboard, else False.
+        """
         if term.key in self.term_names:
             return True, self.term_names[term.key]
         else:
-            t = term.substitute({terms.IVar(i).key: self.terms[i] for i in range(self.num_terms)})
+            t = self.expand_term(term)
             if t.key in self.term_names:
                 return True, self.term_names[t.key]
         return False, -1
 
     def expand_term(self, ti):
+        """
+        Expands a term with IVars into its full definition.
+        """
         return ti.substitute({terms.IVar(i).key: self.terms[i] for i in range(self.num_terms)})
 
     def term_name(self, ti):
         """
-        Assumes t is a canonized term without IVars. Returns an IVar that represents t, if
+        Assumes ti is a canonized term without IVars. Returns an IVar that represents t, if
         there is one. If not, recursively creates indices representing t and all its subterms, as
         needed.
         """
@@ -171,15 +179,31 @@ class Blackboard(object):
             return terms.IVar(i)
 
     def has_new_info(self, module):
+        """
+        Module is an int identifying a certain module.
+        Returns True if new information has been learned since the last time that module asked.
+        False otherwise.
+        """
         return self.tracker.has_new_info(module)
 
     def get_new_info(self, module):
+        """
+        Module is an int identifying a certain module.
+        Returns a list of indices i and pairs of indices (i, j) representing that information has
+        been learned about those (pairs of) indices since the last time the module asked.
+        """
         return self.tracker.get_new_info(module)
 
     def identify(self):
+        """
+        Returns a unique identifier for a module.
+        """
         return self.tracker.identify()
 
     def get_inequalities(self):
+        """
+        Returns a list of comparisons t_i <> c*t_j or t_i <> 0.
+        """
         inequalities = []
         for i in self.zero_inequalities:
             comp = self.zero_inequalities[i]
@@ -191,6 +215,9 @@ class Blackboard(object):
         return inequalities
 
     def get_equalities(self):
+        """
+        Returns a list of equalities t_i == c*t_j or ti == 0. Does not include definitional eqs.
+        """
         equalities = [terms.IVar(i) == 0 for i in self.zero_equalities]
         for p in self.equalities:
             coeff = self.equalities[p]
@@ -198,6 +225,9 @@ class Blackboard(object):
         return equalities
 
     def get_disequalities(self):
+        """
+        Returns a list of disequalities t_i != c*t_j or t_i != 0.
+        """
         disequalities = [terms.IVar(i) != 0 for i in self.zero_disequalities]
         for p in self.disequalities:
             coeff_list = self.disequalities[p]
@@ -206,6 +236,10 @@ class Blackboard(object):
         return disequalities
 
     def update_clause(self, *p):
+        """
+        p is either a singleton (i) or a pair (i, j).
+        Updates any clauses that have literals containing either t_i or t_i and t_j.
+        """
         for c in self.clauses:
             if len(p) == 1:
                 c.update_on_index(p[0], self)
@@ -392,18 +426,28 @@ class Blackboard(object):
             raise Error('Unrecognized comparison: {0!s}'.format())
 
     def add(self, *comparisons):
+        """
+        Asserts a list of comparisons.
+        """
         for c in comparisons:
             self.assert_comparison(c)
 
     def assume(self, *comparisons):
+        """
+        Aliases add.
+        """
         self.add(*comparisons)
 
     def assert_comparisons(self, *comparisons):
+        """
+        Aliases add.
+        """
         self.add(*comparisons)
 
     def assert_inequality(self, i, comp, coeff, j):
         """
         Adds the inequality "ti comp coeff * tj".
+        This should never be called directly; rather, assert_comparison should be used.
         """
         self.announce_comparison(i, comp, coeff, j)
         self.tracker.update((i, j))
@@ -492,6 +536,7 @@ class Blackboard(object):
     def assert_zero_inequality(self, i, comp):
         """
         Adds the inequality "ti comp 0".
+        This should never be called directly; rather, assert_comparison should be used.
         """
         if i in self.zero_disequalities:
             c = terms.GT if comp in [terms.GE, terms.GT] else terms.LT
@@ -572,6 +617,7 @@ class Blackboard(object):
     def assert_equality(self, i, coeff, j):
         """
         Adds the equality "ti = coeff * tj"
+        This should never be called directly; rather, assert_comparison should be used.
         """
         self.equalities[i, j] = coeff
         if (i, j) in self.inequalities:
@@ -585,6 +631,7 @@ class Blackboard(object):
     def assert_zero_equality(self, i):
         """
         Adds the equality "ti = 0"
+        This should never be called directly; rather, assert_comparison should be used.
         """
         for k in self.zero_equalities:
             self.assert_comparison(terms.IVar(i) == terms.IVar(k))
@@ -597,6 +644,7 @@ class Blackboard(object):
     def assert_disequality(self, i, coeff, j):
         """
         Adds the equality "ti != coeff * tj"
+        This should never be called directly; rather, assert_comparison should be used.
         """
         # Print this now, in case the disequality is superseded; we want to see this first.
         self.announce_comparison(i, terms.NE, coeff, j)
@@ -627,6 +675,7 @@ class Blackboard(object):
     def assert_zero_disequality(self, i):
         """
         Adds the equality "ti != 0"
+        This should never be called directly; rather, assert_comparison should be used.
         """
         self.announce_zero_comparison(i, terms.NE)
 
@@ -732,6 +781,7 @@ class Blackboard(object):
     def info_dump(self):
         """
         For debugging purposes.
+        Prints out all information known by the Blackboard.
         """
         st = '\n******\n'
         for i in self.term_defs:
