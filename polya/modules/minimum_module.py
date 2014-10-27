@@ -26,6 +26,9 @@ class MinimumModule:
         pass
 
     def update_blackboard(self, B):
+        """
+        Asserts identities about minm terms
+        """
         messages.announce_module('minimum module')
         timer.start(timer.MINM)
         for i in range(B.num_terms):

@@ -27,6 +27,10 @@ class CongClosureModule:
         pass
 
     def update_blackboard(self, B):
+        """
+        Checks the blackboard B for function terms with equal arguments, and asserts that the
+        function terms are equal.
+        """
 
         def eq_func_terms(f1, f2):
             """

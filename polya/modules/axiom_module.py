@@ -109,7 +109,7 @@ def elim_var(i, pivot, rows):
 def elim_var_mul(i, pivot, rows):
     """
     pivot:=[c,a1,a2,...,an] represents c*t1^a1 * t2^a2*...*tn^an. Similarly for r in rows.
-    Uses pivot to eliminate ti from each r in rows, respecting the
+    Uses pivot to eliminate ti from each r in rows
     """
     if pivot[i] == 0:
         raise Exception
@@ -131,6 +131,8 @@ def add_gauss_eq_elim(coeff, term, B):
     """
     Given an additive term, performs gaussian elimination on known equalities to deduce
     whether term is equal to any problem term.
+    Returns a pair (coeff1, ind), such that coeff*term = coeff1*t_i. If no such pair is found,
+    raises NoTermException.
     """
     if len(term.args) == 1:
         return coeff*term.args[0].coeff, term.args[0].term.index
@@ -200,6 +202,8 @@ def mul_gauss_eq_elim(coeff, term, B):
     whether term is equal to a problem term.
     The first coordinate of the elimination matrix represents the constant coefficient; the ith
     coordinate represents the exponent of ti in c*t1^e1*...*tn^en = 1.
+    Returns a pair (coeff1, ind), such that coeff*term = coeff1*t_i. If no such pair is found,
+    raises NoTermException.
     """
     if len(term.args) == 1 and term.args[0].exponent == 1:
         return coeff, B.term_name(term.args[0]).index
@@ -447,7 +451,10 @@ def unify(B, termlist, uvars, arg_uvars, envs=list()):
 
 
 def instantiate(axiom, B):
-
+    """
+    Given an Axiom object, finds appropriate instantiations by unifying with B.
+    Returns a list of clauses.
+    """
     # Get a list of assignments that work for all of axiom's triggers.
     envs = unify(B, axiom.triggers, list(axiom.vars), list(axiom.trig_arg_vars))
     messages.announce(' Environments:', messages.DEBUG)
@@ -499,12 +506,15 @@ class AxiomModule:
 
     def add_axiom(self, axiom):
         """
-        axiom is a Formula.
+        axiom is a Formula. Adds it to the list of axioms.
         """
         clauses = formulas.cnf(axiom)
         self.axioms.update(formulas.Axiom(c) for c in clauses)
 
     def update_blackboard(self, B):
+        """
+        Instantiates all stored axioms with respect to B and asserts new clauses.
+        """
         timer.start(timer.FUN)
         messages.announce_module('axiom module')
         for a in self.axioms:

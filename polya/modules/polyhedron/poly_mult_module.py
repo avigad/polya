@@ -191,6 +191,9 @@ class PolyMultiplicationModule:
             raise Exception('lrs is needed to instantiate a polyhedron module.')
 
     def update_blackboard(self, B):
+        """
+        Saturates a Blackboard B with multiplicative inferences.
+        """
         timer.start(timer.PMUL)
         messages.announce_module('polyhedron multiplicative module')
 

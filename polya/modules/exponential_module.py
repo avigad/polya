@@ -115,6 +115,7 @@ class ExponentialModule:
     def __init__(self, am):
         """
         The exponential module must be instantiated with an axiom module to add axioms to.
+        Asserts a list of axioms to this module.
         """
         self.am = am
         x, y = terms.Vars('x y')
@@ -141,6 +142,9 @@ class ExponentialModule:
         self.am.add_axiom(formulas.Forall([x], terms.log(terms.exp(x)) == x))
 
     def update_blackboard(self, B):
+        """
+        Asserts identities about exp and log terms found in B.
+        """
         timer.start(timer.EXP)
         messages.announce_module('exponential module')
         exp_factor_constant(B)

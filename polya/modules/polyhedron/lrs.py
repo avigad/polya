@@ -1,18 +1,30 @@
-#import subprocess
+####################################################################################################
+#
+# lrs.py
+#
+# Author:
+# Rob Lewis
+#
+# Helper class for interacting with the external lrs geometry package.
+#
+####################################################################################################
+
 from fractions import Fraction
 import pipes
 import tempfile
 import os.path
-import polya.main.messages as messages
-#import timecount
+#import polya.main.messages as messages
 
 
 import subprocess
 
 poly_dir = os.path.dirname(__file__)
 
-# look in some standard places for lrs
+
 def find_lrs_path():
+    """
+    look in some standard places for lrs and return the path
+    """
     for s in ['lrs', './lrs', poly_dir + '/lrs', '/usr/bin/lrs']:
         try:
             subprocess.check_output([s, '_pretend_file'])
@@ -23,8 +35,11 @@ def find_lrs_path():
 
 lrs_path = find_lrs_path()
 
-# look in some standard places for redund
+
 def find_redund_path():
+    """
+    look in some standard places for redund and return the path
+    """
     for s in ['redund', './redund', poly_dir + '/redund', '/usr/bin/redund']:
         try:
             subprocess.check_output([s, '_pretend_file'])
@@ -37,6 +52,9 @@ redund_path = find_redund_path()
 
 
 def make_frac(string):
+    """
+    Turns a string "1234/3456" into a Fraction
+    """
     i = string.find('/')
     if i < 0:
         return int(string)
@@ -44,6 +62,11 @@ def make_frac(string):
 
 
 def output_to_matrix(str_output):
+    """
+    Takes an lrs output string and parses it.
+    Returns a pair (mat, lin_set), where mat is a list of lists (a matrix) and lin_set is the
+    list of linear rows of that matrix.
+    """
     arr = str(str_output).split('\n')
 
     try:
@@ -100,6 +123,9 @@ def get_inequalities(matrix):
 
 
 def redund_and_generate(matrix):
+    """
+    Uses lrs to remove redundancies before performing v-to-h conversion.
+    """
     s = str(matrix)
     p = pipes.Template()
     p.append(redund_path, "--")
