@@ -1,8 +1,8 @@
 import timeit
 import polya.main.messages as messages
-PMUL, PADD, FMMUL, FMADD, FUN, CCM, EXP, MINM, ABS, ROOT = range(10)
+PMUL, PADD, FMMUL, FMADD, FUN, CCM, EXP, MINM, ABS, ROOT, BUILTIN = range(11)
 mod_names = {0: "Poly mult", 1: "Poly add", 2: "FM mult", 3: "FM add", 4: "Function", 5: "CCM",
-             6: 'Exponential', 7: 'Minimum', 8: 'Abs', 9: 'Roots'}
+             6: 'Exponential', 7: 'Minimum', 8: 'Abs', 9: 'Roots', 10: 'Builtins'}
 
 runs = {}
 time_total = {}

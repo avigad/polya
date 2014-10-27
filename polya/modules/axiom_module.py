@@ -450,7 +450,7 @@ def unify(B, termlist, uvars, arg_uvars, envs=list()):
     return nenvs
 
 
-def instantiate(axiom, B):
+def instantiate(axiom, used_envs, B):
     """
     Given an Axiom object, finds appropriate instantiations by unifying with B.
     Returns a list of clauses.
@@ -463,7 +463,8 @@ def instantiate(axiom, B):
 
     # For each assignment, use it to instantiate a Clause from axiom and assert it in B.
     clauses = []
-    for env in envs:
+    astr = str(axiom)
+    for env in [e for e in envs if (axiom, str(e)) not in used_envs]:
         literals = []
         for l in axiom.literals:
             comp = l.comp
@@ -490,6 +491,7 @@ def instantiate(axiom, B):
                 terms.comp_eval[comp](lcoeff*terms.IVar(lterm), rcoeff*terms.IVar(rterm))
             )
         clauses.append(literals)
+        used_envs.add((axiom, str(env)))
     return clauses
 
 
@@ -503,6 +505,7 @@ class AxiomModule:
         for a in axioms:
             clauses = formulas.cnf(a)
             self.axioms.update(formulas.Axiom(c) for c in clauses)
+        self.used_envs = set()
 
     def add_axiom(self, axiom):
         """
@@ -510,6 +513,13 @@ class AxiomModule:
         """
         clauses = formulas.cnf(axiom)
         self.axioms.update(formulas.Axiom(c) for c in clauses)
+
+    def add_axioms(self, axioms):
+        """
+        axioms is a list of Formulas. Adds each one.
+        """
+        for a in axioms:
+            self.add_axiom(a)
 
     def update_blackboard(self, B):
         """
@@ -519,7 +529,7 @@ class AxiomModule:
         messages.announce_module('axiom module')
         for a in self.axioms:
             messages.announce("Instantiating axiom: {}".format(a), messages.DEBUG)
-            clauses = instantiate(a, B)
+            clauses = instantiate(a, self.used_envs, B)
             for c in clauses:
                 B.assert_clause(*c)
         timer.stop(timer.FUN)

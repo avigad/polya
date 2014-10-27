@@ -21,6 +21,7 @@ import polya.modules.abs_module as abs_module
 import polya.modules.nth_root_module as nth_root_module
 import polya.modules.exponential_module as exp_module
 import polya.modules.minimum_module as min_module
+import polya.modules.builtins_module as builtins_module
 import polya.main.formulas as formulas
 import polya.main.messages as messages
 import polya.main.blackboard as blackboard
@@ -81,7 +82,8 @@ class Solver:
             self.fm = axiom_module.AxiomModule(axioms)
             modules = [cc_module.CongClosureModule(), exp_module.ExponentialModule(self.fm)]
             modules.extend([abs_module.AbsModule(self.fm), min_module.MinimumModule(),
-                            nth_root_module.NthRootModule(self.fm), self.fm])
+                            nth_root_module.NthRootModule(self.fm),
+                            builtins_module.BuiltinsModule(self.fm), self.fm])
             if default_solver == 'poly':
                 pa = poly_add_module.PolyAdditionModule()
                 pm = poly_mult_module.PolyMultiplicationModule()
