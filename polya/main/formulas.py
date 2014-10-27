@@ -222,9 +222,11 @@ class Implies(Formula):
 class Forall:
     """
     Represents a universal quantifier over vars
-    Vars are terms.Vars
     """
     def __init__(self, vars, formula):
+        """
+        vars is a list of terms.Vars. formula is a Formula
+        """
         self.vars = vars
         #self.vars = set(v.key for v in vars) if isinstance(vars, list) else set(vars.key)
         self.formula = formula

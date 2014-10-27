@@ -100,7 +100,8 @@ def split_modules(B, modules, depth, breadth, saturate=True):
             gtsplit = False
             try:
                 newcomp = terms.comp_eval[comp](ti, tj)
-                messages.announce("Case split: assuming {0}".format(newcomp), messages.ASSERTION)
+                messages.announce("Case split: assuming {0} at depth {1}".format(newcomp, depth),
+                                  messages.ASSERTION)
                 backup_bbds[i, comp].assert_comparison(newcomp)
                 gtsplit = run_modules(backup_bbds[i, comp], backup_modules[i, comp], 0, 0)
             except terms.Contradiction:
@@ -108,12 +109,31 @@ def split_modules(B, modules, depth, breadth, saturate=True):
 
             if gtsplit:
                 #print 'DETERMINED {0} <= {1}'.format(ti, tj)
+                messages.announce("Split led to contradiction at depth {0}. Learned:".format(depth),
+                                  messages.ASSERTION)
                 B.assert_comparison(terms.comp_eval[terms.comp_negate(comp)](ti, tj))
                 return split_modules(B, modules, depth, breadth)
 
         # at this point, none of the depth-1 splits have returned any useful information.
         for (i, c) in backup_bbds.keys():
-            split_modules(backup_bbds[i, c], backup_modules[i, c], depth-1, breadth, saturate=False)
+            messages.announce("Working under depth {4} assumption: t{0} {1} {2} t{3}".format(
+                candidates[i][0], terms.comp_str[candidates[i][2]],
+                candidates[i][3], candidates[i][1], depth), messages.ASSERTION)
+            try:
+                split_modules(backup_bbds[i, c], backup_modules[i, c], depth-1, breadth, saturate=False)
+            except terms.Contradiction:
+                messages.announce("Split led to contradiction at depth {0}. Learned:".format(depth),
+                                  messages.ASSERTION)
+
+                can = candidates[i]
+                ti, tj = terms.IVar(can[0]), can[3]*terms.IVar(can[1])
+                comp = can[2]
+                B.assert_comparison(terms.comp_eval[terms.comp_negate(comp)](ti, tj))
+                return split_modules(B, modules, depth, breadth)
+
+            messages.announce("Ending depth {4} assumption: t{0} {1} {2} t{3}".format(
+                candidates[i][0], terms.comp_str[candidates[i][2]],
+                candidates[i][3], candidates[i][1], depth), messages.ASSERTION)
 
 
 def run_modules(B, modules, depth, breadth):
