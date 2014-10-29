@@ -141,7 +141,27 @@ examples.append(Example(
     omit=True
 ))
 
+# These came from http://web.mit.edu/~holden1/www/math/high_school/awesome_math/Inequalities.pdf
+# We shouldn't get them.
 
+examples.append(Example(
+    hyps=[],
+    conc=(x**2/y**2 + y**2/z**2 + z**2/x**2 >= x/z + y/x + z/y),
+    split_depth = 3, split_breadth=15,
+    omit=True,
+    comment="We should not solve this even with case splits. But it's a good stress test for split."
+))
+
+examples.append(Example(
+    hyps=[a>0, b>0, c>0],
+    conc=(a*b/(a+b) + b*c/(b+c) + a*c/(a+c) <= 3*(a*b + b*c + c*a)/(2*(a+b+c))),
+    omit=True
+))
+
+examples.append(Example(
+    hyps=[a>0, b>0, c>0],
+    conc=(a/(b+c) + b/(c+a) + c/(a+b) >= fractions.Fraction(3, 2))
+))
 ####################################################################################################
 #
 # To run from the command line

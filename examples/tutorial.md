@@ -199,8 +199,8 @@ quantified formulas which serve as axioms, and performs instantiations of the
 axioms according to a certain heuristic for a given blackboard.
 
 ```python
-fm = FunctionModule([Forall([x, y], Implies(x<y, f(x) < f(y)))])
-fm.update_blackboard(b)
+am = AxiomModule([Forall([x, y], Implies(x<y, f(x) < f(y)))])
+am.update_blackboard(b)
 ```
 
 The information shared between all modules consists of one of the following 
