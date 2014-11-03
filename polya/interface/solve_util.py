@@ -17,7 +17,7 @@ import polya.modules.fourier_motzkin.fm_add_module as fm_add_module
 import polya.modules.fourier_motzkin.fm_mult_module as fm_mult_module
 import polya.modules.congruence_closure_module as cc_module
 import polya.modules.axiom_module as axiom_module
-import polya.modules.abs_module as abs_module
+import polya.modules.absolute_value_module as abs_module
 import polya.modules.nth_root_module as nth_root_module
 import polya.modules.exponential_module as exp_module
 import polya.modules.minimum_module as min_module

@@ -34,7 +34,7 @@ from polya.modules.fourier_motzkin.fm_mult_module import FMMultiplicationModule
 from polya.modules.congruence_closure_module import CongClosureModule
 from polya.modules.axiom_module import AxiomModule
 from polya.modules.exponential_module import ExponentialModule
-from polya.modules.abs_module import AbsModule
+from polya.modules.absolute_value_module import AbsModule
 from polya.modules.minimum_module import MinimumModule
 from polya.modules.nth_root_module import NthRootModule
 from polya.main.blackboard import Blackboard
