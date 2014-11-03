@@ -843,7 +843,7 @@ class Blackboard(object):
     
     def get_le_range(self, i, j):
         """
-        Takes a selflackselfoard self, and two indices, i, j < self,num_terms.
+        Takes two indices, i, j < self,num_terms.
         Returns an geometry.ComparisonRange for the comparison t_i <= c * t_j.
         """
     
@@ -852,7 +852,7 @@ class Blackboard(object):
         sj = self.sign(j)
         wsj = self.weak_sign(j)
     
-        if i ==j or (i < j and (i, j) in self.equalities) or (j < i and (j, i) in self.equalities):
+        if i == j or (i < j and (i, j) in self.equalities) or (j < i and (j, i) in self.equalities):
             if i == j:
                 coeff = geometry.Extended(1)
             elif i < j:
@@ -917,6 +917,8 @@ class Blackboard(object):
                 return geometry.ComparisonRange(coeff, coeff, strict, strict, strict)
         else:
             hp0, hp1 = hp_comps[0], hp_comps[1]
+            interior_strong = (self.implies_zero_comparison(i, terms.NE) or
+                               self.implies_zero_comparison(j, terms.NE))
             if hp0.compare_hp(hp1) == 1:
                 hp0, hp1 = hp1, hp0
             if hp0.b <= 0 and hp1.b <= 0:
@@ -924,21 +926,22 @@ class Blackboard(object):
             elif hp0.b <= 0:
                 lower = geometry.neg_infty
                 upper = geometry.Extended(hp1.a / hp1.b)
-                return geometry.ComparisonRange(lower, upper, True, True, hp1.strong)
+                return geometry.ComparisonRange(lower, upper, True, interior_strong, hp1.strong)
             elif hp1.b <= 0:
                 lower = geometry.Extended(hp0.a / hp0.b)
                 upper = geometry.infty
-                return geometry.ComparisonRange(lower, upper, hp0.strong, True, True)
+                return geometry.ComparisonRange(lower, upper, hp0.strong, interior_strong, True)
             else:
                 lower = geometry.Extended(hp0.a / hp0.b)
                 upper = geometry.Extended(hp1.a / hp1.b)
-                return geometry.ComparisonRange(lower, upper, hp0.strong, True, hp1.strong)
+                return geometry.ComparisonRange(lower, upper,
+                                                hp0.strong, interior_strong, hp1.strong)
     
     
-    # TODO: this is similar to the previous one. Can they selfe comselfined?
+    # TODO: this is similar to the previous one. Can they be combined?
     def get_ge_range(self, i, j):
         """
-        Takes a selflackselfoard self, and two indices, i, j < self,num_terms.
+        Takes two indices, i, j < self,num_terms.
         Returns an geometry.ComparisonRange for the comparison t_i >= c * t_j.
         """
     
@@ -1012,6 +1015,8 @@ class Blackboard(object):
                 return geometry.ComparisonRange(coeff, coeff, strict, strict, strict)
         else:
             hp0, hp1 = hp_comps[0], hp_comps[1]
+            interior_strong = (self.implies_zero_comparison(i, terms.NE) or
+                               self.implies_zero_comparison(j, terms.NE))
             if hp0.compare_hp(hp1) == 1:
                 hp0, hp1 = hp1, hp0
             if hp0.b >= 0 and hp1.b >= 0:
@@ -1019,15 +1024,16 @@ class Blackboard(object):
             elif hp0.b >= 0:
                 lower = geometry.neg_infty
                 upper = geometry.Extended(hp1.a / hp1.b)
-                return geometry.ComparisonRange(lower, upper, True, True, hp1.strong)
+                return geometry.ComparisonRange(lower, upper, True, interior_strong, hp1.strong)
             elif hp1.b >= 0:
                 lower = geometry.Extended(hp0.a / hp0.b)
                 upper = geometry.infty
-                return geometry.ComparisonRange(lower, upper, hp0.strong, True, True)
+                return geometry.ComparisonRange(lower, upper, hp0.strong, interior_strong, True)
             else:
                 lower = geometry.Extended(hp0.a / hp0.b)
                 upper = geometry.Extended(hp1.a / hp1.b)
-                return geometry.ComparisonRange(lower, upper, hp0.strong, True, hp1.strong)
+                return geometry.ComparisonRange(lower, upper,
+                                                hp0.strong, interior_strong, hp1.strong)
 
     def le_coeff_range(self, i, j, coeff):
         """
