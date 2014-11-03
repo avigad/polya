@@ -1,3 +1,21 @@
+####################################################################################################
+#
+# geometry.py
+#
+# Authors:
+# Jeremy Avigad
+# Rob Lewis
+#
+# Classes and functions to handle geometric notions, like lines and half-planes.
+#
+# Lines are used by the geometric routines, while comparisons are stored in Blackboard using
+# the half-plane representation.
+#
+# TODO: explain the two different representations.
+#
+####################################################################################################
+
+
 #from ..main import terms
 import polya.main.terms as terms
 import fractions
@@ -257,6 +275,7 @@ def halfplane_flip(hp):
     Converts a comparison between ti and tj into a comparison between tj and ti
     """
     return Halfplane(-hp.b, -hp.a, hp.strong)
+
 
 ####################################################################################################
 #
