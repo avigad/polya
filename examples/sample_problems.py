@@ -18,6 +18,7 @@
 ####################################################################################################
 
 from polya import *
+import fractions
 import sys
 
 
@@ -171,7 +172,6 @@ examples.append(Example(
 ))
 
 examples.append(Example(
-    axioms=[Forall([x, y], abs(x + y) <= abs(x) + abs(y))],
     hyps=[i >= 0, abs(f(y) - f(x)) < 1 / (2 * (i + 1)), abs(f(z) - f(y)) < 1 / (2 * (i + 1))],
     conc=(abs(f(z) - f(x)) < 1 / (i + 1)),
     comment='Discussed in Avigad, Lewis, and Roux (2014)'
@@ -193,7 +193,49 @@ examples.append(Example(
 ))
 
 #
+# Some new ones
+#
+
+examples.append(Example(
+    hyps=[x < y, u < v],
+    conc=(maxm(x + u, 2 * x + u) < maxm(y + v, 2 * y + v))
+))
+
+# we don't get this one
+examples.append(Example(
+    hyps=[y > 0],
+    conc=(exp(minm(x + y, x + 2 *y)) < exp(x) * (exp(y) ** 2))
+))
+
+examples.append(Example(
+    hyps=[y > 0, w == exp(x + y)],
+    conc=(exp(minm(x + y, x + 2 *y)) < exp(x) * (exp(y) ** 2))
+))
+
+examples.append(Example(
+    conc=(exp(x + y) == exp(x) * exp(y))
+))
+
+examples.append(Example(
+    hyps=[y > 0],
+    conc=(log(1 + abs(x) + y) > 0)
+))
+
+examples.append(Example(
+    hyps=[abs(x) < 3, abs(y) < 2, w >= 0],
+    conc=(abs(x + 2 * y + z) < (7 + abs(z)) * exp(w))
+))
+
+examples.append(Example(
+    hyps=[abs(x) < 3, abs(y) < 2, w <= 0],
+    conc=(abs(x + 2 * y + z)  * exp(w) < (7 + abs(z)))
+))
+
+
+
+#
 # cases where Polya fails
+# TODO: update this
 #
 
 examples.append(Example(
@@ -311,7 +353,6 @@ examples.append(Example(
 # examples involving function symbols
 #
 
-
 examples.append(Example(
     hyps=[x == y, f(x) != f(y)]
 ))
@@ -393,6 +434,113 @@ examples.append(Example(
     conc=(log(a*b**2*c**3) > 7)
 ))
 
+
+#
+# min and max
+#
+
+examples.append(Example(
+    hyps=[x <= y],
+    conc=(minm(x, y) == x)))
+
+examples.append(Example(
+    hyps=[0 < x, x <= y],
+    conc=(2 * x + minm(w, z) < 3 * y + w)))
+
+examples.append(Example(
+    hyps=[x < y, u <= v],
+    conc=(u + minm(x + 2 * u, y + 2 * v) <= x + 3 * v)))
+
+examples.append(Example(
+    hyps=[x >= y],
+    conc=(minm(x, y) + maxm(x, y) == x + y)))
+
+examples.append(Example(
+    hyps=[x < u, y < u, z < u, x < v, y < v, z < v],
+    conc=(maxm(x, y, z) < minm(u, v))))
+
+
+#
+# abs
+#
+
+examples.append(Example(
+    conc=(abs(3 * x + 2 * y) <= 3 * abs(x) + 4 * abs(y))
+))
+
+examples.append(Example(
+    hyps=[y > 0],
+    conc=(abs(3 * x + 2 * y + 5) < 4 * abs(x) + 3 * y + 6)
+))
+
+examples.append(Example(
+    conc=(abs(x - y) >= abs(y) - abs(x))
+))
+
+
+#
+# varia
+#
+
+examples.append(Example(
+    hyps=[x==z, y==w, x>0, y>0],
+    conc=(x * y == z * w)
+))
+
+examples.append(Example(
+    hyps=[x > 2 * y, x == 3 * y],
+    conc=(y > 0)
+))
+
+# Follows by x > log(x) >= minm(...) > 1
+examples.append(Example(
+    hyps=[minm(exp(3*x), exp(9*x**2-2), log(x))>1, x>0],
+    conc=(x>1)
+))
+
+examples.append(Example(
+    hyps=[y>maxm(2, 3*x), x>0],
+    conc=(exp(4*y-3*x)>exp(6))
+))
+
+examples.append(Example(
+    hyps=[x!=0, y!=0, log(abs(x)+2*abs(y)) > 5, log(abs(y)) < root(2, 2)],
+    conc=(log(exp(x)) > exp(-2))
+))
+
+
+# The Pythagorean Theorem. We shouldn't be able to prove this, just checking.
+a1, a2, a3, b1, b2, b3 = Vars('a1 a2 a3 b1 b2 b3')
+examples.append(Example(
+    hyps=[(b2-b1)/(a2-a1) == -(a3-a2)/(b3-b2)],
+    conc=(root(2, (b3-b1)**2 + (a3-a1)**2) == root(2, (b2-b1)**2 + (a2 - a1)**2) + root(2, (b3-b2)**2 - (a3-a2)**2)),
+    split_depth=6, split_breadth=10,
+    omit=True
+))
+
+# These came from http://web.mit.edu/~holden1/www/math/high_school/awesome_math/Inequalities.pdf
+# We shouldn't get them.
+
+examples.append(Example(
+    hyps=[],
+    conc=(x**2/y**2 + y**2/z**2 + z**2/x**2 >= x/z + y/x + z/y),
+    split_depth = 3, split_breadth=15,
+    omit=True,
+    comment="We should not solve this even with case splits. But it's a good stress test for split."
+))
+
+examples.append(Example(
+    hyps=[a>0, b>0, c>0],
+    conc=(a*b/(a+b) + b*c/(b+c) + a*c/(a+c) <= 3*(a*b + b*c + c*a)/(2*(a+b+c))),
+    omit=True
+))
+
+examples.append(Example(
+    hyps=[a>0, b>0, c>0],
+    conc=(a/(b+c) + b/(c+a) + c/(a+b) >= fractions.Fraction(3, 2))
+))
+
+
 ####################################################################################################
 #
 # To run from the command line
@@ -402,51 +550,3 @@ examples.append(Example(
 
 if __name__ == '__main__':
     run_examples(examples, sys.argv)
-
-    # # handle switches
-    # if '-v' in sys.argv:
-    #     messages.set_verbosity(messages.normal)
-    #     sys.argv.remove('-v')
-    # else:
-    #     messages.set_verbosity(messages.quiet)
-    # if '-fm' in sys.argv:
-    #     set_solver_type('fm')
-    #     sys.argv.remove('-fm')
-    #
-    # # perform command
-    # if len(sys.argv) == 1:
-    #     print "Use 'python sample_problems.py list' to list the examples."
-    #     print "Use 'python sample_problems.py 6 9 10' to run those examples."
-    #     print "Use 'python sample_problems.py test_all' to run them all."
-    # else:
-    #     show_configuration()
-    #     if sys.argv[1] == 'list':
-    #         for i in range(len(examples)):
-    #             print '*** Example {0!s} ***'.format(i)
-    #             examples[i].show()
-    #     elif sys.argv[1] == 'test_all':
-    #         t = timeit.default_timer()
-    #         for i in range(len(examples)):
-    #             if not examples[i].omit:
-    #                 print '*** Example {0!s} ***'.format(i)
-    #                 examples[i].test()
-    #         print 'Total:', round(timeit.default_timer()-t, 3), 'seconds'
-    #     # for a comparison of Fourier-Motzkin and polytope methods
-    #     elif sys.argv[1] == 'test_all_comp':
-    #         t = timeit.default_timer()
-    #         for i in range(len(examples)):
-    #             if not examples[i].omit:
-    #                 print '*** Example {0!s} ***'.format(i)
-    #                 set_solver_type('fm')
-    #                 print '[Fourier-Motzkin]'
-    #                 examples[i].test()
-    #                 set_solver_type('poly')
-    #                 print '[Poly]'
-    #                 examples[i].test()
-    #         print 'Total:', round(timeit.default_timer()-t, 3), 'seconds'
-    #     else:
-    #         for i in range(1, len(sys.argv)):
-    #             try:
-    #                 examples[int(sys.argv[i])].test()
-    #             except ValueError:
-    #                 print 'No example {0}.'.format(sys.argv[i])

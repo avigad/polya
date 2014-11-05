@@ -149,4 +149,5 @@ def run_examples(examples, args):
                     print 'No example {0}.'.format(args[i])
         messages.set_verbosity(messages.debug)
 
-        timer.announce_times()
+        if args[1] != 'list':
+            timer.announce_times()

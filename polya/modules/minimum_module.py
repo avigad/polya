@@ -55,7 +55,8 @@ class MinimumModule:
                         comp_range = geometry.ComparisonRange(geometry.neg_infty, geometry.infty,
                                                               True, True, True)
                         for a in args:
-                            comp_range = comp_range & B.le_coeff_range(j, a.term.index, a.coeff)
+                            new_comp_range = B.le_coeff_range(j, a.term.index, a.coeff)
+                            comp_range = comp_range & new_comp_range
                             if comp_range.is_empty():
                                 break
                         if not comp_range.is_empty():
@@ -75,23 +76,3 @@ class MinimumModule:
 
     def get_split_weight(self, B):
         return None
-
-
-                # old code
-                # # if any argument is the smallest, t_i is equal to that
-                # if a in args:
-                #     if all((a is a1) or B.implies_comparison(a <= a1) for a1 in args):
-                #             B.assert_comparison(terms.IVar(i) == a)
-                # # see if any problem term is known to be less than all the arguments
-                # # TODO: note, we could also do this by adding clauses
-                # for j in range(B.num_terms):
-                #     if j != i:
-                #         if all(B.implies_comparison(terms.IVar(j) < a) for a in args):
-                #             B.assert_comparison(terms.IVar(j) < terms.IVar(i))
-                #         elif all(B.implies_comparison(terms.IVar(j) <= a) for a in args):
-                #             B.assert_comparison(terms.IVar(j) <= terms.IVar(i))
-                #
-                #         # if all(B.implies(j, terms.LT, a.coeff, a.term.index) for a in args):
-                #         #     B.assert_comparison(terms.IVar(j) < terms.IVar(i))
-                #         # elif all(B.implies(j, terms.LE, a.coeff, a.term.index) for a in args):
-                #         #     B.assert_comparison(terms.IVar(j) <= terms.IVar(i))

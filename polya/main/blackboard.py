@@ -846,7 +846,7 @@ class Blackboard(object):
         Takes two indices, i, j < self,num_terms.
         Returns an geometry.ComparisonRange for the comparison t_i <= c * t_j.
         """
-    
+
         si = self.sign(i)
         wsi = self.weak_sign(i)
         sj = self.sign(j)
@@ -909,7 +909,7 @@ class Blackboard(object):
             return geometry.empty_range
         if len(hp_comps) == 1:
             hp = hp_comps[0]
-            if hp.a <= 0:
+            if hp.b <= 0:
                 return geometry.empty_range
             else:
                 coeff = geometry.Extended(hp.a / hp.b)
@@ -944,7 +944,7 @@ class Blackboard(object):
         Takes two indices, i, j < self,num_terms.
         Returns an geometry.ComparisonRange for the comparison t_i >= c * t_j.
         """
-    
+
         si = self.sign(i)
         wsi = self.weak_sign(i)
         sj = self.sign(j)
@@ -1007,7 +1007,7 @@ class Blackboard(object):
             return geometry.empty_range
         if len(hp_comps) == 1:
             hp = hp_comps[0]
-            if hp.a <= 0:
+            if hp.b >= 0:
                 return geometry.empty_range
             else:
                 coeff = geometry.Extended(hp.a / hp.b)
