@@ -508,6 +508,12 @@ class Func(object):
             raise Error('Wrong number of arguments to {0!s}'.format(self.name))
         return FuncTerm(self, args)
 
+    def __eq__(self, other):
+        if isinstance(other, Func):
+            return self.name == other.name and self.arity == other.arity
+        else:
+            return False
+
 
 class NthRoot(Func):
     """
@@ -588,10 +594,11 @@ class STerm(object):
 
     def __init__(self, coeff, term):
         self.coeff = fractions.Fraction(coeff)
-        if coeff != 0:
-            self.term = term
-        else:
-            self.term = One()
+        #if coeff != 0:
+        #    self.term = term
+        #else:
+        #    self.term = One()
+        self.term = term
         self.key = (term.key, coeff)
         self.__hash__ = None
 

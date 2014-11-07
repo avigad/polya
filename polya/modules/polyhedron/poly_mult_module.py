@@ -154,6 +154,7 @@ def add_of_mul_comps(m_comparisons, num_terms):
             elif isinstance(c.term1, terms.IVar):
                 t += c.term1
             else:
+                print c
                 raise Exception
             a_comparisons.append((t, terms.EQ))
         else:

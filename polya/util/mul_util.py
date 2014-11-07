@@ -94,6 +94,8 @@ def reduce_mul_term(t):
         exp = sum(t.args[k].exponent for k in l)
         if exp != 0:
             rt *= t.args[l[0]].term ** exp
+    if isinstance(rt, terms.One):
+        return terms.IVar(0)
     return rt
 
 

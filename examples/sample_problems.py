@@ -172,6 +172,7 @@ examples.append(Example(
 ))
 
 examples.append(Example(
+    #axioms=[Forall([x, y], abs(x + y) <= abs(x) + abs(y))],
     hyps=[i >= 0, abs(f(y) - f(x)) < 1 / (2 * (i + 1)), abs(f(z) - f(y)) < 1 / (2 * (i + 1))],
     conc=(abs(f(z) - f(x)) < 1 / (i + 1)),
     comment='Discussed in Avigad, Lewis, and Roux (2014)'
@@ -227,7 +228,7 @@ examples.append(Example(
 ))
 
 examples.append(Example(
-    hyps=[abs(x) < 3, abs(y) < 2, w <= 0],
+    hyps=[abs(x) < 3, abs(y) < 2, w <= 0, exp(0) == 1],
     conc=(abs(x + 2 * y + z)  * exp(w) < (7 + abs(z)))
 ))
 

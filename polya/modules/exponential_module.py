@@ -81,6 +81,7 @@ def exp_factor_sum(B):
     If B.term_defs[i] is of the form exp(t_1 + ct_2 + ...), will declare that it is equal to
     exp(t_1)*exp(ct_2)*...
     """
+
     exp_inds = [i for i in range(B.num_terms) if (isinstance(B.term_defs[i], terms.FuncTerm)
                                                   and B.term_defs[i].func == terms.exp)]
     for i in exp_inds:
