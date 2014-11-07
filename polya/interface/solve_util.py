@@ -98,7 +98,8 @@ class Solver:
 
             modules.extend([pa, pm])
         else:
-            self.fm = next([m for m in modules if isinstance(m, axiom_module.AxiomModule)], None)
+            self.fm = next((m for m in modules if isinstance(m, axiom_module.AxiomModule)), None)
+            self.fm.add_axioms(axioms)
 
         self.contradiction = False
         self.assume(*assertions)
