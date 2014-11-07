@@ -41,7 +41,7 @@ class CongClosureModule:
             for i in range(len(f1.args)):
                 arg1, arg2 = f1.args[i], f2.args[i]
                 if arg1.coeff == 0:
-                    eq = B.implies(arg2.term.index, terms.EQ, 0, 0)
+                    eq = B.implies(arg2.term.index, terms.EQ, 0, 0) or arg2.coeff == 0
                 else:
                     eq = B.implies(arg1.term.index, terms.EQ,
                                    fractions.Fraction(arg2.coeff, arg1.coeff), arg2.term.index)

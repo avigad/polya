@@ -238,7 +238,7 @@ examples.append(Example(
 ))
 
 examples.append(Example(
-    axioms=[Forall([x, y], abs(x + y) <= abs(x) + abs(y))],
+    #axioms=[Forall([x, y], abs(x + y) <= abs(x) + abs(y))],
     conc=(abs(2 * x - z) <= abs(2 * x - y) + abs(y - z)),
     split_depth=1,
     split_breadth=10
