@@ -110,7 +110,15 @@ class AbsModule:
         timer.stop(timer.ABS)
 
     def get_split_weight(self, B):
-        return None
+        inds = [i for i in range(B.num_terms) if (isinstance(B.term_defs[i], terms.FuncTerm)
+                                            and B.term_defs[i].func_name == 'abs' and
+                                            B.weak_sign(B.term_defs[i].args[0].term.index) == 0)]
+        print 'inds:', inds
+        weights = []
+        for i in inds:
+            j = B.term_defs[i].args[0].term.index
+            weights.extend([(j, 0, 0, terms.LE, .5), (j, 0, 0, terms.GE, .5)])
+        return weights
 
 
 if __name__ == '__main__':
