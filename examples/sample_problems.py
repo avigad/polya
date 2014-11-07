@@ -232,7 +232,15 @@ examples.append(Example(
     conc=(abs(x + 2 * y + z)  * exp(w) < (7 + abs(z)))
 ))
 
+examples.append(Example(
+    axioms=[Forall([x, y], abs(x + y) <= abs(x) + abs(y))],
+    conc=(abs(x - z) <= abs(x - y) + abs(y - z))
+))
 
+examples.append(Example(
+    axioms=[Forall([x, y], abs(x + y) <= abs(x) + abs(y))],
+    conc=(abs(2 * x - z) <= abs(2 * x - y) + abs(y - z))
+))
 
 #
 # cases where Polya fails
