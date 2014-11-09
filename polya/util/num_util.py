@@ -171,6 +171,8 @@ def perfect_root(p, q):
     """Determines wheter a rational p is a perfect
     q root, by dichotomy. and returns it if
     it exists, and returns None otherwise.
+
+    UNLIKE perfect_root_int: returns a rational r such that r^(1/q) = p
     
     Arguments:
     - `p`: a Rational
