@@ -16,7 +16,7 @@ import polya.main.messages as messages
 import polya.util.timer as timer
 # import polya.util.num_util as num_util
 import polya.util.geometry as geometry
-# import fractions
+import fractions
 # import copy
 
 
@@ -75,4 +75,19 @@ class MinimumModule:
         timer.stop(timer.MINM)
 
     def get_split_weight(self, B):
-        return None
+        min_inds = [i for i in range(B.num_terms) if (isinstance(B.term_defs[i], terms.FuncTerm)
+                                                      and B.term_defs[i].func == terms.minm
+                                                      and len(B.term_defs[i].args) == 2)]
+        splits = []
+        for i in min_inds:
+            t = B.term_defs[i]
+            if not (B.implies_comparison(t.args[0] <= t.args[1]) or
+                        B.implies_comparison(t.args[0] >= t.args[1])):
+                if t.args[0].coeff != 0:
+                    c = fractions.Fraction(t.args[1].coeff, t.args[0].coeff)
+                    splits.append((t.args[0].term.index, t.args[1].term.index, c, terms.LE, .5))
+                    splits.append((t.args[0].term.index, t.args[1].term.index, c, terms.GE, .5))
+                else:
+                    splits.append((t.args[1].term.index, 0, 0, terms.LE, .5))
+                    splits.append((t.args[1].term.index, 0, 0, terms.GE, .5))
+        return splits

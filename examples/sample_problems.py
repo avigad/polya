@@ -175,7 +175,8 @@ examples.append(Example(
     #axioms=[Forall([x, y], abs(x + y) <= abs(x) + abs(y))],
     hyps=[i >= 0, abs(f(y) - f(x)) < 1 / (2 * (i + 1)), abs(f(z) - f(y)) < 1 / (2 * (i + 1))],
     conc=(abs(f(z) - f(x)) < 1 / (i + 1)),
-    comment='Discussed in Avigad, Lewis, and Roux (2014)'
+    comment='Discussed in Avigad, Lewis, and Roux (2014)',
+    split_depth=1, split_breadth=10
 ))
 
 examples.append(Example(
@@ -422,8 +423,9 @@ examples.append(Example(
     conc=(-1 <= 4*x**3 - 3*x),
     comment="Need a case split on x. Along with the following, is equivalent to an example from " +
     "McLaughlin and Harrison",
-    split_depth=2,
-    split_breadth=10
+    split_depth=1,
+    split_breadth=10,
+    omit=True
 ))
 
 examples.append(Example(
@@ -431,8 +433,9 @@ examples.append(Example(
     conc=(1 >= 4*x**3 - 3*x),
     comment="Need a case split on x. Along with the previous, is equivalent to an example from " +
     "McLaughlin and Harrison",
-    split_depth=2,
-    split_breadth=10
+    split_depth=1,
+    split_breadth=10,
+    omit=True
 ))
 
 examples.append(Example(
@@ -463,8 +466,11 @@ examples.append(Example(
     conc=(u + minm(x + 2 * u, y + 2 * v) <= x + 3 * v)))
 
 examples.append(Example(
-    hyps=[x >= y],
-    conc=(minm(x, y) + maxm(x, y) == x + y)))
+    #hyps=[x >= y],
+    conc=(minm(x, y) + maxm(x, y) == x + y),
+    split_depth=1,
+    split_breadth=10
+))
 
 examples.append(Example(
     hyps=[x < u, y < u, z < u, x < v, y < v, z < v],
@@ -516,7 +522,7 @@ examples.append(Example(
 
 examples.append(Example(
     hyps=[x!=0, y!=0, log(abs(x)+2*abs(y)) > 5, log(abs(y)) < root(2, 2)],
-    conc=(log(exp(x)) > exp(-2))
+    #conc=(x > exp(-2))
 ))
 
 
@@ -551,6 +557,10 @@ examples.append(Example(
     conc=(a/(b+c) + b/(c+a) + c/(a+b) >= fractions.Fraction(3, 2))
 ))
 
+examples.append(Example(
+    hyps=[log(exp(x)) == log(exp(x))],
+    conc=(log(1 + x**2 + exp(x)) > x)
+))
 
 ####################################################################################################
 #

@@ -184,10 +184,9 @@ def perfect_root(p, q):
     #print 'perfect_root:', p, q, n, d, k, l
     r_n = perfect_root_int(n, k)
     r_d = perfect_root_int(d, k)
+    #print "n:{}, d:{}, k:{}, l:{}, r_n:{}, r_d:{}".format(n, d, k, l, r_n, r_d)
     if r_n and r_d:
 #        return fractions.Fraction(r_n ** l, r_d ** l)
         return fractions.Fraction(r_n)**l / fractions.Fraction(r_d) ** l
     else:
         return None
-
-

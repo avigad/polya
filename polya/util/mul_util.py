@@ -46,8 +46,10 @@ def round_coeff(coeff, comp):
     """
     if comp in [terms.LE, terms.LT]:
         return round_up(fractions.Fraction(coeff))
-    else:
+    elif comp in [terms.GE, terms.GT]:
         return round_down(fractions.Fraction(coeff))
+    else:
+        return coeff
 
 
 def ge_one(B, i):
@@ -145,10 +147,16 @@ def process_mul_comp(m1, m2, coeff1, comp1, B):
         if ei < 0:
             comp = terms.comp_reverse(comp)
         cexp = fractions.Fraction(1, ei)
-        p = (num_util.perfect_root(coeff, 1/cexp) if cexp > 0
-             else fractions.Fraction(1, num_util.perfect_root(coeff, -1/cexp)))
+
+        # take both sides to the cexp power
+        p = (num_util.perfect_root(coeff, cexp) if cexp > 0
+             else num_util.perfect_root(coeff, -cexp))
+        if p and cexp < 0:
+            p = fractions.Fraction(1, p)
         if p:
             ei, ej, coeff = 1, 1, p
+        elif comp in [terms.EQ, terms.NE]:
+            return terms.IVar(0) == terms.IVar(0)
         else:
             ei, ej, coeff = 1, 1, fractions.Fraction(coeff ** cexp)
         # ei, ej, coeff = 1, 1, coeff ** fractions.Fraction(1, ei)
@@ -156,10 +164,12 @@ def process_mul_comp(m1, m2, coeff1, comp1, B):
             if comp in [terms.GE, terms.GT]:
                 coeff = max_coeff
             else:
-                return None
+                return terms.IVar(0) == terms.IVar(0)
         else:
             coeff = round_coeff(coeff, comp)
         comp, coeff = make_term_comparison_unabs(i, j, ei, ej, comp, coeff, B)
+        if isinstance(coeff, fractions.Fraction) and coeff.denominator > precision:
+            print i, terms.comp_str[comp], coeff, j
         return terms.comp_eval[comp](terms.IVar(i), coeff * terms.IVar(j))
 
 ####################################################################################################
