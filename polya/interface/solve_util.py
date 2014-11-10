@@ -35,7 +35,7 @@ def run(B, split_depth, split_breadth, solver_type):
     found or no new information is learned.
     Returns True if a contradiction is found, False otherwise.
     """
-    s = Solver(split_depth, split_breadth, [], [], [], solver_type)
+    s = Solver(split_depth, split_breadth, [], [], [], [], solver_type)
     s.B = B
     return s.check()
 
@@ -56,7 +56,8 @@ def solve(split_depth, split_breadth, solver_type, *assertions):
 
 class Solver:
 
-    def __init__(self, split_depth, split_breadth, assertions, axioms, modules, default_solver):
+    def __init__(self, split_depth, split_breadth, assertions, terms, axioms, modules,
+                 default_solver):
         """
         Instantiates a Solver object.
         Arguments:
@@ -103,6 +104,7 @@ class Solver:
 
         self.contradiction = False
         self.assume(*assertions)
+        self.assume(*terms)
         self.modules = modules
         self.split_depth, self.split_breadth = split_depth, split_breadth
 
@@ -111,6 +113,9 @@ class Solver:
 
     def append_module(self, m):
         self.modules.append(m)
+
+    def add_term(self, t):
+        self.B.add_term(t)
 
     def check(self):
         """
@@ -159,6 +164,8 @@ class Solver:
         for item in c:
             if isinstance(item, formulas.Forall):
                 self.add_axiom(item)
+            elif isinstance(item, (terms.Term, terms.STerm)):
+                self.add_term(item)
             else:
                 try:
                     self.B.add(item)

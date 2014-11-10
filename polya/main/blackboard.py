@@ -178,6 +178,12 @@ class Blackboard(object):
                 self.inequalities[j, i] = [hp]
             return terms.IVar(i)
 
+    def add_term(self, t):
+        """
+        Defines the term t, and any necessary subterms, without adding any comparison information.
+        """
+        self.term_name(t.canonize().term)
+
     def has_new_info(self, module):
         """
         Module is an int identifying a certain module.

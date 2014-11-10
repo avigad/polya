@@ -135,8 +135,9 @@ def run(B):
     return solve_util.run(B, default_split_depth, default_split_breadth, default_solver)
 
 
-def Solver(assertions=list(), axioms=list(), modules=list(), split_depth=default_split_depth,
-           split_breadth=default_split_breadth, solver_type=default_solver):
+def Solver(assertions=list(), terms=list(), axioms=list(), modules=list(),
+           split_depth=default_split_depth, split_breadth=default_split_breadth,
+           solver_type=default_solver):
     """
     Instantiates a Solver object.
     Arguments:
@@ -147,10 +148,11 @@ def Solver(assertions=list(), axioms=list(), modules=list(), split_depth=default
      -- split_breadth: How many split options to consider.
      -- solver_type: 'fm' or 'poly' arithmetic.
     """
-    return solve_util.Solver(split_depth, split_breadth, assertions, axioms, modules, solver_type)
+    return solve_util.Solver(split_depth, split_breadth, assertions, terms, axioms, modules,
+                             solver_type)
 
 
-def Example(hyps=None, conc=None, axioms=None, modules=None, omit=False, comment=None,
+def Example(hyps=None, terms=None, conc=None, axioms=None, modules=None, omit=False, comment=None,
             split_depth=default_split_depth, split_breadth=default_split_breadth):
     """
     Instantiates an Example object. Used to create lists of test problems.
@@ -164,5 +166,5 @@ def Example(hyps=None, conc=None, axioms=None, modules=None, omit=False, comment
      -- comment: prints comment when the example is run.
      -- split_depth, split_depth: as in Solver.
     """
-    return example.Example(hyps, conc, axioms, modules, omit, comment,
+    return example.Example(hyps, terms, conc, axioms, modules, omit, comment,
                            split_depth, split_breadth, default_solver)

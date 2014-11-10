@@ -20,7 +20,7 @@ import polya.util.timer as timer
 
 class Example:
 
-    def __init__(self, hyps, conc, axioms, modules, omit, comment,
+    def __init__(self, hyps, terms, conc, axioms, modules, omit, comment,
                  split_depth, split_breadth, solver):
         """
         Instantiates an Example object. Used to create lists of test problems.
@@ -36,6 +36,7 @@ class Example:
          -- solver: 'fm' or 'poly' arithmetic
         """
         self.hyps = hyps if hyps else list()
+        self.terms = terms if terms else list()
         self.conc = conc
         self.axioms = axioms if axioms else list()
         self.modules = modules if modules else list()
@@ -53,6 +54,8 @@ class Example:
             print 'Axiom: {0!s}'.format(a)
         for h in self.hyps:
             print 'Hypothesis: {0!s}'.format(h)
+        for t in self.terms:
+            print 'Term of interest: {0!s}'.format(t)
         if self.conc:
             print 'Conclusion: {0!s}'.format(self.conc)
         else:
@@ -74,8 +77,8 @@ class Example:
         Creates a Solver object with the stored values, and runs check().
         """
         self.show()
-        S = solve_util.Solver(self.split_depth, self.split_breadth, self.hyps, self.axioms,
-                              self.modules, self.solver)
+        S = solve_util.Solver(self.split_depth, self.split_breadth, self.hyps, self.terms,
+                              self.axioms, self.modules, self.solver)
         t = timeit.default_timer()
         if self.conc:
             if S.prove(self.conc):
