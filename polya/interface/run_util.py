@@ -89,7 +89,10 @@ def split_modules(B, modules, depth, breadth, saturate=True):
     else:
         backup_bbds = {}
         backup_modules = {}
-        candidates = get_splits(B, modules)[:breadth]
+        if breadth <= 0:
+            candidates = get_splits(B, modules)
+        else:
+            candidates = get_splits(B, modules)[:breadth]
         for i in range(len(candidates)):
             can = candidates[i]
             ti, tj = terms.IVar(can[0]), can[3]*terms.IVar(can[1])
