@@ -40,7 +40,7 @@ ceil = Func('ceil')
 examples = list()
 
 #
-# examples from the paper
+# examples from the JAR paper
 #
 
 examples.append(Example(
@@ -51,7 +51,8 @@ examples.append(Example(
 
 examples.append(Example(
     hyps=[x > 1],
-    conc=((1 + y**2) * x >= 1 + y**2)
+    conc=((1 + y**2) * x >= 1 + y**2),
+    comment='Discussed in Avigad, Lewis, and Roux (2014)'
 ))
 
 examples.append(Example(
@@ -75,6 +76,12 @@ examples.append(Example(
 examples.append(Example(
     hyps=[0 < u, u < (v**2 + 23)**3, 0 < z, z + 1 < w],
     conc=((u + (v**2 + 23)**3 + z)**3 < (u + (v**2 + 23)**3 + w + 1)**5),
+))
+
+examples.append(Example(
+    axioms=[Forall([x], f(x) <= 1)],
+    hyps=[u < v, 0 < w],
+    conc=(u + w * f(x) < v + w),
     comment='Discussed in Avigad, Lewis, and Roux (2014)'
 ))
 
@@ -82,13 +89,6 @@ examples.append(Example(
     axioms=[Forall([x, y], Implies(x >= y, f(x) >= f(y)))],
     hyps=[u < v, x <= y],
     conc=(u + f(x) < v + f(y)),
-    comment='Discussed in Avigad, Lewis, and Roux (2014)'
-))
-
-examples.append(Example(
-    axioms=[Forall([x], f(x) <= 1)],
-    hyps=[u < v, 0 < w],
-    conc=(u + w * f(x) < v + w),
     comment='Discussed in Avigad, Lewis, and Roux (2014)'
 ))
 
@@ -101,42 +101,80 @@ examples.append(Example(
 
 examples.append(Example(
     axioms=[Forall([x, y], Implies(x >= y, f(x) >= f(y)))],
-    hyps=[u < v, 1 < w, 2 < s, (w + s) / 3 < v, x <= y],
-    conc=(f(x) + u < v**2 + f(y)),
-    comment='Discussed in Avigad, Lewis, and Roux (2014)'
-))
-
-examples.append(Example(
-    axioms=[Forall([x, y], Implies(x >= y, f(x) >= f(y)))],
     hyps=[u < v, 1 < v, x <= y],
     conc=(f(x) + u < v**2 + f(y)),
     comment='Discussed in Avigad, Lewis, and Roux (2014)'
 ))
 
 examples.append(Example(
-    #axioms=[Forall([x, y], Implies(x < y, exp(x) < exp(y)))],
+    axioms=[Forall([x, y], Implies(x >= y, f(x) >= f(y)))],
+    hyps=[u < v, 1 < w, 2 < s, (w + s) / 3 < v, x <= y],
+    conc=(f(x) + u < v**2 + f(y)),
+    comment='Discussed in Avigad, Lewis, and Roux (2014)'
+))
+
+examples.append(Example(
+    hyps=[z > exp(x), w > exp(y)],
+    conc=(z**3 * w**2 > exp(3 * x + 2 * y)),
+    comment='Discussed in Avigad, Lewis, and Roux (2014)'
+))
+
+examples.append(Example(
+    hyps=[a > 1, b != 0, c > 0, log(b**2) > 4, log(c) > 1],
+    conc=(log(a * b**2 * c**3) > 7),
+    comment='Discussed in Avigad, Lewis, and Roux (2014)'
+))
+
+examples.append(Example(
+    hyps=[u > 0, v > 0, log(x) > 2 * u + v],
+    conc=(x > 1),
+    comment='Discussed in Avigad, Lewis, and Roux (2014)'
+))
+
+examples.append(Example(
+    hyps=[x < y, u <= v],
+    conc=(u + minm(x + 2 * u, y + 2 * v) <= x + 3 * v),
+    comment='Discussed in Avigad, Lewis, and Roux (2014)'
+))
+
+examples.append(Example(
+    hyps=[u > 0, v > 1],
+    conc=(root(3, (u**9 * v *4)) > u**3 * v),
+    comment='Discussed in Avigad, Lewis, and Roux (2014)'
+))
+
+examples.append(Example(
+    hyps=[y > 0],
+    conc=(abs(3 * x + 2 * y + 5) < 4 * abs(x) + 3 * y + 6),
+    comment='Discussed in Avigad, Lewis, and Roux (2014)'
+))
+
+examples.append(Example(
+    conc=(exp(maxm(abs(x), y)) >= 1),
+    comment='Discussed in Avigad, Lewis, and Roux (2014)'
+))
+
+examples.append(Example(
+    hyps=[y>maxm(2, 3*x), x > 0],
+    conc=(exp(4*y - 3*x) > exp(6)),
+    comment='Discussed in Avigad, Lewis, and Roux (2014)'
+))
+
+examples.append(Example(
+    hyps=[y > 0],
+    conc=(log(1 + abs(x) + y) > 0),
+    comment='Discussed in Avigad, Lewis, and Roux (2014)'
+))
+
+examples.append(Example(
+    hyps=[abs(x) < 3, abs(y) < 2, w <= 0, exp(0) == 1],
+    conc=(abs(x + 2 * y + z)  * exp(w) < (7 + abs(z))),
+    comment='Discussed in Avigad, Lewis, and Roux (2014)'
+))
+
+examples.append(Example(
     hyps=[0 < x, x < y, u < v],
     conc=(2 * u + exp(1 + x + x**4) <= 2 * v + exp(1 + y + y**4)),
-    comment='Discussed in Avigad, Lewis, and Roux (2014)'
-))
-
-examples.append(Example(
-    #axioms=[Forall([x, y], Implies(x < y, exp(x) < exp(y)))],
-    hyps=[0 < x, 3 < y, u < v],
-    conc=(2 * u + exp(10) <= 2 * v + exp(1 + y**2))
-))
-
-examples.append(Example(
-    axioms=[Forall([x, y], f(x + y) == f(x) * f(y))],
-    hyps=[f(a) > 2, f(b) > 2],
-    conc=(f(a + b) > 4),
-    comment='Discussed in Avigad, Lewis, and Roux (2014)'
-))
-
-examples.append(Example(
-    axioms=[Forall([x, y], f(x + y) == f(x) * f(y))],
-    hyps=[f(a + b) > 2, f(c + d) > 2],
-    conc=(f(a + b + c + d) > 4),
     comment='Discussed in Avigad, Lewis, and Roux (2014)'
 ))
 
@@ -160,7 +198,22 @@ examples.append(Example(
 ))
 
 examples.append(Example(
-    hyps=[0 < x, 0 < y, y < 1, x * y > x + y]
+    axioms=[Forall([x, y], f(x + y) == f(x) * f(y))],
+    hyps=[f(a) > 2, f(b) > 2],
+    conc=(f(a + b) > 4),
+    comment='Discussed in Avigad, Lewis, and Roux (2014)'
+))
+
+examples.append(Example(
+    axioms=[Forall([x, y], f(x + y) == f(x) * f(y))],
+    hyps=[f(a + b) > 2, f(c + d) > 2],
+    conc=(f(a + b + c + d) > 4),
+    comment='Discussed in Avigad, Lewis, and Roux (2014)'
+))
+
+examples.append(Example(
+    hyps=[0 < x, 0 < y, y < 1, x * y > x + y],
+    comment='Discussed in Avigad, Lewis, and Roux (2014)'
 ))
 
 examples.append(Example(
@@ -172,7 +225,6 @@ examples.append(Example(
 ))
 
 examples.append(Example(
-    #axioms=[Forall([x, y], abs(x + y) <= abs(x) + abs(y))],
     hyps=[i >= 0, abs(f(y) - f(x)) < 1 / (2 * (i + 1)), abs(f(z) - f(y)) < 1 / (2 * (i + 1))],
     conc=(abs(f(z) - f(x)) < 1 / (i + 1)),
     comment='Discussed in Avigad, Lewis, and Roux (2014)',
@@ -194,68 +246,48 @@ examples.append(Example(
 
 ))
 
+examples.append(Example(
+    hyps=[0 < x, y < z],
+    conc=(x * y < x * z),
+    comment='Discussed in Avigad, Lewis, and Roux (2014)'
+#    split_depth=1,
+#    split_breadth=10
+))
+
+examples.append(Example(
+    hyps=[0 < x, x * y * z < 0, x * w > 0],
+    conc=(w > y * z),
+    split_depth=1,
+    comment='Discussed in Avigad, Lewis, and Roux (2014)'
+))
+
+examples.append(Example(
+    conc=(minm(x, y) + maxm(x, y) == x + y),
+    split_depth=1,
+    split_breadth=10,
+    comment='Discussed in Avigad, Lewis, and Roux (2014)'
+))
+
+
+
+#
+# Polya does not get these.
+#
+
+
+
+
 #
 # Some new ones
 #
 
-examples.append(Example(
-    hyps=[x < y, u < v],
-    conc=(maxm(x + u, 2 * x + u) < maxm(y + v, 2 * y + v))
-))
-
-# we don't get this one
-examples.append(Example(
-    hyps=[y > 0],
-    conc=(exp(minm(x + y, x + 2 *y)) < exp(x) * (exp(y) ** 2))
-))
-
-examples.append(Example(
-    hyps=[y > 0, w == exp(x + y)],
-    conc=(exp(minm(x + y, x + 2 *y)) < exp(x) * (exp(y) ** 2))
-))
-
-examples.append(Example(
-    conc=(exp(x + y) == exp(x) * exp(y))
-))
-
-examples.append(Example(
-    hyps=[y > 0],
-    conc=(log(1 + abs(x) + y) > 0)
-))
-
-examples.append(Example(
-    hyps=[abs(x) < 3, abs(y) < 2, w >= 0],
-    conc=(abs(x + 2 * y + z) < (7 + abs(z)) * exp(w))
-))
-
-examples.append(Example(
-    hyps=[abs(x) < 3, abs(y) < 2, w <= 0, exp(0) == 1],
-    conc=(abs(x + 2 * y + z)  * exp(w) < (7 + abs(z)))
-))
-
-examples.append(Example(
-    axioms=[Forall([x, y], abs(x + y) <= abs(x) + abs(y))],
-    conc=(abs(x - z) <= abs(x - y) + abs(y - z))
-))
-
-examples.append(Example(
-    #axioms=[Forall([x, y], abs(x + y) <= abs(x) + abs(y))],
-    conc=(abs(2 * x - z) <= abs(2 * x - y) + abs(y - z)),
-    split_depth=1,
-    split_breadth=10
-))
 
 #
 # cases where Polya fails
 # TODO: update this
 #
 
-examples.append(Example(
-    hyps=[0 < x, y < z],
-    conc=(x * y < x * z),
-    split_depth=1,
-    split_breadth=10
-))
+
 
 examples.append(Example(
     hyps=[0 < x, y < z, y < 0, z > 0],
@@ -411,11 +443,144 @@ examples.append(Example(
 ))
 
 examples.append(Example(
-    hyps=[x > 0, x*y*z < 0, x*w > 0],
-    conc=(w > y*z),
+    hyps=[x > 0, x*y*z < 0, x * w > 0],
+    conc=(w > y * z),
     comment="Need a case split on y to solve this.",
     split_depth=2,
     split_breadth=10
+))
+
+
+#
+# min and max
+#
+
+examples.append(Example(
+    hyps=[x <= y],
+    conc=(minm(x, y) == x)))
+
+examples.append(Example(
+    hyps=[0 < x, x <= y],
+    conc=(2 * x + minm(w, z) < 3 * y + w)))
+
+examples.append(Example(
+    hyps=[x < u, y < u, z < u, x < v, y < v, z < v],
+    conc=(maxm(x, y, z) < minm(u, v))))
+
+examples.append(Example(
+    hyps=[x < y, u < v],
+    conc=(maxm(x + u, 2 * x + u) < maxm(y + v, 2 * y + v))
+))
+
+
+#
+# abs
+#
+
+examples.append(Example(
+    conc=(abs(3 * x + 2 * y) <= 3 * abs(x) + 4 * abs(y))
+))
+
+examples.append(Example(
+    conc=(abs(x - y) >= abs(y) - abs(x))
+))
+
+examples.append(Example(
+#    axioms=[Forall([x, y], abs(x + y) <= abs(x) + abs(y))],
+    conc=(abs(x - z) <= abs(x - y) + abs(y - z))
+))
+
+examples.append(Example(
+    hyps=[abs(x) < 3, abs(y) < 2, w >= 0],
+    conc=(abs(x + 2 * y + z) < (7 + abs(z)) * exp(w))
+))
+
+
+#
+# exp and log
+#
+
+
+examples.append(Example(
+    conc=(exp(x + y) == exp(x) * exp(y))
+))
+
+examples.append(Example(
+    terms=[log(exp(x))],
+    conc=(log(1 + x**2 + exp(x)) > x)
+))
+
+examples.append(Example(
+    hyps=[0 < x, 3 < y, u < v],
+    conc=(2 * u + exp(10) <= 2 * v + exp(1 + y**2))
+))
+
+
+examples.append(Example(
+    hyps=[y > 0],
+    terms=[exp(x + 2 * y)],
+    conc=(exp(minm(x + y, x + 2 *y)) < exp(x) * (exp(y) ** 2))
+))
+
+
+
+
+examples.append(Example(
+
+    conc=(abs(2 * x - z) <= abs(2 * x - y) + abs(y - z)),
+    split_depth=1,
+    split_breadth=10
+))
+
+#
+# combinations of built-in functions
+
+# Follows by x > log(x) >= minm(...) > 1
+examples.append(Example(
+    hyps=[minm(exp(3 * x), exp(9 * x**2 - 2), log(x)) > 1, x > 0],
+    conc=(x>1)
+))
+
+examples.append(Example(
+    hyps=[x != 0, y != 0, log(abs(x) + 2 * abs(y)) > 5, log(abs(y)) < root(2, 2)],
+    #conc=(x > exp(-2))
+))
+
+examples.append(Example(
+    terms=[log(exp(3 * x))],
+    conc=(log(maxm(exp(2 * x), exp(3 * x))) >= 3 * x),
+    comment='Discussed in Avigad, Lewis, and Roux (2014)'
+))
+
+
+
+#
+# varia
+#
+
+examples.append(Example(
+    hyps=[x == z, y == w, x > 0, y > 0],
+    conc=(x * y == z * w)
+))
+
+examples.append(Example(
+    hyps=[x > 2 * y, x == 3 * y],
+    conc=(y > 0)
+))
+
+
+#
+# problems we don't get
+#
+
+
+# The Pythagorean Theorem.
+a1, a2, a3, b1, b2, b3 = Vars('a1 a2 a3 b1 b2 b3')
+examples.append(Example(
+    hyps=[(b2-b1)/(a2-a1) == -(a3-a2)/(b3-b2)],
+    conc=(root(2, (b3-b1)**2 + (a3-a1)**2) == root(2, (b2-b1)**2 + (a2 - a1)**2) + root(2, (b3-b2)**2 - (a3-a2)**2)),
+    split_depth=6, split_breadth=10,
+    omit=True
 ))
 
 examples.append(Example(
@@ -438,105 +603,7 @@ examples.append(Example(
     omit=True
 ))
 
-examples.append(Example(
-    hyps=[z > exp(x), w > exp(y)],
-    conc=(z**3 * w**2 > exp(3 * x + 2 * y))
-))
-
-examples.append(Example(
-    hyps=[a>1, c>0, log(b**2)>4, log(c)>1, b!=0],
-    conc=(log(a*b**2*c**3) > 7)
-))
-
-
-#
-# min and max
-#
-
-examples.append(Example(
-    hyps=[x <= y],
-    conc=(minm(x, y) == x)))
-
-examples.append(Example(
-    hyps=[0 < x, x <= y],
-    conc=(2 * x + minm(w, z) < 3 * y + w)))
-
-examples.append(Example(
-    hyps=[x < y, u <= v],
-    conc=(u + minm(x + 2 * u, y + 2 * v) <= x + 3 * v)))
-
-examples.append(Example(
-    #hyps=[x >= y],
-    conc=(minm(x, y) + maxm(x, y) == x + y),
-    split_depth=1,
-    split_breadth=10
-))
-
-examples.append(Example(
-    hyps=[x < u, y < u, z < u, x < v, y < v, z < v],
-    conc=(maxm(x, y, z) < minm(u, v))))
-
-
-#
-# abs
-#
-
-examples.append(Example(
-    conc=(abs(3 * x + 2 * y) <= 3 * abs(x) + 4 * abs(y))
-))
-
-examples.append(Example(
-    hyps=[y > 0],
-    conc=(abs(3 * x + 2 * y + 5) < 4 * abs(x) + 3 * y + 6)
-))
-
-examples.append(Example(
-    conc=(abs(x - y) >= abs(y) - abs(x))
-))
-
-
-#
-# varia
-#
-
-examples.append(Example(
-    hyps=[x==z, y==w, x>0, y>0],
-    conc=(x * y == z * w)
-))
-
-examples.append(Example(
-    hyps=[x > 2 * y, x == 3 * y],
-    conc=(y > 0)
-))
-
-# Follows by x > log(x) >= minm(...) > 1
-examples.append(Example(
-    hyps=[minm(exp(3*x), exp(9*x**2-2), log(x))>1, x>0],
-    conc=(x>1)
-))
-
-examples.append(Example(
-    hyps=[y>maxm(2, 3*x), x>0],
-    conc=(exp(4*y-3*x)>exp(6))
-))
-
-examples.append(Example(
-    hyps=[x!=0, y!=0, log(abs(x)+2*abs(y)) > 5, log(abs(y)) < root(2, 2)],
-    #conc=(x > exp(-2))
-))
-
-
-# The Pythagorean Theorem. We shouldn't be able to prove this, just checking.
-a1, a2, a3, b1, b2, b3 = Vars('a1 a2 a3 b1 b2 b3')
-examples.append(Example(
-    hyps=[(b2-b1)/(a2-a1) == -(a3-a2)/(b3-b2)],
-    conc=(root(2, (b3-b1)**2 + (a3-a1)**2) == root(2, (b2-b1)**2 + (a2 - a1)**2) + root(2, (b3-b2)**2 - (a3-a2)**2)),
-    split_depth=6, split_breadth=10,
-    omit=True
-))
-
 # These came from http://web.mit.edu/~holden1/www/math/high_school/awesome_math/Inequalities.pdf
-# We shouldn't get them.
 
 examples.append(Example(
     hyps=[],
@@ -557,10 +624,6 @@ examples.append(Example(
     conc=(a/(b+c) + b/(c+a) + c/(a+b) >= fractions.Fraction(3, 2))
 ))
 
-examples.append(Example(
-    hyps=[log(exp(x)) == log(exp(x))],
-    conc=(log(1 + x**2 + exp(x)) > x)
-))
 
 ####################################################################################################
 #
