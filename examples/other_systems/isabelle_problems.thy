@@ -18,7 +18,7 @@ by (rule mult_strict_mono, auto)
 
 (* even this is nontrivial for sledgehammer *)
 lemma one_plus_square_gt_0: "(0 :: real) < 1 + y^2"
-by (metis add_commute less_add_one linorder_neqE_linordered_idom pos_add_strict 
+by (metis add.commute less_add_one linorder_neqE_linordered_idom pos_add_strict 
   power2_less_0 zero_less_one)
 
 (* but sledgehammer eventually finds an easy solution using z3 *)
@@ -72,7 +72,8 @@ by (metis add_less_le_mono)
 (* sledgehammer finds a solution with Z3 *)
 lemma "(ALL x y. x <= y --> f x <= f y) ==> (u::real) < v ==> 1 < v ==> (x::real) <= y ==> 
     f x + u < v^2 + f y"
-by (smt power_less_imp_less_exp power_one_right)
+by (smt add_mono_thms_linordered_field(5) numeral_One numeral_le_iff power_increasing_iff 
+power_one_right semiring_norm(69))
 
 (* but fails here *)
 lemma "(ALL x y. x <= y --> f x <= f y) ==> (u::real) < v ==> 1 < w ==> 2 < s ==> 
@@ -80,7 +81,7 @@ lemma "(ALL x y. x <= y --> f x <= f y) ==> (u::real) < v ==> 1 < w ==> 2 < s ==
   apply (drule_tac x = x in spec)
   apply (drule_tac x = y in spec)
   apply (erule impE, assumption)
-  apply (subst add_commute)
+  apply (subst add.commute)
   apply (rule add_less_le_mono, auto simp add: eval_nat_numeral)
   apply (subst mult.right_neutral [of u, symmetric])
 by (rule mult_strict_mono, auto)
@@ -88,6 +89,7 @@ by (rule mult_strict_mono, auto)
 (* sledgehammer finds a solution with Z3 *)
 lemma "(ALL x y. x <= y --> f x <= f y) ==> (u::real) < v ==> 1 < v ==> (x::real) <= y ==> 
     f x + u < (1 + v)^10 + f y"
+
 by (smt power_one_right power_strict_increasing_iff)
 
 (* sledgehammer gets this with resolution *)
@@ -140,7 +142,7 @@ lemma "(ALL (x::real) y. f(x + y) = f(x) * f(y)) ==> f(a + b) > (2::real) ==> f(
     f(a + b + c + d) > 4"
   apply (drule_tac x = "a + b" in spec)
   apply (drule_tac x = "c + d" in spec)
-  apply (simp add: add_assoc)
+  apply (simp add: add.assoc)
   apply (subgoal_tac "4 = 2 * 2")
   apply (erule ssubst) back
   apply (rule mult_strict_mono)
@@ -155,29 +157,28 @@ by (rule mult_le_less_imp_less, auto simp add: field_simps)
 
 (* sledgehammer fails here *)
 lemma "(0::real) < x ==> x < y ==> (1 + x^2) / (2 + y)^17 < (1 + y^2) / (2 + x)^10"
-  apply (simp add: field_simps del: ring_distribs)
-  apply (rule mult_strict_mono)
-  apply (rule add_strict_left_mono)
-  apply (erule power_strict_mono, auto)
+  apply (simp add: divide_simps)
+  apply (rule mult_strict_mono, auto)
+  apply (rule power_strict_mono, auto)
   apply (rule order_le_less_trans)
-  apply (rule power_mono [of "x + 2" "y + 2"], auto)
+  apply (rule power_mono [of "2 + x" "2 + y"], auto)
 by (rule one_plus_square_gt_0) 
 
 (* sledgehammer fails here *)
 lemma "(0::real) < x ==> x < y ==> (1 + x^2) / (2 + exp y) < (1 + y^2) / (2 + exp x)"
   apply (subgoal_tac "exp x > 0")
   apply (subgoal_tac "exp y > 0")
-  apply (auto simp add: field_simps simp del: exp_gt_zero ring_distribs)
+  apply (auto simp add: divide_simps simp del: exp_gt_zero)
   apply (rule mult_strict_mono)
   apply (auto simp del: exp_gt_zero)
-  apply (rule power_strict_mono)
-by auto
+  apply (rule power_strict_mono, auto)
+by (rule one_plus_square_gt_0) 
+
 
 (* from the Isabelle mailing list - Sledgehammer gets it *)
 lemma "(0::real) < x ==> 0 < y ==> y < 1 ==> x + y > x * y"
-
 by (metis add_strict_mono monoid_add_class.add.right_neutral monoid_mult_class.mult.left_neutral 
-  mult_commute real_mult_less_iff1)
+  mult.commute real_mult_less_iff1)
 
 (* Sledgehammer fails *)
 lemma "(0::real) < x ==> 0 < y ==> y < 1 ==> x + y^150 > x * y^150"
@@ -203,7 +204,7 @@ lemma
   shows "f m < x"
 proof -
   from * have **: "real m > ((b - a) / (x - a))"
-    by (metis add_commute ceiling_real_of_int less_ceiling_eq less_linear not_le 
+    by (metis add.commute ceiling_real_of_int less_ceiling_eq less_linear not_le 
         pos_add_strict zero_less_one zle_add1_eq_le)
   have ***: "real m > 0"
     apply (rule order_less_trans [OF _ **])
@@ -263,6 +264,24 @@ lemma "i > (0::real) ==> abs(f y - f x) < 1 / (2 * (i + 1)) ==>
   apply (rule order_less_le_trans)
   apply (erule (1) add_strict_mono)
 by (auto simp add: field_simps)
+
+lemma "(z :: real) > exp x \<Longrightarrow> w > exp y \<Longrightarrow> z^3 * w^2 > exp (3 * x + 2 * y)"
+apply (subgoal_tac "exp (3 * x + 2 * y) = (exp x)^3 * (exp y)^2")
+prefer 2
+apply (simp add: exp_add exp_real_of_nat_mult [symmetric])
+apply (erule ssubst)
+apply (rule mult_strict_mono)
+apply (rule power_strict_mono, auto)
+apply (rule power_strict_mono, auto)
+apply (rule le_less_trans)
+prefer 2
+apply assumption
+by auto
+
+lemma "(x :: real) < y \<Longrightarrow> u \<le> v \<Longrightarrow> u + min (x + 2 * u) (y + 2 * v) \<le> x + 3 * v"
+by auto
+
+
 
 end
   
