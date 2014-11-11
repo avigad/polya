@@ -148,6 +148,10 @@ class ExponentialModule:
         """
         timer.start(timer.EXP)
         messages.announce_module('exponential module')
+        if any(isinstance(t, terms.FuncTerm) and t.func == terms.exp for t in B.term_defs.values()):
+            B.assert_comparison(terms.exp(0) == 1)
+        if any(isinstance(t, terms.FuncTerm) and t.func == terms.log for t in B.term_defs.values()):
+            B.assert_comparison(terms.log(1) == 0)
         exp_factor_constant(B)
         exp_factor_sum(B)
         log_factor_exponent(B)

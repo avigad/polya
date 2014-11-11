@@ -474,7 +474,11 @@ class Blackboard(object):
                     return
                 else:
                     # shouldn't get here
-                    assert(False)
+                    return
+                    #print old_comps
+                    #print new_comp
+                    #print i, j
+                    #assert(False)
             elif c.opp_dir(new_comp):
                 if (not new_comp.strong) and (not c.strong):
                     self.assert_comparison(terms.IVar(i) == coeff * terms.IVar(j))

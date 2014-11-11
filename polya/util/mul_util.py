@@ -359,14 +359,37 @@ def preprocess_cancellations(B):
         rterm = mul_inds[c.term2.term.index] if c.term2.term.index in mul_inds else c.term2.term
         coeff = c.term2.coeff
         comp = c.comp
+        if isinstance(lterm, terms.IVar):
+            lterm = terms.MulTerm([terms.MulPair(lterm, 1)])
         if isinstance(rterm, terms.IVar):
             rterm = terms.MulTerm([terms.MulPair(rterm, 1)])
-        for p in rterm.args:
+        args_to_cancel = []
+        for j in range(len(rterm.args)):
+            p = rterm.args[j]
             s = B.sign(p.term.index)
             if s != 0 or (B.implies_zero_comparison(p.term.index, terms.NE) and p.exponent%2 == 0):
-                cancel = terms.MulTerm([terms.MulPair(p.term,-p.exponent)])
-                rterm, lterm = (rterm * cancel).canonize().term, (lterm * cancel).canonize().term
+                #cancel = terms.MulTerm([terms.MulPair(p.term,-p.exponent)])
+                #rterm, lterm = (rterm * cancel).canonize().term, (lterm * cancel).canonize().term
+                args_to_cancel.append(j)
+                try:
+                    k = next(i for i in range(len(lterm.args)) if lterm.args[i].term.index ==
+                                                                  p.term.index)
+                    if lterm.args[k].exponent == p.exponent:
+                        lterm.args.pop(k)
+                    else:
+                        lterm.args[k].exponent -= p.exponent
+                except StopIteration:
+                    lterm *= terms.MulTerm([terms.MulPair(p.term,-p.exponent)])
                 comp = terms.comp_reverse(comp) if (s < 0 and p.exponent % 2 == 1) else comp
+
+        rterm = terms.MulTerm([rterm.args[k] for k in range(len(rterm.args)) if
+                               k not in args_to_cancel])
+        if len(rterm.args) == 0:
+            rterm = terms.One()
+        if len(lterm.args) == 0:
+            lterm = terms.One()
+
+        lterm, rterm = lterm.canonize().term, rterm.canonize().term
 
         if B.has_name(lterm)[0] and B.has_name(rterm)[0]:
             B.assert_comparison(terms.comp_eval[comp](lterm, coeff * rterm))

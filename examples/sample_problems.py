@@ -124,7 +124,7 @@ examples.append(Example(
 ))
 
 examples.append(Example(
-    hyps=[u > 0, v > 0, log(x) > 2 * u + v],
+    hyps=[u > 0, v > 0, x > 0, log(x) > 2 * u + v],
     conc=(x > 1),
     comment='Discussed in Avigad, Lewis, and Roux (2014)'
 ))
@@ -560,7 +560,8 @@ examples.append(Example(
     hyps=[x>0, y>0, z>0],
     conc=(x**2/y**2 + y**2/z**2 + z**2/x**2 >= x/z + y/x + z/y),
     split_depth = 3, split_breadth=15,
-    comment="We should not solve this even with case splits. But it's a good stress test for split."
+    comment="We should not solve this even with case splits.",
+    omit=True
 ))
 
 examples.append(Example(
@@ -571,7 +572,8 @@ examples.append(Example(
 
 examples.append(Example(
     hyps=[a>0, b>0, c>0],
-    conc=(a/(b+c) + b/(c+a) + c/(a+b) >= fractions.Fraction(3, 2))
+    conc=(a/(b+c) + b/(c+a) + c/(a+b) >= fractions.Fraction(3, 2)),
+    omit=True
 ))
 
 
