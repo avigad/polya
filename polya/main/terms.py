@@ -568,7 +568,7 @@ floor = Func('floor', 1)
 def ceil_canonize(func_term):
     # replace ceil(t) by -floor(-t)
     arg = func_term.args[0]
-    return (floor(arg * -1)).canonize * -1
+    return (floor(arg * -1)).canonize() * -1
 
 ceil = Func('ceil', 1, ceil_canonize)
 

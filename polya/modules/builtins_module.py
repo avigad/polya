@@ -39,23 +39,22 @@ class BuiltinsModule:
         Adds axioms for sin, cos, tan, floor
         """
         timer.start(timer.BUILTIN)
-        if (not self.added['sin'] and
-                any(isinstance(t, terms.FuncTerm) and t.func == sin for t in B.term_defs)):
+        ts = [B.term_defs[i] for i in range(B.num_terms)]
+        funcs = [t.func.name for t in ts if isinstance(t, terms.FuncTerm)]
+
+        if (not self.added['sin'] and 'sin' in funcs):
             self.am.add_axioms(sin_axioms)
             self.added['sin'] = True
 
-        if (not self.added['cos'] and
-                any(isinstance(t, terms.FuncTerm) and t.func == cos for t in B.term_defs)):
+        if (not self.added['cos'] and 'cos' in funcs):
             self.am.add_axioms(cos_axioms)
             self.added['cos'] = True
 
-        if (not self.added['tan'] and
-                any(isinstance(t, terms.FuncTerm) and t.func == tan for t in B.term_defs)):
+        if (not self.added['tan'] and 'tan' in funcs):
             self.am.add_axioms(tan_axioms)
             self.added['tan'] = True
 
-        if (not self.added['floor'] and
-                any(isinstance(t, terms.FuncTerm) and t.func == floor for t in B.term_defs)):
+        if (not self.added['floor'] and 'floor' in funcs):
             self.am.add_axioms(floor_axioms)
             self.added['floor'] = True
         timer.stop(timer.BUILTIN)

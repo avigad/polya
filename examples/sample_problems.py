@@ -34,8 +34,6 @@ r, s, t, u, v, w, x, y, z = Vars('r, s, t, u, v, w, x, y, z')
 eps = Var('eps')
 
 f = Func('f')
-#exp = Func('exp')
-ceil = Func('ceil')
 
 examples = list()
 
@@ -232,14 +230,12 @@ examples.append(Example(
 ))
 
 examples.append(Example(
-    axioms=[Forall([x], ceil(x) >= x)],
     hyps=[a < b, x > a, m >= ceil((b - a) / (x - a))],
     conc=(a + (b - a) / (m + 1) < x)
 ))
 
 examples.append(Example(
-    axioms=[Forall([x], ceil(x) >= x),
-            Forall([m], Implies(m > 0, f(ceil(m)) < a + (b - a) / (ceil(m))))],
+    axioms=[Forall([m], Implies(m > 0, f(ceil(m)) < a + (b - a) / (ceil(m))))],
     hyps=[a < b, x > a, m >= ((b - a) / (x - a))],
     conc=(f(ceil(m)) < x),
     comment='Discussed in Avigad, Lewis, and Roux (2014)'
@@ -268,63 +264,10 @@ examples.append(Example(
     comment='Discussed in Avigad, Lewis, and Roux (2014)'
 ))
 
-
-
-#
-# Polya does not get these.
-#
-
-
-
-
-#
-# Some new ones
-#
-
-
-#
-# cases where Polya fails
-# TODO: update this
-#
-
-
-
-examples.append(Example(
-    hyps=[0 < x, y < z, y < 0, z > 0],
-    conc=(x * y < x * z)
-))
-
-examples.append(Example(
-    hyps=[0 < x, y < z, y == 0, z > 0],
-    conc=(x * y < x * z)
-))
-
-examples.append(Example(
-    hyps=[x > 1],
-    conc=(1 + y**2 * x >= 1 + y**2),
-    split_depth=1,
-    split_breadth=10
-))
-
-examples.append(Example(
-    hyps=[x > 1, z == y**2],
-    conc=(1 + z * x >= 1 + z)
-))
-
-# Polya does not refute the hypotheses in the next example, although there is a contradiction.
-# we get t6 = t1*t3*t5, t10=t3*t5, t1>0, t10>0, t6<0.
-# but because the signs of t1 and t3 are unknown, the mul routine cannot find that contradiction.
-examples.append(Example(
-    axioms=[Forall([x, y], f((x * y) / 2) <= (f(x) * f(y)) / 2)],
-    hyps=[z > 0, z * f(x) * f(y) < 0, 4 * z * f(x * y / 2) > 0],
-    comment='Polya needs a split on f(x).',
-    split_depth=3,
-    split_breadth=10
-))
-
 examples.append(Example(
     hyps=[x ** 2 + 2 * x + 1 < 0],
-    comment='An example where the method does not terminate.',
+    comment='Discussed in Avigad, Lewis, and Roux (2014). ' +
+            'An example where the method does not terminate.',
     omit=True
 ))
 
@@ -392,6 +335,46 @@ examples.append(Example(
     hyps=[a**21 > 0, a**3 < 1, b**55 > 0, b < 1, a + b < a * b]
 ))
 
+examples.append(Example(
+    hyps=[0 < x, y < z, y < 0, z > 0],
+    conc=(x * y < x * z)
+))
+
+examples.append(Example(
+    hyps=[0 < x, y < z, y == 0, z > 0],
+    conc=(x * y < x * z)
+))
+
+examples.append(Example(
+    hyps=[x > 1],
+    conc=(1 + y**2 * x >= 1 + y**2),
+    split_depth=1,
+    split_breadth=10
+))
+
+examples.append(Example(
+    hyps=[x > 1, z == y**2],
+    conc=(1 + z * x >= 1 + z)
+))
+
+examples.append(Example(
+    hyps=[x > 0, x * y * z < 0, x * w > 0],
+    conc=(w > y * z),
+    comment="Need a case split on y to solve this.",
+    split_depth=2,
+    split_breadth=10
+))
+
+examples.append(Example(
+    hyps=[x == z, y == w, x > 0, y > 0],
+    conc=(x * y == z * w)
+))
+
+examples.append(Example(
+    hyps=[x > 2 * y, x == 3 * y],
+    conc=(y > 0)
+))
+
 
 #
 # examples involving function symbols
@@ -443,10 +426,10 @@ examples.append(Example(
 ))
 
 examples.append(Example(
-    hyps=[x > 0, x*y*z < 0, x * w > 0],
-    conc=(w > y * z),
-    comment="Need a case split on y to solve this.",
-    split_depth=2,
+    axioms=[Forall([x, y], f((x * y) / 2) <= (f(x) * f(y)) / 2)],
+    hyps=[z > 0, z * f(x) * f(y) < 0, 4 * z * f(x * y / 2) > 0],
+    comment='Polya needs a split on f(x).',
+    split_depth=3,
     split_breadth=10
 ))
 
@@ -457,15 +440,18 @@ examples.append(Example(
 
 examples.append(Example(
     hyps=[x <= y],
-    conc=(minm(x, y) == x)))
+    conc=(minm(x, y) == x)
+))
 
 examples.append(Example(
     hyps=[0 < x, x <= y],
-    conc=(2 * x + minm(w, z) < 3 * y + w)))
+    conc=(2 * x + minm(w, z) < 3 * y + w)
+))
 
 examples.append(Example(
     hyps=[x < u, y < u, z < u, x < v, y < v, z < v],
-    conc=(maxm(x, y, z) < minm(u, v))))
+    conc=(maxm(x, y, z) < minm(u, v))
+))
 
 examples.append(Example(
     hyps=[x < y, u < v],
@@ -486,8 +472,13 @@ examples.append(Example(
 ))
 
 examples.append(Example(
-#    axioms=[Forall([x, y], abs(x + y) <= abs(x) + abs(y))],
     conc=(abs(x - z) <= abs(x - y) + abs(y - z))
+))
+
+examples.append(Example(
+    conc=(abs(2 * x - z) <= abs(2 * x - y) + abs(y - z)),
+    split_depth=1,
+    split_breadth=10
 ))
 
 examples.append(Example(
@@ -499,7 +490,6 @@ examples.append(Example(
 #
 # exp and log
 #
-
 
 examples.append(Example(
     conc=(exp(x + y) == exp(x) * exp(y))
@@ -516,69 +506,32 @@ examples.append(Example(
 ))
 
 
-examples.append(Example(
-    hyps=[y > 0],
-    terms=[exp(x + 2 * y)],
-    conc=(exp(minm(x + y, x + 2 *y)) < exp(x) * (exp(y) ** 2))
-))
-
-
-
-
-examples.append(Example(
-
-    conc=(abs(2 * x - z) <= abs(2 * x - y) + abs(y - z)),
-    split_depth=1,
-    split_breadth=10
-))
-
 #
 # combinations of built-in functions
+#
 
-# Follows by x > log(x) >= minm(...) > 1
+# Follows from x > log(x) >= minm(...) > 1
 examples.append(Example(
     hyps=[minm(exp(3 * x), exp(9 * x**2 - 2), log(x)) > 1, x > 0],
     conc=(x>1)
 ))
 
 examples.append(Example(
-    hyps=[x != 0, y != 0, log(abs(x) + 2 * abs(y)) > 5, log(abs(y)) < root(2, 2)],
-    #conc=(x > exp(-2))
-))
-
-examples.append(Example(
     terms=[log(exp(3 * x))],
-    conc=(log(maxm(exp(2 * x), exp(3 * x))) >= 3 * x),
-    comment='Discussed in Avigad, Lewis, and Roux (2014)'
-))
-
-
-
-#
-# varia
-#
-
-examples.append(Example(
-    hyps=[x == z, y == w, x > 0, y > 0],
-    conc=(x * y == z * w)
-))
-
-examples.append(Example(
-    hyps=[x > 2 * y, x == 3 * y],
-    conc=(y > 0)
+    conc=(log(maxm(exp(2 * x), exp(3 * x))) >= 3 * x)
 ))
 
 
 #
-# problems we don't get
+# problems Polya does not get
 #
-
 
 # The Pythagorean Theorem.
 a1, a2, a3, b1, b2, b3 = Vars('a1 a2 a3 b1 b2 b3')
 examples.append(Example(
-    hyps=[(b2-b1)/(a2-a1) == -(a3-a2)/(b3-b2)],
-    conc=(root(2, (b3-b1)**2 + (a3-a1)**2) == root(2, (b2-b1)**2 + (a2 - a1)**2) + root(2, (b3-b2)**2 - (a3-a2)**2)),
+    hyps=[(b2-  b1) / (a2 - a1) == -(a3 - a2) / (b3 - b2)],
+    conc=(root(2, (b3 - b1)**2 + (a3 - a1)**2) == root(2, (b2 - b1)**2 + (a2 - a1)**2) +
+          root(2, (b3 - b2)**2 - (a3 - a2)**2)),
     split_depth=6, split_breadth=10,
     omit=True
 ))
@@ -586,8 +539,7 @@ examples.append(Example(
 examples.append(Example(
     hyps=[-1 <= x, x <= 1],
     conc=(-1 <= 4*x**3 - 3*x),
-    comment="Need a case split on x. Along with the following, is equivalent to an example from " +
-    "McLaughlin and Harrison",
+    comment="Along with the following, is equivalent to an example from McLaughlin and Harrison",
     split_depth=1,
     split_breadth=10,
     omit=True
@@ -596,8 +548,7 @@ examples.append(Example(
 examples.append(Example(
     hyps=[-1 <= x, x <= 1],
     conc=(1 >= 4*x**3 - 3*x),
-    comment="Need a case split on x. Along with the previous, is equivalent to an example from " +
-    "McLaughlin and Harrison",
+    comment="Along with the previous, is equivalent to an example from McLaughlin and Harrison",
     split_depth=1,
     split_breadth=10,
     omit=True
