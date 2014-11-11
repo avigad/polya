@@ -557,10 +557,9 @@ examples.append(Example(
 # These came from http://web.mit.edu/~holden1/www/math/high_school/awesome_math/Inequalities.pdf
 
 examples.append(Example(
-    hyps=[],
+    hyps=[x>0, y>0, z>0],
     conc=(x**2/y**2 + y**2/z**2 + z**2/x**2 >= x/z + y/x + z/y),
     split_depth = 3, split_breadth=15,
-    omit=True,
     comment="We should not solve this even with case splits. But it's a good stress test for split."
 ))
 
