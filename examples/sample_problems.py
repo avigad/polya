@@ -529,7 +529,7 @@ examples.append(Example(
 # The Pythagorean Theorem.
 a1, a2, a3, b1, b2, b3 = Vars('a1 a2 a3 b1 b2 b3')
 examples.append(Example(
-    hyps=[(b2-  b1) / (a2 - a1) == -(a3 - a2) / (b3 - b2)],
+    hyps=[(b2-  b1) / (a2 - a1) == -(a3 - a2) / (b3 - b2), a2-a1 != 0, b3-b2!=0],
     conc=(root(2, (b3 - b1)**2 + (a3 - a1)**2) == root(2, (b2 - b1)**2 + (a2 - a1)**2) +
           root(2, (b3 - b2)**2 - (a3 - a2)**2)),
     split_depth=6, split_breadth=10,

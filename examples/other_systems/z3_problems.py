@@ -237,14 +237,14 @@ examples.append(Example(
     axioms=[Forall([x, y], Implies(x >= y, f(x) >= f(y)))],
     hyps=[u < v, 1 < v, x <= y],
     conc=(f(x) + u < v**2 + f(y)),
-    comment='Discussed in Avigad, Lewis, and Roux (2014)'
+    comment='Discussed in Avigad, Lewis, and Roux (2014). z3 fails'
 ))
 
 examples.append(Example(
     axioms=[Forall([x, y], Implies(x >= y, f(x) >= f(y)))],
     hyps=[u < v, 1 < w, 2 < s, (w + s) / 3 < v, x <= y],
     conc=(f(x) + u < v**2 + f(y)),
-    comment='Discussed in Avigad, Lewis, and Roux (2014)'
+    comment='Discussed in Avigad, Lewis, and Roux (2014). z3 fails'
 ))
 
 examples.append(Example(
@@ -259,7 +259,7 @@ examples.append(Example(
     axioms=[logprod, logpow],
     hyps=[a > 1, b != 0, c > 0, log(b**2) > 4, log(c) > 1],
     conc=(log(a * b**2 * c**3) > 7),
-    comment='Discussed in Avigad, Lewis, and Roux (2014)'
+    comment='Discussed in Avigad, Lewis, and Roux (2014). z3 fails'
 ))
 
 examples.append(Example(
@@ -323,7 +323,7 @@ examples.append(Example(
     hyps=[0 < x, x < y, u < v],
     axioms=[expmon1],
     conc=(2 * u + exp(1 + x + x**4) <= 2 * v + exp(1 + y + y**4)),
-    comment='Discussed in Avigad, Lewis, and Roux (2014)'
+    comment='Discussed in Avigad, Lewis, and Roux (2014). z3 fails'
 ))
 
 examples.append(Example(
@@ -342,7 +342,7 @@ examples.append(Example(
     axioms=[exppos, expmon2],
     hyps=[0 < x, x < y],
     conc=((1 + x**2) / (2 + exp(y)) < (2 + y**2) / (1 + exp(x))),
-    comment='From Avigad and Friedman (2006).'
+    comment='From Avigad and Friedman (2006).. z3 fails'
 ))
 
 examples.append(Example(
@@ -389,14 +389,15 @@ examples.append(Example(
 examples.append(Example(
     axioms=[Forall([x], ceil(x) >= x)],
     hyps=[a < b, x > a, m >= ceil((b - a) / (x - a))],
-    conc=(a + (b - a) / (m + 1) < x)
+    conc=(a + (b - a) / (m + 1) < x),
+    comment="z3 fails"
 ))
 
 examples.append(Example(
     axioms=[Forall([m], Implies(m > 0, f(ceil(m)) < a + (b - a) / (ceil(m))))],
     hyps=[a < b, x > a, m >= ((b - a) / (x - a))],
     conc=(f(ceil(m)) < x),
-    comment='Discussed in Avigad, Lewis, and Roux (2014)'
+    comment='Discussed in Avigad, Lewis, and Roux (2014). z3 fails'
 
 ))
 
@@ -555,7 +556,8 @@ examples.append(Example(
 
 examples.append(Example(
     axioms=[Forall([x, y], g(x, y, x * y) > 0)],
-    hyps=[g(a, b, c * d) < 0, a > 0, b > 0, a == c, b == d]
+    hyps=[g(a, b, c * d) < 0, a > 0, b > 0, a == c, b == d],
+    comment='. z3 fails'
 ))
 
 examples.append(Example(
@@ -657,17 +659,22 @@ examples.append(Example(
 #
 
 examples.append(Example(
+    axioms=[expsum],
     conc=(exp(x + y) == exp(x) * exp(y))
 ))
 
 examples.append(Example(
+    axioms=[logexpinv1, logexpinv2, logmon1],
     terms=[log(exp(x))],
-    conc=(log(1 + x**2 + exp(x)) > x)
+    conc=(log(1 + x**2 + exp(x)) > x),
+    comment='. z3 fails'
 ))
 
 examples.append(Example(
+    axioms=[expmon2],
     hyps=[0 < x, 3 < y, u < v],
-    conc=(2 * u + exp(10) <= 2 * v + exp(1 + y**2))
+    conc=(2 * u + exp(10) <= 2 * v + exp(1 + y**2)),
+    comment='. z3 fails'
 ))
 
 
@@ -698,10 +705,11 @@ examples.append(Example(
 # The Pythagorean Theorem.
 a1, a2, a3, b1, b2, b3 = z3.Reals('a1 a2 a3 b1 b2 b3')
 examples.append(Example(
-    hyps=[(b2-  b1) / (a2 - a1) == -(a3 - a2) / (b3 - b2)],
-    conc=(root(2, (b3 - b1)**2 + (a3 - a1)**2) == root(2, (b2 - b1)**2 + (a2 - a1)**2) +
-          root(2, (b3 - b2)**2 - (a3 - a2)**2))
+    hyps=[(b2-  b1) / (a2 - a1) == -(a3 - a2) / (b3 - b2), a2-a1!=0, b3-b2!=0],
+    conc=(root(2, (b3 - b1)**2 + (a3 - a1)**2)**2 == root(2, (b2 - b1)**2 + (a2 - a1)**2)**2 +
+          root(2, (b3 - b2)**2 + (a3 - a2)**2)**2)
 ))
+
 
 examples.append(Example(
     hyps=[-1 <= x, x <= 1],
