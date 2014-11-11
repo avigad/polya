@@ -137,7 +137,7 @@ examples.append(Example(
 
 examples.append(Example(
     hyps=[u > 0, v > 1],
-    conc=(root(3, (u**9 * v *4)) > u**3 * v),
+    conc=(root(3, (u**9 * v**4)) > u**3 * v),
     comment='Discussed in Avigad, Lewis, and Roux (2014)'
 ))
 
