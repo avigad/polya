@@ -62,8 +62,10 @@ class Example:
             print 'Conclusion: False'
         if self.comment:
             print 'Comment: {0}'.format(self.comment)
-        if self.omit:
+        if self.omit == True:
             print "(Omitted from 'test_all')"
+        elif self.omit == 'fm':
+            print "(Omitted from FM)"
         print
 
     def set_solver_type(self, s):
@@ -127,7 +129,8 @@ def run_examples(examples, args):
         elif args[1] == 'test_all':
             t = timeit.default_timer()
             for i in range(len(examples)):
-                if not examples[i].omit:
+                if not (examples[i].omit == True or (examples[i].omit == 'fm'
+                                                     and examples[i].solver == 'fm')):
                     print '*** Example {0!s} ***'.format(i)
                     examples[i].test()
             print 'Total:', round(timeit.default_timer()-t, 3), 'seconds'
@@ -135,11 +138,14 @@ def run_examples(examples, args):
         elif args[1] == 'test_all_comp':
             t = timeit.default_timer()
             for i in range(len(examples)):
-                if not examples[i].omit:
+                if not (examples[i].omit == True):
                     print '*** Example {0!s} ***'.format(i)
-                    examples[i].set_solver_type('fm')
-                    print '[Fourier-Motzkin]'
-                    examples[i].test()
+                    if examples[i].omit == 'fm':
+                        print '[Fourier Motzkin run omitted]'
+                    else:
+                        examples[i].set_solver_type('fm')
+                        print '[Fourier-Motzkin]'
+                        examples[i].test()
                     examples[i].set_solver_type('poly')
                     print '[Poly]'
                     examples[i].test()
