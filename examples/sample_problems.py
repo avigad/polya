@@ -190,7 +190,6 @@ examples.append(Example(
 ))
 
 examples.append(Example(
-    #axioms=[Forall([x, y], And(Implies(x < y, exp(x) < exp(y)), exp(x) > 0))],
     hyps=[0 < x, x < y],
     conc=((1 + x**2) / (2 + exp(y)) < (2 + y**2) / (1 + exp(x))),
     comment='From Avigad and Friedman (2006).'
@@ -474,7 +473,9 @@ examples.append(Example(
 ))
 
 examples.append(Example(
-    conc=(abs(x - z) <= abs(x - y) + abs(y - z))
+    conc=(abs(x - z) <= abs(x - y) + abs(y - z)),
+    split_depth = 1,
+    omit='fm'
 ))
 
 examples.append(Example(
@@ -486,7 +487,8 @@ examples.append(Example(
 
 examples.append(Example(
     hyps=[abs(x) < 3, abs(y) < 2, w >= 0],
-    conc=(abs(x + 2 * y + z) < (7 + abs(z)) * exp(w))
+    conc=(abs(x + 2 * y + z) < (7 + abs(z)) * exp(w)),
+    omit='fm'
 ))
 
 
