@@ -26,6 +26,12 @@ lemma "(0 :: real) < 1 + y^2"
 by (smt power2_less_0)
 
 (* sledgehammer and auto fail on this *)
+lemma "(1::real) < x ==> (1 + y^2) * x > (1 + y^2)"
+  apply (subst mult.right_neutral [of "1 + y^2", symmetric])
+  apply (rule mult_le_less_imp_less, auto)
+by (rule one_plus_square_gt_0) 
+
+(* sledgehammer and auto fail on this *)
 lemma "(0::real) < x ==> x < 1 ==> 1 / (1 - x) > 1 / (1 - x^2)"
   apply (auto simp add: field_simps eval_nat_numeral)
   apply (rule mult_imp_div_pos_less)
@@ -58,12 +64,6 @@ lemma "(0::real) < u ==> u < (v^2 + 23)^3 ==> 0 < z ==> z + 1 < w ==>
   apply (rule power_strict_increasing)
 by auto
 
-(* sledgehammer and auto fail on this *)
-lemma "(1::real) < x ==> (1 + y^2) * x > (1 + y^2)"
-  apply (subst mult.right_neutral [of "1 + y^2", symmetric])
-  apply (rule mult_le_less_imp_less, auto)
-by (rule one_plus_square_gt_0) 
-
 (* sledgehammer gets this easily *)
 lemma "(ALL x y. x <= y --> f x <= f y) ==> (u::real) < v ==> (x::real) <= y ==> 
     u + f x < v + f y"
@@ -89,7 +89,6 @@ by (rule mult_strict_mono, auto)
 (* sledgehammer finds a solution with Z3 *)
 lemma "(ALL x y. x <= y --> f x <= f y) ==> (u::real) < v ==> 1 < v ==> (x::real) <= y ==> 
     f x + u < (1 + v)^10 + f y"
-
 by (smt power_one_right power_strict_increasing_iff)
 
 (* sledgehammer gets this with resolution *)
@@ -101,6 +100,42 @@ lemma "(ALL x. f x <= 2) ==> (0::real) < w ==> u < v ==> u + w * (f x - 1) < v +
   apply (erule add_less_le_mono)
   apply (subst (2) mult.right_neutral [of w, symmetric])
   by (rule mult_left_mono, auto)
+
+
+lemma "(z :: real) > exp x \<Longrightarrow> w > exp y \<Longrightarrow> z^3 * w^2 > exp (3 * x + 2 * y)"
+apply (subgoal_tac "exp (3 * x + 2 * y) = (exp x)^3 * (exp y)^2")
+prefer 2
+apply (simp add: exp_add exp_real_of_nat_mult [symmetric])
+apply (erule ssubst)
+apply (rule mult_strict_mono)
+apply (rule power_strict_mono, auto)
+apply (rule power_strict_mono, auto)
+apply (rule le_less_trans)
+prefer 2
+apply assumption
+by auto
+
+lemma "(x :: real) < y \<Longrightarrow> u \<le> v \<Longrightarrow> u + min (x + 2 * u) (y + 2 * v) \<le> x + 3 * v"
+by auto
+
+lemma "y > (0::real) \<Longrightarrow> abs (3 * x + 2 * y + 5) < 4 * abs(x) + 3 * y + 6"
+by (auto split: abs_split)
+
+lemma "(u::real) > 0 \<Longrightarrow> v > 0 \<Longrightarrow> root 3 (u^9 * v^4) > u^3 * v"
+sorry
+
+lemma "exp(max (abs (x::real)) y) \<ge> 1"
+by auto
+
+lemma "y > (0::real) \<Longrightarrow> ln (1 + abs(x) + y) > 0"
+by auto
+
+lemma "ln (1 + abs(x) + y^4) > 0"
+sorry
+
+
+
+
 
 (* sledgehammer finds a solution using resolution *)
 lemma "(0::real) < x ==> x < y ==> u < v ==>
@@ -264,22 +299,6 @@ lemma "i > (0::real) ==> abs(f y - f x) < 1 / (2 * (i + 1)) ==>
   apply (rule order_less_le_trans)
   apply (erule (1) add_strict_mono)
 by (auto simp add: field_simps)
-
-lemma "(z :: real) > exp x \<Longrightarrow> w > exp y \<Longrightarrow> z^3 * w^2 > exp (3 * x + 2 * y)"
-apply (subgoal_tac "exp (3 * x + 2 * y) = (exp x)^3 * (exp y)^2")
-prefer 2
-apply (simp add: exp_add exp_real_of_nat_mult [symmetric])
-apply (erule ssubst)
-apply (rule mult_strict_mono)
-apply (rule power_strict_mono, auto)
-apply (rule power_strict_mono, auto)
-apply (rule le_less_trans)
-prefer 2
-apply assumption
-by auto
-
-lemma "(x :: real) < y \<Longrightarrow> u \<le> v \<Longrightarrow> u + min (x + 2 * u) (y + 2 * v) \<le> x + 3 * v"
-by auto
 
 
 

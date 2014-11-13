@@ -226,8 +226,8 @@ examples.append(Example(
     hyps=[i >= 0, abs(f(y) - f(x)) < 1 / (2 * (i + 1)), abs(f(z) - f(y)) < 1 / (2 * (i + 1))],
     conc=(abs(f(z) - f(x)) < 1 / (i + 1)),
     comment='Discussed in Avigad, Lewis, and Roux (2014)',
-    split_depth=1, split_breadth=10,
-    omit='fm'
+#    split_depth=1, split_breadth=10,
+#    omit='fm'
 ))
 
 examples.append(Example(
@@ -247,8 +247,6 @@ examples.append(Example(
     hyps=[0 < x, y < z],
     conc=(x * y < x * z),
     comment='Discussed in Avigad, Lewis, and Roux (2014)'
-#    split_depth=1,
-#    split_breadth=10
 ))
 
 examples.append(Example(
@@ -473,9 +471,9 @@ examples.append(Example(
 ))
 
 examples.append(Example(
-    conc=(abs(x - z) <= abs(x - y) + abs(y - z)),
-    split_depth = 1,
-    omit='fm'
+    conc=(abs(x - z) <= abs(x - y) + abs(y - z))
+#    split_depth = 1,
+#    omit='fm'
 ))
 
 examples.append(Example(

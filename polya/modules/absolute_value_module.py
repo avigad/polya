@@ -122,19 +122,7 @@ class AbsModule:
 
 if __name__ == '__main__':
     pass
-#     S = Solver()
-#     am = function_module.AxiomModule()
-#     m = AbsModule(am)
-#     S.append_module(am)
-#     S.append_module(m)
-#
-#     x, y, z, w = terms.Vars('x y z w')
-# #    S.prove(abs(3 * x + 2 * y) <= 3 * abs(x) + 4 * abs(y))
-#
-#     S.assume(y > 0)
-#     S.prove(abs(3 * x + 2 * y + 5) < 4 * abs(x) + 3 * y + 4)
 
-#    S.prove(abs(x - y) >= abs(y) - abs(x))
 
 
 

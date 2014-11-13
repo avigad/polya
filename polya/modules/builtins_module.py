@@ -14,8 +14,10 @@ import polya.main.formulas as formulas
 import polya.util.timer as timer
 
 Forall, And, Implies = formulas.Forall, formulas.And, formulas.Implies
-x = terms.Var('x')
 sin, cos, tan, floor = terms.sin, terms.cos, terms.tan, terms.floor
+
+x = terms.Var('x')
+y = terms.Var('y')
 
 sin_axioms = [Forall([x], And(sin(x) >= -1, sin(x) <= 1))]
 
@@ -25,6 +27,8 @@ tan_axioms = [Forall([x], tan(x) == sin(x) / cos(x))]
 
 floor_axioms = [Forall([x], And(floor(x) <= x, floor(x) > x-1))]
 
+abs_axioms=[Forall([x, y], And(abs(x + y) >= abs(x) + abs(y), abs(x - y) >= abs(x) - abs(y)))]
+
 
 class BuiltinsModule:
     def __init__(self, am):
@@ -32,7 +36,7 @@ class BuiltinsModule:
         Module must be initiated with an axiom module.
         """
         self.am = am
-        self.added = {'sin': False, 'cos': False, 'tan': False, 'floor': False}
+        self.added = {'sin': False, 'cos': False, 'tan': False, 'floor': False, 'abs': False}
 
     def update_blackboard(self, B):
         """
@@ -57,6 +61,11 @@ class BuiltinsModule:
         if (not self.added['floor'] and 'floor' in funcs):
             self.am.add_axioms(floor_axioms)
             self.added['floor'] = True
+
+        if (not self.added['abs'] and 'abs' in funcs):
+            self.am.add_axioms(abs_axioms)
+            self.added['abs'] = True
+
         timer.stop(timer.BUILTIN)
 
     def get_split_weight(self, B):
