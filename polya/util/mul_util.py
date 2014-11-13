@@ -310,7 +310,8 @@ def derive_info_from_definitions(B):
                for p in B.term_defs[key].args):  # This term is 0 * something else.
             B.assert_comparison(terms.IVar(key) == 0)
 
-        if B.implies(key, terms.NE, 0, 0):
+        if B.implies(key, terms.NE, 0, 0) and all((p.exponent > 0 or B.sign(p.term.index) > 0)
+                                                  for p in B.term_defs[key].args):
             # we have strict information about key already. So everything must have a strict sign.
             for p in B.term_defs[key].args:
                 #print 'from {0} != 0, we get {1} != 0'.format(B.term_defs[key], p.term)
