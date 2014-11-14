@@ -530,7 +530,8 @@ class AxiomModule:
         messages.announce_module('axiom module')
         n = B.num_terms + len(B.equalities.keys()) + len(B.zero_equalities)
         if n == self.num_eqs:
-            print 'No new equality information to use.'
+            messages.announce("No new information for the axiom module to use.", messages.DEBUG)
+            timer.stop(timer.FUN)
             return
         self.num_eqs = n
 

@@ -172,8 +172,10 @@ examples.append(Example(
 ))
 
 examples.append(Example(
+    axioms=[Forall([x, y], Implies(x <= y, exp(x) <= exp(y)))],
     hyps=[0 < x, x < y, u < v],
     conc=(2 * u + exp(1 + x + x**4) <= 2 * v + exp(1 + y + y**4)),
+    modules=[CongClosureModule(), AxiomModule(), FMAdditionModule(), FMMultiplicationModule()],
     comment='Discussed in Avigad, Lewis, and Roux (2014)'
 ))
 
