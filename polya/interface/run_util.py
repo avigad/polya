@@ -14,6 +14,8 @@
 
 import polya.main.messages as messages
 import polya.main.terms as terms
+import polya.modules.absolute_value_module as abs_module
+import polya.modules.exponential_module as exp_module
 import copy
 
 
@@ -40,6 +42,35 @@ def saturate_modules(B, modules):
     mid = B.identify()
     while len(B.get_new_info(mid)) > 0:
         for m in modules:
+            messages.announce(B.info_dump(), messages.DEBUG)
+            m.update_blackboard(B)
+
+
+def saturate_modules2(B, modules):
+    """Run the modules in succession on B until saturation.
+    Delays the use of the "expensive" abs and exp modules.
+
+    Arguments:
+    -- B: a blackboard
+    -- modules: a list of modules
+    """
+    mid = B.identify()
+    cntr = 0
+    amodules, bmodules = [], []
+    for m in modules:
+        if isinstance(m, (abs_module.AbsModule, exp_module.ExponentialModule)):
+            bmodules.append(m)
+        else:
+            amodules.append(m)
+    while len(B.get_new_info(mid)) > 0 and cntr < 3:
+        for m in amodules:
+            messages.announce(B.info_dump(), messages.DEBUG)
+            m.update_blackboard(B)
+    for m in bmodules:
+        messages.announce(B.info_dump(), messages.DEBUG)
+        m.update_blackboard(B)
+    while len(B.get_new_info(mid)) > 0:
+        for m in amodules + bmodules:
             messages.announce(B.info_dump(), messages.DEBUG)
             m.update_blackboard(B)
 

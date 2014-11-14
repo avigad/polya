@@ -506,6 +506,7 @@ class AxiomModule:
             clauses = formulas.cnf(a)
             self.axioms.update(formulas.Axiom(c) for c in clauses)
         self.used_envs = set()
+        self.num_eqs = 0
 
     def add_axiom(self, axiom):
         """
@@ -527,6 +528,12 @@ class AxiomModule:
         """
         timer.start(timer.FUN)
         messages.announce_module('axiom module')
+        n = B.num_terms + len(B.equalities.keys()) + len(B.zero_equalities)
+        if n == self.num_eqs:
+            print 'No new equality information to use.'
+            return
+        self.num_eqs = n
+
         for a in self.axioms:
             messages.announce("Instantiating axiom: {}".format(a), messages.DEBUG)
             clauses = instantiate(a, self.used_envs, B)
