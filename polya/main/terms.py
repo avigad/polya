@@ -572,6 +572,17 @@ def ceil_canonize(func_term):
 
 ceil = Func('ceil', 1, ceil_canonize)
 
+
+def exp_canonize(func_term):
+    """
+    This is unused, for now- we don't necessarily want to canonize this way.
+    """
+    arg = func_term.args[0].canonize()
+    if arg.coeff == 1:
+        return STerm(1, exp(arg))
+    else:
+        return STerm(1, exp(STerm(1, arg.term ** arg.coeff)))
+
 exp, log = Func('exp', 1), Func('log', 1)
 
 

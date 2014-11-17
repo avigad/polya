@@ -180,6 +180,13 @@ examples.append(Example(
 ))
 
 examples.append(Example(
+    hyps=[0 < x, x < y, u < v],
+    conc=(2 * u + exp(1 + x + x**4) <= 2 * v + exp(1 + y + y**4)),
+    comment='Discussed in Avigad, Lewis, and Roux (2014). Takes much longer with all axioms present',
+    omit=True
+))
+
+examples.append(Example(
     hyps=[0 <= n, n < (K / 2) * x, 0 < c, 0 < eps, eps < 1],
     conc=((1 + eps / (3 * (c + 3))) * n < K * x),
     comment='Discussed in Avigad, Lewis, and Roux (2014)'
