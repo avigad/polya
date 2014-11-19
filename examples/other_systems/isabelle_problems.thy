@@ -115,6 +115,9 @@ prefer 2
 apply assumption
 by auto
 
+lemma "(u::real) > 0 \<Longrightarrow> v > 0 \<Longrightarrow> ln x > 2 * u + v \<Longrightarrow> x > 1"
+sorry
+
 lemma "(x :: real) < y \<Longrightarrow> u \<le> v \<Longrightarrow> u + min (x + 2 * u) (y + 2 * v) \<le> x + 3 * v"
 by auto
 

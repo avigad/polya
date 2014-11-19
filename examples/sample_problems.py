@@ -168,6 +168,7 @@ examples.append(Example(
     hyps=[abs(x) < 3, abs(y) < 2, w <= 0, exp(0) == 1],
     conc=(abs(x + 2 * y + z)  * exp(w) < (7 + abs(z))),
     comment='Discussed in Avigad, Lewis, and Roux (2014)',
+#    modules=[CongClosureModule(), AxiomModule(), FMAdditionModule(), FMMultiplicationModule()]
     omit='fm'
 ))
 
@@ -175,7 +176,7 @@ examples.append(Example(
     axioms=[Forall([x, y], Implies(x <= y, exp(x) <= exp(y)))],
     hyps=[0 < x, x < y, u < v],
     conc=(2 * u + exp(1 + x + x**4) <= 2 * v + exp(1 + y + y**4)),
-    modules=[CongClosureModule(), AxiomModule(), FMAdditionModule(), FMMultiplicationModule()],
+#    modules=[CongClosureModule(), AxiomModule(), FMAdditionModule(), FMMultiplicationModule()],
     comment='Discussed in Avigad, Lewis, and Roux (2014)'
 ))
 
@@ -489,12 +490,14 @@ examples.append(Example(
     conc=(abs(2 * x - z) <= abs(2 * x - y) + abs(y - z)),
     split_depth=1,
     split_breadth=10,
+#    modules=[CongClosureModule(), AxiomModule(), FMAdditionModule(), FMMultiplicationModule()]
     omit='fm'
 ))
 
 examples.append(Example(
     hyps=[abs(x) < 3, abs(y) < 2, w >= 0],
     conc=(abs(x + 2 * y + z) < (7 + abs(z)) * exp(w)),
+#    modules=[CongClosureModule(), AxiomModule(), FMAdditionModule(), FMMultiplicationModule()],
     omit='fm'
 ))
 
