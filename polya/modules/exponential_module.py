@@ -93,6 +93,27 @@ def exp_factor_sum(B):
             B.assert_comparison(terms.IVar(i) == t2.coeff * n)
 
 
+def exp_factor_both(B):
+    """
+    Adds axioms of the form exp(c1 * t1 + ... + cn * tn) = exp(t1)^c1 * ... * exp(tn)^cn (also
+    when n = 1).
+    """
+    exp_inds = [i for i in range(B.num_terms) if (isinstance(B.term_defs[i], terms.FuncTerm)
+                                                  and B.term_defs[i].func == terms.exp)]
+
+    for i in exp_inds:
+        coeff, t = B.term_defs[i].args[0].coeff, B.term_defs[B.term_defs[i].args[0].term.index]
+        if isinstance(t, terms.AddTerm):
+            margs = [B.term_name((terms.exp(a) ** coeff).canonize().term) for a in t.args]
+            t2 = reduce(lambda x, y: x*y, margs, 1).canonize()
+            n = B.term_name(t2.term)
+            B.assert_comparison(terms.IVar(i) == t2.coeff * n)
+        elif coeff != 1:
+            term2 = (terms.exp(t)**coeff).canonize()
+            n = B.term_name(term2.term)
+            B.assert_comparison(terms.IVar(i) == term2.coeff * n)
+
+
 def log_factor_product(B):
     """
     Takes a Blackboard and looks for terms of the form log(a*b*...).
@@ -154,6 +175,7 @@ class ExponentialModule:
             B.assert_comparison(terms.log(1) == 0)
         exp_factor_constant(B)
         exp_factor_sum(B)
+        #exp_factor_both(B)
         log_factor_exponent(B)
         log_factor_product(B)
         timer.stop(timer.EXP)
