@@ -37,6 +37,7 @@ from polya.modules.exponential_module import ExponentialModule
 from polya.modules.absolute_value_module import AbsModule
 from polya.modules.minimum_module import MinimumModule
 from polya.modules.nth_root_module import NthRootModule
+from polya.modules.builtins_module import BuiltinsModule
 from polya.main.blackboard import Blackboard
 from polya.interface.example import run_examples
 from polya.main.messages import set_verbosity, quiet, modules, low, normal, debug

@@ -27,12 +27,12 @@ class AbsModule:
         The abs module must be instantiated with a function module to add axioms to.
         """
         self.am = am
-        x = terms.Var('x')
-        self.am.add_axiom(formulas.Forall([x], terms.abs_val(x) >= 0))
-        self.am.add_axiom(formulas.Forall([x], terms.abs_val(x) >= x))
-        self.am.add_axiom(formulas.Forall([x], terms.abs_val(x) >= -x))
-        self.am.add_axiom(formulas.Forall([x], formulas.Implies(x >= 0, terms.abs_val(x) == x)))
-        self.am.add_axiom(formulas.Forall([x], formulas.Implies(x <= 0, terms.abs_val(x) == -x)))
+        # x = terms.Var('x')
+        # self.am.add_axiom(formulas.Forall([x], terms.abs_val(x) >= 0))
+        # self.am.add_axiom(formulas.Forall([x], terms.abs_val(x) >= x))
+        # self.am.add_axiom(formulas.Forall([x], terms.abs_val(x) >= -x))
+        # self.am.add_axiom(formulas.Forall([x], formulas.Implies(x >= 0, terms.abs_val(x) == x)))
+        # self.am.add_axiom(formulas.Forall([x], formulas.Implies(x <= 0, terms.abs_val(x) == -x)))
 
     def update_blackboard(self, B):
         """

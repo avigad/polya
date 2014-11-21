@@ -140,28 +140,28 @@ class ExponentialModule:
         Asserts a list of axioms to this module.
         """
         self.am = am
-        x, y = terms.Vars('x y')
-        self.am.add_axiom(formulas.Forall([x], terms.exp(x) > 0))
-#        self.am.add_axiom(formulas.Forall([x], terms.exp(x) > x))
-        self.am.add_axiom(formulas.Forall([x], formulas.Implies(x >= 0, terms.exp(x) >= 1)))
-        self.am.add_axiom(formulas.Forall([x], formulas.Implies(x > 0, terms.exp(x) > 1)))
-        self.am.add_axiom(formulas.Forall([x, y],
-                                          formulas.Implies(x < y, terms.exp(x) < terms.exp(y))))
-        self.am.add_axiom(formulas.Forall([x, y],
-                                          formulas.Implies(x <= y, terms.exp(x) <= terms.exp(y))))
-        self.am.add_axiom(formulas.Forall([x, y],
-                                          formulas.Implies(x != y, terms.exp(x) != terms.exp(y))))
-        self.am.add_axiom(formulas.Forall([x], formulas.Implies(x >= 1, terms.log(x) >= 0)))
-        self.am.add_axiom(formulas.Forall([x], formulas.Implies(x > 1, terms.log(x) > 0)))
-        self.am.add_axiom(formulas.Forall([x], formulas.Implies(x > 0, terms.log(x) < x)))
-        self.am.add_axiom(formulas.Forall([x, y], formulas.Implies(formulas.And(x > 0, x < y),
-                                                                   terms.log(x) < terms.log(y))))
-        self.am.add_axiom(formulas.Forall([x, y], formulas.Implies(formulas.And(x > 0, x <= y),
-                                                                   terms.log(x) <= terms.log(y))))
-        self.am.add_axiom(formulas.Forall([x, y], formulas.Implies(formulas.And(x > 0, y > 0, x != y),
-                                                                   terms.log(x) != terms.log(y))))
-        self.am.add_axiom(formulas.Forall([x], formulas.Implies(x > 0, terms.exp(terms.log(x)) == x)))
-        self.am.add_axiom(formulas.Forall([x], terms.log(terms.exp(x)) == x))
+        # x, y = terms.Vars('x y')
+#         self.am.add_axiom(formulas.Forall([x], terms.exp(x) > 0))
+# #        self.am.add_axiom(formulas.Forall([x], terms.exp(x) > x))
+#         self.am.add_axiom(formulas.Forall([x], formulas.Implies(x >= 0, terms.exp(x) >= 1)))
+#         self.am.add_axiom(formulas.Forall([x], formulas.Implies(x > 0, terms.exp(x) > 1)))
+#         self.am.add_axiom(formulas.Forall([x, y],
+#                                           formulas.Implies(x < y, terms.exp(x) < terms.exp(y))))
+#         self.am.add_axiom(formulas.Forall([x, y],
+#                                           formulas.Implies(x <= y, terms.exp(x) <= terms.exp(y))))
+#         self.am.add_axiom(formulas.Forall([x, y],
+#                                           formulas.Implies(x != y, terms.exp(x) != terms.exp(y))))
+#         self.am.add_axiom(formulas.Forall([x], formulas.Implies(x >= 1, terms.log(x) >= 0)))
+#         self.am.add_axiom(formulas.Forall([x], formulas.Implies(x > 1, terms.log(x) > 0)))
+#         self.am.add_axiom(formulas.Forall([x], formulas.Implies(x > 0, terms.log(x) < x)))
+#         self.am.add_axiom(formulas.Forall([x, y], formulas.Implies(formulas.And(x > 0, x < y),
+#                                                                    terms.log(x) < terms.log(y))))
+#         self.am.add_axiom(formulas.Forall([x, y], formulas.Implies(formulas.And(x > 0, x <= y),
+#                                                                    terms.log(x) <= terms.log(y))))
+#         self.am.add_axiom(formulas.Forall([x, y], formulas.Implies(formulas.And(x > 0, y > 0, x != y),
+#                                                                    terms.log(x) != terms.log(y))))
+#         self.am.add_axiom(formulas.Forall([x], formulas.Implies(x > 0, terms.exp(terms.log(x)) == x)))
+#         self.am.add_axiom(formulas.Forall([x], terms.log(terms.exp(x)) == x))
 
     def update_blackboard(self, B):
         """

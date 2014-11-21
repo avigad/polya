@@ -27,7 +27,38 @@ tan_axioms = [Forall([x], tan(x) == sin(x) / cos(x))]
 
 floor_axioms = [Forall([x], And(floor(x) <= x, floor(x) > x-1))]
 
-abs_axioms=[Forall([x, y], And(abs(x + y) >= abs(x) + abs(y), abs(x - y) >= abs(x) - abs(y)))]
+abs_axioms=[
+    Forall([x, y], And(abs(x + y) >= abs(x) + abs(y), abs(x - y) >= abs(x) - abs(y))),
+    formulas.Forall([x], terms.abs_val(x) >= 0),
+    formulas.Forall([x], terms.abs_val(x) >= x),
+    formulas.Forall([x], terms.abs_val(x) >= -x),
+    formulas.Forall([x], formulas.Implies(x >= 0, terms.abs_val(x) == x)),
+    formulas.Forall([x], formulas.Implies(x <= 0, terms.abs_val(x) == -x))
+]
+
+exp_log_axioms = [
+    formulas.Forall([x], terms.exp(x) > 0),
+    #formulas.Forall([x], terms.exp(x) > x),
+    formulas.Forall([x], formulas.Implies(x >= 0, terms.exp(x) >= 1)),
+    formulas.Forall([x], formulas.Implies(x > 0, terms.exp(x) > 1)),
+    formulas.Forall([x, y],
+                                      formulas.Implies(x < y, terms.exp(x) < terms.exp(y))),
+    formulas.Forall([x, y],
+                                      formulas.Implies(x <= y, terms.exp(x) <= terms.exp(y))),
+    formulas.Forall([x, y],
+                                      formulas.Implies(x != y, terms.exp(x) != terms.exp(y))),
+    formulas.Forall([x], formulas.Implies(x >= 1, terms.log(x) >= 0)),
+    formulas.Forall([x], formulas.Implies(x > 1, terms.log(x) > 0)),
+    formulas.Forall([x], formulas.Implies(x > 0, terms.log(x) < x)),
+    formulas.Forall([x, y], formulas.Implies(formulas.And(x > 0, x < y),
+                                                               terms.log(x) < terms.log(y))),
+    formulas.Forall([x, y], formulas.Implies(formulas.And(x > 0, x <= y),
+                                                               terms.log(x) <= terms.log(y))),
+    formulas.Forall([x, y], formulas.Implies(formulas.And(x > 0, y > 0, x != y),
+                                                               terms.log(x) != terms.log(y))),
+    formulas.Forall([x], formulas.Implies(x > 0, terms.exp(terms.log(x)) == x)),
+    formulas.Forall([x], terms.log(terms.exp(x)) == x)
+]
 
 
 class BuiltinsModule:
@@ -36,7 +67,8 @@ class BuiltinsModule:
         Module must be initiated with an axiom module.
         """
         self.am = am
-        self.added = {'sin': False, 'cos': False, 'tan': False, 'floor': False, 'abs': False}
+        self.added = {'sin': False, 'cos': False, 'tan': False, 'floor': False, 'abs': False,
+                      'exp': False}
 
     def update_blackboard(self, B):
         """
@@ -65,6 +97,10 @@ class BuiltinsModule:
         if (not self.added['abs'] and 'abs' in funcs):
             self.am.add_axioms(abs_axioms)
             self.added['abs'] = True
+
+        if (not self.added['exp'] and 'exp' in funcs):
+            self.am.add_axioms(exp_log_axioms)
+            self.added['exp'] = True
 
         timer.stop(timer.BUILTIN)
 
