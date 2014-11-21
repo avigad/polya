@@ -36,7 +36,7 @@ abs_axioms=[
     formulas.Forall([x], formulas.Implies(x <= 0, terms.abs_val(x) == -x))
 ]
 
-exp_log_axioms = [
+exp_axioms = [
     formulas.Forall([x], terms.exp(x) > 0),
     #formulas.Forall([x], terms.exp(x) > x),
     formulas.Forall([x], formulas.Implies(x >= 0, terms.exp(x) >= 1)),
@@ -46,7 +46,10 @@ exp_log_axioms = [
     formulas.Forall([x, y],
                                       formulas.Implies(x <= y, terms.exp(x) <= terms.exp(y))),
     formulas.Forall([x, y],
-                                      formulas.Implies(x != y, terms.exp(x) != terms.exp(y))),
+                                      formulas.Implies(x != y, terms.exp(x) != terms.exp(y)))
+]
+
+log_axioms = [
     formulas.Forall([x], formulas.Implies(x >= 1, terms.log(x) >= 0)),
     formulas.Forall([x], formulas.Implies(x > 1, terms.log(x) > 0)),
     formulas.Forall([x], formulas.Implies(x > 0, terms.log(x) < x)),
@@ -68,7 +71,7 @@ class BuiltinsModule:
         """
         self.am = am
         self.added = {'sin': False, 'cos': False, 'tan': False, 'floor': False, 'abs': False,
-                      'exp': False}
+                      'exp': False, 'log': False}
 
     def update_blackboard(self, B):
         """
@@ -99,8 +102,12 @@ class BuiltinsModule:
             self.added['abs'] = True
 
         if (not self.added['exp'] and 'exp' in funcs):
-            self.am.add_axioms(exp_log_axioms)
+            self.am.add_axioms(exp_axioms)
             self.added['exp'] = True
+
+        if (not self.added['log'] and 'log' in funcs):
+            self.am.add_axioms(log_axioms)
+            self.added['log'] = True
 
         timer.stop(timer.BUILTIN)
 
