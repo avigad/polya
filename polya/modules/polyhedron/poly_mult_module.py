@@ -197,7 +197,6 @@ class PolyMultiplicationModule:
         """
         timer.start(timer.PMUL)
         messages.announce_module('polyhedron multiplicative module')
-
         mul_util.derive_info_from_definitions(B)
 
         mul_util.preprocess_cancellations(B)

@@ -2,6 +2,7 @@ import polya.main.terms as terms
 import polya.util.num_util as num_util
 import fractions
 import math
+import copy
 
 ####################################################################################################
 #
@@ -248,10 +249,10 @@ def get_multiplicative_information(B):
     for key in B.term_defs:
         if (isinstance(B.term_defs[key], terms.MulTerm) and B.sign(key) != 0 and
                 all(B.sign(p.term.index) != 0 for p in B.term_defs[key].args)):
+            lhs, rhs = reduce_mul_term(B.term_defs[key]), terms.IVar(key)
             comparisons.append(
-                terms.TermComparison(reduce_mul_term(B.term_defs[key]), terms.EQ, terms.IVar(key))
+                terms.TermComparison(lhs, terms.EQ, rhs)
             )
-
     return comparisons
 
 ####################################################################################################
@@ -351,7 +352,7 @@ def preprocess_cancellations(B):
     pieces as we can that have sign info and check what remains for a valid comparison.
     """
 
-    mul_inds = {i:B.term_defs[i]
+    mul_inds = {i:copy.deepcopy(B.term_defs[i])
                 for i in range(len(B.term_defs)) if isinstance(B.term_defs[i],terms.MulTerm)}
     comps = []
 
@@ -418,6 +419,3 @@ def get_split_weight(B):
     return [(i, 0, 0, comp, 1) for i in range(B.num_terms) if (occurs_in_mul_term(i)
                                                                and no_sign_info(i))
             for comp in [terms.GT, terms.LT]]
-
-
-
