@@ -1,0 +1,780 @@
+*** Example 0 ***
+Hypothesis: u > 0
+Hypothesis: u < v
+Hypothesis: v < 1
+Hypothesis: x >= 2
+Hypothesis: x <= y
+Conclusion: 2 * u**2 * x < v * y**2
+Comment: Discussed in Avigad, Lewis, and Roux (2014)
+
+Conclusion is valid.
+Ran in 0.028 seconds
+
+*** Example 1 ***
+Hypothesis: x > 1
+Conclusion: (1 + y**2) * x >= 1 + y**2
+Comment: Discussed in Avigad, Lewis, and Roux (2014)
+
+Conclusion is valid.
+Ran in 0.028 seconds
+
+*** Example 2 ***
+Hypothesis: x > 0
+Hypothesis: x < 1
+Conclusion: (-1*x + 1)**-1 > (-1*x**2 + 1)**-1
+Comment: Discussed in Avigad, Lewis, and Roux (2014)
+
+Conclusion is valid.
+Ran in 0.025 seconds
+
+*** Example 3 ***
+Hypothesis: u > 0
+Hypothesis: u < v
+Hypothesis: z > 0
+Hypothesis: 1 + z < w
+Conclusion: (u + v + z)**3 < (u + v + w + 1)**5
+Comment: Discussed in Avigad, Lewis, and Roux (2014)
+
+Conclusion is valid.
+Ran in 0.041 seconds
+
+*** Example 4 ***
+Hypothesis: u > 0
+Hypothesis: u < v
+Hypothesis: z > 0
+Hypothesis: 1 + z < w
+Conclusion: (u + v + z)**33 < (u + v + w + 1)**55
+Comment: Discussed in Avigad, Lewis, and Roux (2014)
+
+Conclusion is valid.
+Ran in 0.038 seconds
+
+*** Example 5 ***
+Hypothesis: u > 0
+Hypothesis: u < (23 + v**2)**3
+Hypothesis: z > 0
+Hypothesis: 1 + z < w
+Conclusion: (u + (23 + v**2)**3 + z)**3 < (u + (23 + v**2)**3 + w + 1)**5
+
+Conclusion is valid.
+Ran in 0.058 seconds
+
+*** Example 6 ***
+Axiom: Forall([x], f(x) <= 1)
+Hypothesis: u < v
+Hypothesis: w > 0
+Conclusion: u + w * f(x) < v + w
+Comment: Discussed in Avigad, Lewis, and Roux (2014)
+
+Conclusion is valid.
+Ran in 0.012 seconds
+
+*** Example 7 ***
+Axiom: Forall([x, y], Implies(x >= y, f(x) >= f(y)))
+Hypothesis: u < v
+Hypothesis: x <= y
+Conclusion: u + f(x) < v + f(y)
+Comment: Discussed in Avigad, Lewis, and Roux (2014)
+
+Conclusion is valid.
+Ran in 0.008 seconds
+
+*** Example 8 ***
+Axiom: Forall([x], f(x) <= 2)
+Hypothesis: u < v
+Hypothesis: w > 0
+Conclusion: u + w * (-1 + f(x)) < v + w
+Comment: Discussed in Avigad, Lewis, and Roux (2014)
+
+Conclusion is valid.
+Ran in 0.015 seconds
+
+*** Example 9 ***
+Axiom: Forall([x, y], Implies(x >= y, f(x) >= f(y)))
+Hypothesis: u < v
+Hypothesis: v > 1
+Hypothesis: x <= y
+Conclusion: f(x) + u < v**2 + f(y)
+Comment: Discussed in Avigad, Lewis, and Roux (2014)
+
+Conclusion is valid.
+Ran in 0.016 seconds
+
+*** Example 10 ***
+Axiom: Forall([x, y], Implies(x >= y, f(x) >= f(y)))
+Hypothesis: u < v
+Hypothesis: w > 1
+Hypothesis: s > 2
+Hypothesis: (1/3)*(w + s) < v
+Hypothesis: x <= y
+Conclusion: f(x) + u < v**2 + f(y)
+Comment: Discussed in Avigad, Lewis, and Roux (2014)
+
+Conclusion is valid.
+Ran in 0.041 seconds
+
+*** Example 11 ***
+Hypothesis: z > exp(x)
+Hypothesis: w > exp(y)
+Conclusion: w**2 * z**3 > exp(3*x + 2*y)
+Comment: Discussed in Avigad, Lewis, and Roux (2014)
+
+Conclusion is valid.
+Ran in 0.572 seconds
+
+*** Example 12 ***
+Hypothesis: a > 1
+Hypothesis: b != 0
+Hypothesis: c > 0
+Hypothesis: log(b**2) > 4
+Hypothesis: log(c) > 1
+Conclusion: log(c**3 * b**2 * a) > 7
+Comment: Discussed in Avigad, Lewis, and Roux (2014)
+
+Conclusion is valid.
+Ran in 0.405 seconds
+
+*** Example 13 ***
+Hypothesis: u > 0
+Hypothesis: v > 0
+Hypothesis: x > 0
+Hypothesis: log(x) > 2*u + v
+Conclusion: x > 1
+Comment: Discussed in Avigad, Lewis, and Roux (2014)
+
+Conclusion is valid.
+Ran in 0.023 seconds
+
+*** Example 14 ***
+Hypothesis: x < y
+Hypothesis: u <= v
+Conclusion: u + minm(2*u + x, 2*v + y) <= 3*v + x
+Comment: Discussed in Avigad, Lewis, and Roux (2014)
+
+Conclusion is valid.
+Ran in 0.007 seconds
+
+*** Example 15 ***
+Hypothesis: u > 0
+Hypothesis: v > 1
+Conclusion: root_3(v**4 * u**9) > v * u**3
+Comment: Discussed in Avigad, Lewis, and Roux (2014)
+
+Conclusion is valid.
+Ran in 0.02 seconds
+
+*** Example 16 ***
+Hypothesis: y > 0
+Conclusion: abs(3*x + 2*y + 5) < 4*abs(x) + 3*y + 6
+Comment: Discussed in Avigad, Lewis, and Roux (2014)
+
+Conclusion is valid.
+Ran in 0.038 seconds
+
+*** Example 17 ***
+Conclusion: exp(maxm(abs(x), y)) >= 1
+Comment: Discussed in Avigad, Lewis, and Roux (2014)
+
+Conclusion is valid.
+Ran in 0.024 seconds
+
+*** Example 18 ***
+Hypothesis: y > maxm(2, 3*x)
+Hypothesis: x > 0
+Conclusion: exp(4*y + -3*x) > exp(6)
+Comment: Discussed in Avigad, Lewis, and Roux (2014)
+
+Conclusion is valid.
+Ran in 0.221 seconds
+
+*** Example 19 ***
+Hypothesis: y > 0
+Conclusion: log(1 + abs(x) + y) > 0
+Comment: Discussed in Avigad, Lewis, and Roux (2014)
+
+Conclusion is valid.
+Ran in 0.029 seconds
+
+*** Example 20 ***
+Hypothesis: y > 0
+Conclusion: log(1 + abs(x) + y**4) > 0
+Comment: Discussed in Avigad, Lewis, and Roux (2014)
+
+Conclusion is valid.
+Ran in 0.038 seconds
+
+*** Example 22 ***
+Axiom: Forall([x, y], Implies(x <= y, exp(x) <= exp(y)))
+Hypothesis: x > 0
+Hypothesis: x < y
+Hypothesis: u < v
+Conclusion: 2*u + exp(1 + x + x**4) <= 2*v + exp(1 + y + y**4)
+Comment: Discussed in Avigad, Lewis, and Roux (2014)
+
+Conclusion is valid.
+Ran in 3.074 seconds
+
+*** Example 24 ***
+Hypothesis: n >= 0
+Hypothesis: n < (1/2) * K * x
+Hypothesis: c > 0
+Hypothesis: eps > 0
+Hypothesis: eps < 1
+Conclusion: ((1/3) * eps * (3 + c)**-1 + 1) * n < K * x
+Comment: Discussed in Avigad, Lewis, and Roux (2014)
+
+Conclusion is valid.
+Ran in 0.052 seconds
+
+*** Example 25 ***
+Hypothesis: x > 0
+Hypothesis: x < y
+Conclusion: (1 + x**2) * (2 + y)**17**-1 < (2 + y**2) * (2 + x)**10**-1
+Comment: From Avigad and Friedman (2006).
+
+Conclusion is valid.
+Ran in 0.745 seconds
+
+*** Example 26 ***
+Hypothesis: x > 0
+Hypothesis: x < y
+Conclusion: (1 + x**2) * (2 + exp(y))**-1 < (2 + y**2) * (1 + exp(x))**-1
+Comment: From Avigad and Friedman (2006).
+
+Conclusion is valid.
+Ran in 0.635 seconds
+
+*** Example 27 ***
+Axiom: Forall([x, y], f(x + y) == f(x) * f(y))
+Hypothesis: f(a) > 2
+Hypothesis: f(b) > 2
+Conclusion: f(a + b) > 4
+Comment: Discussed in Avigad, Lewis, and Roux (2014)
+
+Conclusion is valid.
+Ran in 0.021 seconds
+
+*** Example 28 ***
+Axiom: Forall([x, y], f(x + y) == f(x) * f(y))
+Hypothesis: f(a + b) > 2
+Hypothesis: f(c + d) > 2
+Conclusion: f(a + b + c + d) > 4
+Comment: Discussed in Avigad, Lewis, and Roux (2014)
+
+Conclusion is valid.
+Ran in 0.042 seconds
+
+*** Example 29 ***
+Hypothesis: x > 0
+Hypothesis: y > 0
+Hypothesis: y < 1
+Hypothesis: x * y > x + y
+Conclusion: False
+Comment: Discussed in Avigad, Lewis, and Roux (2014)
+
+Refuted hypotheses.
+Ran in 0.01 seconds
+
+*** Example 30 ***
+Hypothesis: x > 0
+Hypothesis: y > 0
+Hypothesis: y < 1
+Hypothesis: x**150 * y**150 > x**150 + y**150
+Conclusion: False
+
+Refuted hypotheses.
+Ran in 0.014 seconds
+
+*** Example 31 ***
+Hypothesis: x > 0
+Hypothesis: y > -1
+Hypothesis: y < 0
+Hypothesis: (1 + y)**150 * x**150 > x**150 + (1 + y)**150
+Conclusion: False
+
+Refuted hypotheses.
+Ran in 0.019 seconds
+
+*** Example 32 ***
+Hypothesis: i >= 0
+Hypothesis: abs(-1*f(x) + f(y)) < (1/2)*(1 + i)**-1
+Hypothesis: abs(-1*f(y) + f(z)) < (1/2)*(1 + i)**-1
+Conclusion: abs(-1*f(x) + f(z)) < (1 + i)**-1
+Comment: Discussed in Avigad, Lewis, and Roux (2014)
+
+Conclusion is valid.
+Ran in 0.31 seconds
+
+*** Example 33 ***
+Hypothesis: a < b
+Hypothesis: x > a
+Hypothesis: m >= ceil((-1*a + b) * (-1*a + x)**-1)
+Conclusion: a + (-1*a + b) * (1 + m)**-1 < x
+
+Conclusion is valid.
+Ran in 0.039 seconds
+
+*** Example 34 ***
+Axiom: Forall([m], Implies(m > 0, f(ceil(m)) < a + (-1*a + b) * ceil(m)**-1))
+Hypothesis: a < b
+Hypothesis: x > a
+Hypothesis: m >= (-1*a + b) * (-1*a + x)**-1
+Conclusion: f(ceil(m)) < x
+Comment: Discussed in Avigad, Lewis, and Roux (2014)
+
+Conclusion is valid.
+Ran in 0.095 seconds
+
+*** Example 35 ***
+Hypothesis: x > 0
+Hypothesis: y < z
+Conclusion: x * y < x * z
+Comment: Discussed in Avigad, Lewis, and Roux (2014)
+
+Conclusion is valid.
+Ran in 0.005 seconds
+
+*** Example 36 ***
+Hypothesis: x > 0
+Hypothesis: x * z * y < 0
+Hypothesis: x * w > 0
+Conclusion: w > y * z
+Comment: Discussed in Avigad, Lewis, and Roux (2014)
+
+Conclusion is valid.
+Ran in 0.048 seconds
+
+*** Example 37 ***
+Conclusion: minm(x, y) + maxm(x, y) == x + y
+Comment: Discussed in Avigad, Lewis, and Roux (2014)
+
+Conclusion is valid.
+Ran in 0.108 seconds
+
+*** Example 39 ***
+Hypothesis: x * (y + z) <= 0
+Hypothesis: y + z > 0
+Hypothesis: x >= 0
+Hypothesis: x * w > 0
+Conclusion: False
+
+Refuted hypotheses.
+Ran in 0.013 seconds
+
+*** Example 40 ***
+Hypothesis: x > 0
+Hypothesis: x < 3*y
+Hypothesis: u < v
+Hypothesis: v < 0
+Hypothesis: v**2 > 1
+Hypothesis: v**2 < x
+Conclusion: 9 * u * y**2 + 1 < v * x**2 + x
+
+Conclusion is valid.
+Ran in 0.029 seconds
+
+*** Example 41 ***
+Hypothesis: x > 0
+Hypothesis: x < y
+Hypothesis: u > 0
+Hypothesis: u < v
+Hypothesis: w + z > 0
+Hypothesis: w + z < -1 + r
+Conclusion: u + (1 + x)**2 * (2*w + 2*z + 3) < 2*v + (1 + y)**2 * (2*r + 1)
+
+Conclusion is valid.
+Ran in 0.096 seconds
+
+*** Example 42 ***
+Hypothesis: x + y**-1 < 2
+Hypothesis: y < 0
+Hypothesis: y * x**-1 > 1
+Hypothesis: x >= -2
+Hypothesis: x <= 2
+Hypothesis: y >= -2
+Hypothesis: y <= 2
+Conclusion: x**2 * y**-1 <= -1*x + 1
+
+Conclusion is valid.
+Ran in 0.026 seconds
+
+*** Example 43 ***
+Hypothesis: u > 0
+Hypothesis: u < v
+Hypothesis: x > 1
+Hypothesis: x < y
+Hypothesis: w > 0
+Hypothesis: w < z
+Conclusion: u + x * w < v + z * y**2
+
+Conclusion is valid.
+Ran in 0.024 seconds
+
+*** Example 44 ***
+Hypothesis: x + y**-1 < 2
+Hypothesis: y < 0
+Hypothesis: y * x**-1 > 1
+Hypothesis: x >= -2
+Hypothesis: x <= 2
+Hypothesis: y >= -2
+Hypothesis: y <= 2
+Hypothesis: x**2 * y**-1 > -1*x + 1
+Conclusion: False
+
+Refuted hypotheses.
+Ran in 0.024 seconds
+
+*** Example 45 ***
+Hypothesis: x > 0
+Hypothesis: x < y
+Hypothesis: u > 0
+Hypothesis: u < v
+Hypothesis: w + z > 0
+Hypothesis: w + z < -1 + r
+Hypothesis: u + (1 + x)**2 * (2*w + 2*z + 3) >= 2*v + (1 + y)**2 * (2*r + 1)
+Conclusion: False
+
+Refuted hypotheses.
+Ran in 0.094 seconds
+
+*** Example 46 ***
+Hypothesis: x > 0
+Hypothesis: x < 3*y
+Hypothesis: u < v
+Hypothesis: v < 0
+Hypothesis: v**2 > 1
+Hypothesis: v**2 < x
+Hypothesis: 9 * u * y**2 + 1 >= v * x**2 + x
+Conclusion: False
+
+Refuted hypotheses.
+Ran in 0.028 seconds
+
+*** Example 47 ***
+Hypothesis: x > 0
+Hypothesis: x < 3*y
+Hypothesis: u < v
+Hypothesis: v < 0
+Hypothesis: v**2 > 1
+Hypothesis: v**2 < x
+Hypothesis: 9 * u * y**2 + 1 < v * x**2 + x
+Conclusion: False
+Comment: The hypotheses are consistent.
+
+Failed.
+Ran in 1.015 seconds
+
+*** Example 48 ***
+Hypothesis: x > 1
+Hypothesis: y > 1
+Hypothesis: z > 1
+Hypothesis: x * (1 + z * y) <= 1
+Conclusion: False
+
+Refuted hypotheses.
+Ran in 0.014 seconds
+
+*** Example 49 ***
+Hypothesis: a <= (1/2) * x * b
+Hypothesis: c > 0
+Hypothesis: d > 0
+Hypothesis: d < 1
+Hypothesis: ((1/3) * d * (3 + c)**-1 + 1) * a >= b * x
+Conclusion: False
+Comment: The hypotheses are consistent.
+
+Failed.
+Ran in 0.577 seconds
+
+*** Example 50 ***
+Hypothesis: x < 1
+Hypothesis: y > 1
+Hypothesis: x * y > 1
+Hypothesis: u + x >= 1 + y
+Hypothesis: x**2 * y < -1 * u * x * y + 2
+Conclusion: False
+
+Refuted hypotheses.
+Ran in 1.986 seconds
+
+*** Example 51 ***
+Hypothesis: a**21 > 0
+Hypothesis: a**3 < 1
+Hypothesis: b**55 > 0
+Hypothesis: b < 1
+Hypothesis: a + b < a * b
+Conclusion: False
+
+Refuted hypotheses.
+Ran in 0.023 seconds
+
+*** Example 52 ***
+Hypothesis: x > 0
+Hypothesis: y < z
+Hypothesis: y < 0
+Hypothesis: z > 0
+Conclusion: x * y < x * z
+
+Conclusion is valid.
+Ran in 0.005 seconds
+
+*** Example 53 ***
+Hypothesis: x > 0
+Hypothesis: y < z
+Hypothesis: y == 0
+Hypothesis: z > 0
+Conclusion: x * y < x * z
+
+Conclusion is valid.
+Ran in 0.01 seconds
+
+*** Example 54 ***
+Hypothesis: x > 1
+Conclusion: 1 + x * y**2 >= 1 + y**2
+
+Conclusion is valid.
+Ran in 0.051 seconds
+
+*** Example 55 ***
+Hypothesis: x > 1
+Hypothesis: z == y**2
+Conclusion: 1 + z * x >= 1 + z
+
+Conclusion is valid.
+Ran in 0.14 seconds
+
+*** Example 56 ***
+Hypothesis: x > 0
+Hypothesis: x * z * y < 0
+Hypothesis: x * w > 0
+Conclusion: w > y * z
+Comment: Need a case split on y to solve this.
+
+Conclusion is valid.
+Ran in 0.049 seconds
+
+*** Example 57 ***
+Hypothesis: x == z
+Hypothesis: y == w
+Hypothesis: x > 0
+Hypothesis: y > 0
+Conclusion: x * y == z * w
+
+Conclusion is valid.
+Ran in 0.008 seconds
+
+*** Example 58 ***
+Hypothesis: x > 2*y
+Hypothesis: x == 3*y
+Conclusion: y > 0
+
+Conclusion is valid.
+Ran in 0.003 seconds
+
+*** Example 59 ***
+Hypothesis: x == y
+Hypothesis: f(x) != f(y)
+Conclusion: False
+
+Refuted hypotheses.
+Ran in 0.0 seconds
+
+*** Example 60 ***
+Axiom: Forall([x, y], Implies(x < y, f(x) < f(y)))
+Hypothesis: a < b
+Conclusion: f(a) < f(b)
+
+Conclusion is valid.
+Ran in 0.005 seconds
+
+*** Example 61 ***
+Axiom: Forall([x], f(x) > 0)
+Hypothesis: f(x) < y
+Hypothesis: y < z
+Hypothesis: z < f(x)
+Conclusion: False
+
+Refuted hypotheses.
+Ran in 0.004 seconds
+
+*** Example 62 ***
+Axiom: Forall([x, y], f(x * y) == f(x) * f(y))
+Axiom: Forall([x], Implies(x > 2, f(x) < 0))
+Hypothesis: x > 1
+Hypothesis: y > 2
+Hypothesis: f(x * y) > 0
+Conclusion: False
+
+Refuted hypotheses.
+Ran in 0.01 seconds
+
+*** Example 63 ***
+Axiom: Forall([x, y], f(x, y, x * y) > 0)
+Hypothesis: f(a, b, c * d) < 0
+Hypothesis: a > 0
+Hypothesis: b > 0
+Hypothesis: a == c
+Hypothesis: b == d
+Conclusion: False
+
+Refuted hypotheses.
+Ran in 0.013 seconds
+
+*** Example 64 ***
+Axiom: Forall([x, y], f(x, y, x + y) > 0)
+Hypothesis: f(e, b, c + d) < 0
+Hypothesis: a > 0
+Hypothesis: b > 0
+Hypothesis: a == c
+Hypothesis: b == d
+Hypothesis: a == e
+Conclusion: False
+
+Refuted hypotheses.
+Ran in 0.005 seconds
+
+*** Example 65 ***
+Axiom: Forall([x, y], Implies(x < y, f(x) < f(y)))
+Hypothesis: r > 0
+Hypothesis: s > 1
+Hypothesis: x > 0
+Hypothesis: x < y
+Hypothesis: w > z
+Hypothesis: z + f(x) > w + f(s * (y + r))
+Conclusion: False
+
+Refuted hypotheses.
+Ran in 0.026 seconds
+
+*** Example 66 ***
+Axiom: Forall([x, y], (1/2)*(f(x) + f(y)) >= f((1/2)*(x + y)))
+Hypothesis: f(x) + f(y) < z
+Hypothesis: f((1/2)*(x + y)) > 4*z
+Hypothesis: z > 0
+Conclusion: False
+
+Refuted hypotheses.
+Ran in 0.019 seconds
+
+*** Example 67 ***
+Axiom: Forall([x, y], (1/2)*(f(x) + f(y)) >= f((1/2)*(x + y)))
+Hypothesis: z > 0
+Hypothesis: f(x) + f(y) + -1*z < 0
+Hypothesis: -4*z + f((1/2)*(x + y)) > 0
+Conclusion: False
+
+Refuted hypotheses.
+Ran in 0.026 seconds
+
+*** Example 68 ***
+Axiom: Forall([x, y], f((1/2) * x * y) <= (1/2) * f(y) * f(x))
+Hypothesis: z > 0
+Hypothesis: f(y) * f(x) * z < 0
+Hypothesis: 4 * z * f((1/2) * x * y) > 0
+Conclusion: False
+Comment: Polya needs a split on f(x).
+
+Refuted hypotheses.
+Ran in 0.161 seconds
+
+*** Example 69 ***
+Hypothesis: x <= y
+Conclusion: minm(x, y) == x
+
+Conclusion is valid.
+Ran in 0.002 seconds
+
+*** Example 70 ***
+Hypothesis: x > 0
+Hypothesis: x <= y
+Conclusion: 2*x + minm(w, z) < 3*y + w
+
+Conclusion is valid.
+Ran in 0.005 seconds
+
+*** Example 71 ***
+Hypothesis: x < u
+Hypothesis: y < u
+Hypothesis: z < u
+Hypothesis: x < v
+Hypothesis: y < v
+Hypothesis: z < v
+Conclusion: maxm(x, y, z) < minm(u, v)
+
+Conclusion is valid.
+Ran in 0.007 seconds
+
+*** Example 72 ***
+Hypothesis: x < y
+Hypothesis: u < v
+Conclusion: maxm(x + u, 2*x + u) < maxm(y + v, 2*y + v)
+
+Conclusion is valid.
+Ran in 0.03 seconds
+
+*** Example 73 ***
+Conclusion: abs(3*x + 2*y) <= 3*abs(x) + 4*abs(y)
+
+Conclusion is valid.
+Ran in 0.075 seconds
+
+*** Example 74 ***
+Conclusion: abs(-1*y + x) >= -1*abs(x) + abs(y)
+
+Conclusion is valid.
+Ran in 0.094 seconds
+
+*** Example 75 ***
+Conclusion: abs(-1*z + x) <= abs(-1*y + x) + abs(-1*z + y)
+
+Conclusion is valid.
+Ran in 0.148 seconds
+
+*** Example 78 ***
+Conclusion: exp(x + y) == exp(x) * exp(y)
+
+Conclusion is valid.
+Ran in 0.002 seconds
+
+*** Example 79 ***
+Term of interest: log(exp(x))
+Conclusion: log(1 + x**2 + exp(x)) > x
+
+Conclusion is valid.
+Ran in 0.165 seconds
+
+*** Example 80 ***
+Hypothesis: x > 0
+Hypothesis: y > 3
+Hypothesis: u < v
+Conclusion: 2*u + exp(10) <= 2*v + exp(1 + y**2)
+
+Conclusion is valid.
+Ran in 1.359 seconds
+
+*** Example 81 ***
+Hypothesis: minm(exp(3*x), exp(9*x**2 + -2), log(x)) > 1
+Hypothesis: x > 0
+Conclusion: x > 1
+
+Conclusion is valid.
+Ran in 0.253 seconds
+
+*** Example 82 ***
+Term of interest: log(exp(3*x))
+Conclusion: log(maxm(exp(2*x), exp(3*x))) >= 3*x
+
+Conclusion is valid.
+Ran in 0.163 seconds
+
+Total: 14.2 seconds
+Average run times:
+FM mult module: 0.095 over 80 runs. 7.568 total.
+FM add module: 0.032 over 111 runs. 3.586 total.
+Function module: 0.022 over 115 runs. 2.583 total.
+CCM module: 0.0 over 121 runs. 0.009 total.
+Exponential module: 0.0 over 120 runs. 0.041 total.
+Minimum module: 0.0 over 118 runs. 0.045 total.
+Abs module: 0.0 over 118 runs. 0.005 total.
+Roots module: 0.0 over 115 runs. 0.002 total.
+Builtins module: 0.0 over 115 runs. 0.011 total.

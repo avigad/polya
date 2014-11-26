@@ -46,4 +46,12 @@ If the geometric packages are installed, these are used by default. You can forc
     python sample_problems.py test_all_comp
     
 to run all the examples with both the Fourier-Motzkin modules and the geometric polytope modules.
+
+
+Results
+-------
+
+The file [results.md](results.md) contains timing results prepared for the first (ITP) version of the associated paper. Timing results for a more recent version of sample_problems.py, which makes use of Polya's additional modules, are found in [poly_out.txt](poly_out.txt) and [fm_out.txt](fm_out.txt).
+
+
     

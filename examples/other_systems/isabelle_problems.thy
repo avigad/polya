@@ -89,7 +89,8 @@ by (rule mult_strict_mono, auto)
 (* sledgehammer finds a solution with Z3 *)
 lemma "(ALL x y. x <= y --> f x <= f y) ==> (u::real) < v ==> 1 < v ==> (x::real) <= y ==> 
     f x + u < (1 + v)^10 + f y"
-by (smt power_one_right power_strict_increasing_iff)
+sorry  (* with Isabelle 2014, no longer works *)
+(* by (smt power_one_right power_strict_increasing_iff) *)
 
 (* sledgehammer gets this with resolution *)
 lemma "(ALL x. f x <= 1) ==> (0::real) < w ==> u < v ==> u + w * f x < v + w"
@@ -101,7 +102,7 @@ lemma "(ALL x. f x <= 2) ==> (0::real) < w ==> u < v ==> u + w * (f x - 1) < v +
   apply (subst (2) mult.right_neutral [of w, symmetric])
   by (rule mult_left_mono, auto)
 
-
+(* problems with built-in functions *)
 lemma "(z :: real) > exp x \<Longrightarrow> w > exp y \<Longrightarrow> z^3 * w^2 > exp (3 * x + 2 * y)"
 apply (subgoal_tac "exp (3 * x + 2 * y) = (exp x)^3 * (exp y)^2")
 prefer 2
@@ -115,8 +116,9 @@ prefer 2
 apply assumption
 by auto
 
-lemma "(u::real) > 0 \<Longrightarrow> v > 0 \<Longrightarrow> ln x > 2 * u + v \<Longrightarrow> x > 1"
-sorry
+(* sledgehammer gets this one *)
+lemma "(u::real) > 0 \<Longrightarrow> v > 0 \<Longrightarrow> x > 0 \<Longrightarrow> ln x > 2 * u + v \<Longrightarrow> x > 1"
+by (metis add_less_cancel_left add_strict_mono comm_monoid_add_class.add.right_neutral linorder_neqE_linordered_idom ln_less_zero_iff ln_one monoid_add_class.add.left_neutral mult.commute mult_2_right order_less_irrefl pos_add_strict)
 
 lemma "(x :: real) < y \<Longrightarrow> u \<le> v \<Longrightarrow> u + min (x + 2 * u) (y + 2 * v) \<le> x + 3 * v"
 by auto
@@ -133,12 +135,10 @@ by auto
 lemma "y > (0::real) \<Longrightarrow> ln (1 + abs(x) + y) > 0"
 by auto
 
-lemma "ln (1 + abs(x) + y^4) > 0"
-sorry
-
-
-
-
+lemma "y > 0 \<Longrightarrow> ln (1 + abs(x) + y^4) > 0"
+apply (subgoal_tac "1 + abs(x) + y^4 > 1")
+using ln_gt_zero apply blast
+by (metis abs_power2 is_num_normalize(1) less_add_same_cancel1 pos_add_strict power_zero_numeral zero_less_abs_iff zero_less_power)
 
 (* sledgehammer finds a solution using resolution *)
 lemma "(0::real) < x ==> x < y ==> u < v ==>
@@ -302,8 +302,6 @@ lemma "i > (0::real) ==> abs(f y - f x) < 1 / (2 * (i + 1)) ==>
   apply (rule order_less_le_trans)
   apply (erule (1) add_strict_mono)
 by (auto simp add: field_simps)
-
-
 
 end
   

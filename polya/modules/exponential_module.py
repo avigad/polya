@@ -93,6 +93,7 @@ def exp_factor_sum(B):
             B.assert_comparison(terms.IVar(i) == t2.coeff * n)
 
 
+# We tested this as an alternative, but it was not a significant improvement.
 def exp_factor_both(B):
     """
     Adds axioms of the form exp(c1 * t1 + ... + cn * tn) = exp(t1)^c1 * ... * exp(tn)^cn (also
