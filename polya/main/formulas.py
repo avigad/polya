@@ -22,6 +22,7 @@
 
 import polya.main.terms as terms
 import numbers
+import copy
 
 
 class AxiomException(Exception):
@@ -139,6 +140,9 @@ class And(Formula):
 
     def __repr__(self):
         return str(self)
+        
+    def substitute(self, map):
+    	return And(*[c.substitute(map) for c in self.conjuncts])
 
 
 class Or(Formula):
@@ -151,6 +155,7 @@ class Or(Formula):
         disjuncts is a list of Formulas
         """
         if any(not (isinstance(c, (Formula, terms.TermComparison))) for c in disjuncts):
+            print disjuncts
             raise AxiomException('Badly formed Or')
         self.disjuncts = disjuncts
         Formula.__init__(self)
@@ -160,6 +165,9 @@ class Or(Formula):
 
     def __repr__(self):
         return str(self)
+        
+    def substitute(self, map):
+    	return Or(*[d.substitute(map) for d in self.disjuncts])
 
 
 class Not(Formula):
@@ -169,7 +177,8 @@ class Not(Formula):
 
     def __init__(self, formula):
         if not isinstance(formula, (Formula, terms.TermComparison)):
-            raise AxiomException('Badly formed Not')
+            print "BAD:", formula
+            raise AxiomException('Badly formed Not:' + str(formula))
         self.formula = formula
         Formula.__init__(self)
 
@@ -194,11 +203,20 @@ class Not(Formula):
         elif isinstance(self.formula, Implies):
             return And(self.formula.hyp, Not(self.formula.con))
 
+        elif isinstance(self.formula, Univ):
+            return Exist(self.formula.vars, Not(self.formula.formula))
+
+        elif isinstance(self.formula, Exist):
+            return Univ(self.formula.vars, Not(self.formula.formula))
+
     def __str__(self):
         return "Not({0!s})".format(self.formula)
 
     def __repr__(self):
         return str(self)
+        
+    def substitute(self, map):
+    	return Not(self.formula.substitute(map))
 
 
 class Implies(Formula):
@@ -217,11 +235,57 @@ class Implies(Formula):
 
     def __repr__(self):
         return str(self)
+        
+    def substitute(self, map):
+    	return Implies(self.hyp.substitute(map), self.con.substitute(map))
+
+
+class Univ(Formula):
+    """
+    Not used directly by Polya, but makes the Formula class complete.
+    vars is a list of Vars. formula is a formula.
+    """
+    def __init__(self, vars, formula):
+        if any(not isinstance(v, terms.Var) for v in vars) or not isinstance(formula, (Formula, terms.TermComparison)):
+            raise AxiomException('Badly formed Univ')
+        self.vars, self.formula = set(vars), formula
+        Formula.__init__(self)
+
+    def __str__(self):
+        return "Forall({0!s}: {1!s})".format(", ".join(str(v) for v in self.vars), self.formula)
+
+    def __repr__(self):
+        return str(self)
+        
+    def substitute(self, map):
+    	return Univ(self.vars, self.formula.substitute(map))
+
+
+class Exist(Formula):
+    """
+    Not used directly by Polya, but makes the Formula class complete.
+    vars is a list of Vars. formula is a formula.
+    """
+    def __init__(self, vars, formula):
+        if any(not isinstance(v, terms.Var) for v in vars) or not isinstance(formula, (Formula, terms.TermComparison)):
+            raise AxiomException('Badly formed Exist')
+        self.vars, self.formula = set(vars), formula
+        Formula.__init__(self)
+
+    def __str__(self):
+        return "Exist({0!s}: {1!s})".format(", ".join(str(v) for v in self.vars), self.formula)
+
+    def __repr__(self):
+        return str(self)
+        
+    def substitute(self, map):
+    	return Exist(self.vars, self.formula.substitute(map))
+
 
 
 class Forall:
     """
-    Represents a universal quantifier over vars
+    Represents a universal quantifier over vars. Should not be mixed with Univ and Exist formulas.
     """
     def __init__(self, vars, formula):
         """
@@ -272,6 +336,132 @@ class Forall:
     # def __call__(self, *args, **kwargs):
     #     return Forall(*args)
 
+
+def kill_arrows(fmla):
+    """
+    puts fmla in nnf with no implies
+    """
+    if isinstance(fmla, Univ):
+        return Univ(fmla.vars, kill_arrows(fmla.formula))
+    elif isinstance(fmla, Exist):
+        return Exist(fmla.vars, kill_arrows(fmla.formula))
+    elif isinstance(fmla, And):
+        return And(*[kill_arrows(c) for c in fmla.conjuncts])
+    elif isinstance(fmla, Or):
+        return Or(*[kill_arrows(d) for d in fmla.disjuncts])
+    elif isinstance(fmla, Implies):
+        return kill_arrows(Or(Not(fmla.hyp), fmla.con))
+    elif isinstance(fmla, Not):
+        return kill_arrows(fmla.negate())
+    elif isinstance(fmla, terms.TermComparison):
+    	return fmla
+    else:
+    	print "Bad:", fmla
+        raise Exception('Expected formula to be put in nnf')
+
+class Count(object):
+	def __init__(self):
+		self.i = 1
+		
+	def next(self):
+		self.i += 1
+		return self.i - 1
+
+cntr = Count()
+
+def fix_scopes(fmla1):
+    """
+    Takes a fmla in nnf.
+    Makes sure all quantifiers use different variable names.
+    """
+    def helper(fmla):
+        if isinstance(fmla, Univ):
+            fmla2 = helper(copy.deepcopy(fmla.formula))
+            map = {v.key:terms.Var("qvar"+str(cntr.next())) for v in fmla.vars}    
+            return Univ(set(map.values()), fmla2.substitute(map))
+        elif isinstance(fmla, Exist):
+            fmla2 = helper(copy.deepcopy(fmla.formula))
+            map = {v.key:terms.Var("qvar"+str(cntr.next())) for v in fmla.vars}
+            return Exist(set(map.values()), fmla2.substitute(map))
+        elif isinstance(fmla, And):
+            return And(*[helper(c) for c in fmla.conjuncts])
+        elif isinstance(fmla, Or):
+            return Or(*[helper(c) for c in fmla.disjuncts])
+        elif isinstance(fmla, Implies):
+            return Implies(helper(fmla.hyp), helper(fmla.conc))
+        elif isinstance(fmla, Not):
+            return Not(helper(fmla.formula))
+        elif isinstance(fmla, terms.TermComparison):
+        	return fmla
+    return helper(fmla1)
+
+# def kill_arrows(fmla):
+#     if isinstance(fmla, Univ):
+#         pass
+#     elif isinstance(fmla, Exist):
+#         pass
+#     elif isinstance(fmla, And):
+#         pass
+#     elif isinstance(fmla, Or):
+#         pass
+#     elif isinstance(fmla, Implies):
+#         pass
+#     elif isinstance(fmla, Not):
+#         pass
+
+def init_q_finder(term):
+	"""
+	Takes a term that is an initial sequence of quantifiers Q1...Qn.
+	Returns a function that maps term t to Q1...Qn t.
+	"""
+	if isinstance(term, Univ):
+		qs, t2 = init_q_finder(term.formula)
+		return lambda t: Univ(term.vars, qs(t)), t2
+	elif isinstance(term, Exist):
+		qs, t2 = init_q_finder(term.formula)
+		return lambda t: Exist(term.vars, qs(t)), t2
+	else:
+		return lambda t: t, term
+
+
+def pnf_helper(fmla1):
+    """
+    Puts a formula (with Unif and Exist quantifiers, not Forall) in prenex normal form.
+    """
+    
+    #fmla1 = fix_scopes(kill_arrows(formula))
+    # fmla1 is ands, ors, and quantifiers, and quantifier scopes don't overlap
+    #print 'pnf_helper called on', fmla1
+    
+    if isinstance(fmla1, Univ):
+        fmla2 = pnf_helper(fmla1.formula)
+        if not isinstance(fmla2, Univ):
+     #       print 'return', fmla1.vars, fmla2
+            return Univ(fmla1.vars, fmla2)
+        else:
+            return Univ(fmla1.vars.union(fmla2.vars), fmla2.formula)
+    elif isinstance(fmla1, Exist):
+        fmla2 = pnf_helper(fmla1.formula)
+        if not isinstance(fmla2, Exist):
+            return Exist(fmla1.vars, fmla2)
+        else:
+            return Exist(fmla1.vars.union(fmla2.vars), fmla2.formula)
+    elif isinstance(fmla1, And):
+        pnfcnjs = [init_q_finder(pnf_helper(c)) for c in fmla1.conjuncts]
+      #  print 'in and. pnfcnjs is:', pnfcnjs
+        qstring = reduce(lambda f, g: lambda z: f(g(z)), [p[0] for p in pnfcnjs], lambda x: x)
+        return qstring(And(*[p[1] for p in pnfcnjs]))
+    elif isinstance(fmla1, Or):
+        pnfcnjs = [init_q_finder(pnf_helper(c)) for c in fmla1.disjuncts]
+       # print 'in or. pnfcnjs is:', pnfcnjs
+       # print pnfcnjs
+        qstring = reduce(lambda f, g: lambda z: f(g(z)), [p[0] for p in pnfcnjs], lambda x: x)
+        return qstring(Or(*[p[1] for p in pnfcnjs]))
+    elif isinstance(fmla1, terms.TermComparison):
+    	return fmla1
+        
+def pnf(fmla):
+	return pnf_helper(fix_scopes(kill_arrows(fmla)))
 
 def cnf(formula):
     """

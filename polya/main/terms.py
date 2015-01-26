@@ -886,6 +886,9 @@ class TermComparison(object):
             comp = comp_reverse(comp)
 
         return TermComparison(t1.term, comp, t2 / t1.coeff)
+        
+    def substitute(self, map):
+    	return TermComparison(self.term1.substitute(map), self.comp, self.term2.substitute(map))
 
 
 ####################################################################################################
