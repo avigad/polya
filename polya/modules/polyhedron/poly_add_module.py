@@ -172,15 +172,15 @@ def get_2d_comparisons(vertices, lin_set):
                 #the rays are opposite. Figure out the comparison direction another way.
                 try:
                     pt = next(v for v in i_j_vertices if not l_b1.get_direction(v) == terms.EQ)
+                    dir1 = adjust_strength(strong1 and strong2, l_b1.get_direction(pt))
+                    learned_comparisons.append(
+                        terms.comp_eval[dir1](bound1[1] * terms.IVar(i), bound1[0] * terms.IVar(j))
+                    )
                 except StopIteration:
                     # There is no direction information to be found: all vertices are collinear.
                     #continue
                     learned_comparisons.append(bound1[1]*terms.IVar(i) == bound1[0]*terms.IVar(j))
                 #print '*** l_b1 = ', l_b1, pt, terms.comp_str[l_b1.get_direction(pt)]
-                dir1 = adjust_strength(strong1 and strong2, l_b1.get_direction(pt))
-                learned_comparisons.append(
-                    terms.comp_eval[dir1](bound1[1] * terms.IVar(i), bound1[0] * terms.IVar(j))
-                )
 
         else:
             # Otherwise, the points do not lie on the same line through the origin.

@@ -126,10 +126,15 @@ class And(Formula):
     Represents a conjunction of formulas.
     """
 
-    def __init__(self, *conjuncts):
+    def __init__(self, *conjuncts1):
         """
         conjuncts is a list of Formulas
         """
+        if any(isinstance(c, bool) and not c for c in conjuncts1):
+            self.conjuncts = []
+            Formula.__init__(self)
+            return
+        conjuncts = [c for c in conjuncts1 if not isinstance(c, bool)]
         if any(not (isinstance(c, (Formula, terms.TermComparison))) for c in conjuncts):
             raise AxiomException('Badly formed And')
         self.conjuncts = conjuncts
@@ -150,10 +155,16 @@ class Or(Formula):
     Represents a disjunction of formulas.
     """
 
-    def __init__(self, *disjuncts):
+    def __init__(self, *disjuncts1):
         """
         disjuncts is a list of Formulas
         """
+        if any(isinstance(c, bool) and c for c in disjuncts1):
+            self.disjuncts = [terms.one == terms.one]
+            Formula.__init__(self)
+            return
+        disjuncts = [d for d in disjuncts1 if not isinstance(d, bool)]
+
         if any(not (isinstance(c, (Formula, terms.TermComparison))) for c in disjuncts):
             print disjuncts
             raise AxiomException('Badly formed Or')
@@ -485,7 +496,7 @@ def cnf(formula):
     elif isinstance(formula, Implies):
         return cnf(Or(Not(formula.hyp), formula.con))
     elif isinstance(formula, And):
-        return reduce(lambda a, b: a+b, (cnf(a) for a in formula.conjuncts))
+        return reduce(lambda a, b: a+b, (cnf(a) for a in formula.conjuncts), [])
     elif isinstance(formula, Or):
         disjuncts = [cnf(d) for d in formula.disjuncts]
         return reduce(distribute_or, disjuncts)
