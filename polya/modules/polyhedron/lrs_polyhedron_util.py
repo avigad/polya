@@ -97,5 +97,9 @@ def create_h_format_matrix(comparisons, num_vars):
 
     if equalities:
         matrix.extend(equalities, linear=True)
+    # print 'IN CREATE, MAT IS:'
+    # for l in matrix:
+    #     print l
+    # print "---"
 
     return matrix

@@ -117,9 +117,11 @@ def get_inequalities(matrix):
     try:
         return output_to_matrix(out)
     except StopIteration:
+        print 'Error in LRS'
         print matrix
+        print 'out:'
         print out
-        exit()
+        raise
 
 
 def redund_and_generate(matrix):
