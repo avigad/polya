@@ -28,6 +28,7 @@ import copy
 class AxiomException(Exception):
     def __init__(self, msg):
         self.msg = msg
+        super(AxiomException, self).__init__(msg)
 
 
 class Axiom:
@@ -95,7 +96,7 @@ class Axiom:
             trig_arg_uvars.update(trig_narg_vars)
 
         if trig_uvars != uvars:
-            raise Exception('All UVars must be in the trigger set.')
+            raise AxiomException('All UVars must be in the trigger set.')
         else:
             self.vars, self.arg_vars, self.trig_arg_vars = uvars, arg_uvars, trig_arg_uvars
 

@@ -117,6 +117,13 @@ class Solver:
     def add_term(self, t):
         self.B.add_term(t)
 
+    def add_clause(self, c):
+        try:
+            self.B.assert_clause(*c)
+        except terms.Contradiction as e:
+            self.contradiction = True
+            messages.announce(e.msg, messages.ASSERTION)
+
     def check(self):
         """
         Searches for a contradiction in what has been asserted to the solver.

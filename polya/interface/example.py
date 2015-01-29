@@ -16,6 +16,7 @@ import polya.interface.solve_util as solve_util
 import timeit
 import polya.main.messages as messages
 import polya.util.timer as timer
+import polya.main.formulas as formulas
 
 
 class Example:
@@ -45,6 +46,7 @@ class Example:
         self.split_depth = split_depth
         self.split_breadth = split_breadth
         self.solver = solver
+        self.clauses = []
 
     def show(self):
         """
@@ -56,6 +58,8 @@ class Example:
             print 'Hypothesis: {0!s}'.format(h)
         for t in self.terms:
             print 'Term of interest: {0!s}'.format(t)
+        for c in self.clauses:
+            print 'Clause: {0!s}'.format(formulas.Or(*c))
         if self.conc:
             print 'Conclusion: {0!s}'.format(self.conc)
         else:
@@ -81,19 +85,25 @@ class Example:
         self.show()
         S = solve_util.Solver(self.split_depth, self.split_breadth, self.hyps, self.terms,
                               self.axioms, self.modules, self.solver)
+        for c in self.clauses:
+            S.add_clause(c)
         t = timeit.default_timer()
+        r = False
         if self.conc:
             if S.prove(self.conc):
                 print 'Conclusion is valid.'
+                r = True
             else:
                 print 'Failed.'
         else:
             if S.check():
                 print 'Refuted hypotheses.'
+                r = True
             else:
                 print 'Failed.'
         print 'Ran in', round(timeit.default_timer()-t, 3), 'seconds'
         print
+        return r
         
 def run_examples(examples, args):
     """
