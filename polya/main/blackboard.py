@@ -296,7 +296,28 @@ class Blackboard(object):
 
         if comp in [terms.LT, terms.LE, terms.GE, terms.GT]:
 
-            if (i, j) in self.equalities:
+            if j in self.zero_equalities:
+                if i in self.zero_equalities:
+                    return comp in [terms.LE, terms.GE]
+                if i not in self.zero_inequalities:
+                    return False
+                comp1 = self.zero_inequalities[i]
+                return ((comp1 == comp)
+                        or (comp1 == terms.GT and comp == terms.GE)
+                        or (comp1 == terms.LT and comp == terms.LE))
+
+            elif i in self.zero_equalities:
+                if j not in self.zero_inequalities:
+                    return False
+                comp1 = terms.comp_reverse(self.zero_inequalities[j])
+                if coeff < 0:
+                    comp1 = terms.comp_reverse(comp1)
+                #print 'know 0 {0} tj, checking 0 {1} tj'.format(terms.comp_str[comp1], terms.comp_str[comp])
+                return ((comp1 == comp)
+                        or (comp1 == terms.GT and comp == terms.GE)
+                        or (comp1 == terms.LT and comp == terms.LE))
+
+            elif (i, j) in self.equalities:
                 e_coeff = self.equalities[i, j]
                 if coeff == e_coeff:
                     return comp in [terms.LE, terms.GE]
@@ -304,16 +325,12 @@ class Blackboard(object):
                 pts = [p for p in pts if p[0]*self.sign(i) >= 0 and p[1]*self.sign(j) >= 0]
                 return all(terms.comp_eval[comp](p[0], coeff * p[1]) for p in pts)
 
-            elif j in self.zero_equalities:
-                if i not in self.zero_inequalities:
-                    return False
-                comp1 = self.zero_inequalities[i]
-                return ((comp1 == comp)
-                        or (comp1 == terms.GT and comp == terms.GE)
-                        or (comp1 == terms.LT and comp == terms.LE))
+            #el
             else:
+
                 new_comp = geometry.halfplane_of_comp(comp, coeff)
                 old_comps = self.inequalities.get((i, j), [])
+
                 for c in [d for d in old_comps if d.eq_dir(new_comp)]:
                     if c.strong or not new_comp.strong:
                         return True
@@ -321,6 +338,16 @@ class Blackboard(object):
                         return False
 
                 # If we reach here, then new_comp is not equidirectional with anything in old_comps
+                if new_comp.strong:
+                    n_comp = terms.GE if comp == terms.GT else terms.LE
+                    if self.implies(i, n_comp, coeff, j) and \
+                            not self.implies_zero_comparison(i, terms.NE) and \
+                            not self.implies_zero_comparison(j, terms.NE) and \
+                            not self.has_clause(terms.IVar(i) != 0, terms.IVar(j) != 0):
+                        return False
+                        # Only ruling out one point
+
+
                 if len(old_comps) < 2:
                     return False
                 if all(not o.strong for o in old_comps) and new_comp.strong:
@@ -389,6 +416,18 @@ class Blackboard(object):
             return self.implies(term1.index, comp, coeff, term2.index)
         else:
             return False
+
+    def has_clause(self, *literals):
+        disjunctions = []
+        for l in literals:
+            tc = l.canonize()
+            i, j = self.term_name(tc.term1).index, self.term_name(tc.term2.term).index
+            disjunctions.append((i, tc.comp, tc.term2.coeff, j))
+        c = terms.Clause(disjunctions)
+
+        c.update(self)
+
+        return c in self.clauses
 
     def assert_comparison(self, c):
         """
@@ -461,12 +500,13 @@ class Blackboard(object):
         old_comps = self.inequalities.get((i, j), [])
         new_comp = geometry.halfplane_of_comp(comp, coeff)
 
+
+
         if i == 0 and comp in [terms.LE, terms.LT]:
             if coeff > 0:
                 self.assert_zero_inequality(j, terms.GT)
             elif coeff < 0:
                 self.assert_zero_inequality(j, terms.LT)
-
         for c in old_comps:
             if c.eq_dir(new_comp):
                 if new_comp.strong and not c.strong:
@@ -495,6 +535,13 @@ class Blackboard(object):
 
         # If we reach this point, we can assume that new_comp is not collinear with anything
         # in old_comps
+
+        if new_comp.strong:
+            w_comp = terms.GE if comp == terms.GT else terms.LE
+            if self.implies(i, w_comp, coeff, j):
+                # The only thing implied is not (ti = tj = 0).
+                self.assert_clause(terms.IVar(i) != 0, terms.IVar(j) != 0)
+                return
 
         if len(old_comps) == 0:
             new_comps = [new_comp]

@@ -487,7 +487,8 @@ def cnf(formula):
             for d in c2:
                 rlist.append(c + d)
         return rlist
-
+    if isinstance(formula, bool):
+        return [[]] if not formula else []
     if isinstance(formula, Forall):
         return formula.to_cnf()
     elif isinstance(formula, terms.TermComparison):

@@ -142,7 +142,7 @@ def get_2d_comparisons(vertices, lin_set):
             if v[i+2] != 0 or v[j+2] != 0:
                 i_j_vertices.add((-v[i+2], -v[j+2], v[1]))
 
-        #messages.announce('vertices:'+str(i_j_vertices), messages.DEBUG)
+        if (i, j) == (2, 4): messages.announce('vertices:'+str(i_j_vertices), messages.DEBUG)
 
         if len(i_j_vertices) == 0:
             learned_comparisons.extend([terms.IVar(i) == 0, terms.IVar(j) == 0])

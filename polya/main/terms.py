@@ -868,6 +868,8 @@ class TermComparison(object):
         """
         t1 = self.term1.canonize()
         t2 = self.term2.canonize()
+        if t1.coeff == t2.coeff == 0:
+            return TermComparison(one, self.comp, STerm(1, one))
         comp = self.comp
         if t1.term.key == t2.term.key:
             t = t1.term

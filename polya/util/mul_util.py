@@ -302,7 +302,6 @@ def derive_info_from_definitions(B):
     #     else:
     #         return B.weak_sign(p.term.index)
 
-
     for key in (k for k in B.term_defs if isinstance(B.term_defs[k], terms.MulTerm)):
         #signs = [mulpair_sign(p) for p in B.term_defs[key].args]
         #s = reduce(lambda x, y: x*y, signs)
@@ -331,7 +330,7 @@ def derive_info_from_definitions(B):
                 ind = unsigned[0]
                 s = reduce(lambda x, y: x*y, [signs[i] for i in range(len(signs)) if i is not ind],
                            GT)
-                if s.dir == B.sign(key):
+                if s.dir == B.weak_sign(key):
                     # remaining arg is pos
                     dir = terms.GT if B.sign(key) != 0 else terms.GE
                 else:
