@@ -96,9 +96,11 @@ class Axiom:
             trig_arg_uvars.update(trig_narg_vars)
 
         if trig_uvars != uvars:
-            raise AxiomException('All UVars must be in the trigger set.')
+            #raise AxiomException('All UVars must be in the trigger set.')
+            self.unifiable = False
         else:
-            self.vars, self.arg_vars, self.trig_arg_vars = uvars, arg_uvars, trig_arg_uvars
+            self.unifiable = True
+        self.vars, self.arg_vars, self.trig_arg_vars = uvars, arg_uvars, trig_arg_uvars
 
     def __str__(self):
         str1 = "{For all " + ", ".join(str(terms.UVar(u)) for u in self.vars) + ": "
@@ -148,7 +150,7 @@ class And(Formula):
         return str(self)
         
     def substitute(self, map):
-    	return And(*[c.substitute(map) for c in self.conjuncts])
+        return And(*[c.substitute(map) for c in self.conjuncts])
 
 
 class Or(Formula):
@@ -179,7 +181,7 @@ class Or(Formula):
         return str(self)
         
     def substitute(self, map):
-    	return Or(*[d.substitute(map) for d in self.disjuncts])
+        return Or(*[d.substitute(map) for d in self.disjuncts])
 
 
 class Not(Formula):
@@ -228,7 +230,7 @@ class Not(Formula):
         return str(self)
         
     def substitute(self, map):
-    	return Not(self.formula.substitute(map))
+        return Not(self.formula.substitute(map))
 
 
 class Implies(Formula):
@@ -249,7 +251,7 @@ class Implies(Formula):
         return str(self)
         
     def substitute(self, map):
-    	return Implies(self.hyp.substitute(map), self.con.substitute(map))
+        return Implies(self.hyp.substitute(map), self.con.substitute(map))
 
 
 class Univ(Formula):
@@ -270,7 +272,7 @@ class Univ(Formula):
         return str(self)
         
     def substitute(self, map):
-    	return Univ(self.vars, self.formula.substitute(map))
+        return Univ(self.vars, self.formula.substitute(map))
 
 
 class Exist(Formula):
@@ -291,7 +293,7 @@ class Exist(Formula):
         return str(self)
         
     def substitute(self, map):
-    	return Exist(self.vars, self.formula.substitute(map))
+        return Exist(self.vars, self.formula.substitute(map))
 
 
 
@@ -366,18 +368,18 @@ def kill_arrows(fmla):
     elif isinstance(fmla, Not):
         return kill_arrows(fmla.negate())
     elif isinstance(fmla, terms.TermComparison):
-    	return fmla
+        return fmla
     else:
-    	print "Bad:", fmla
+        print "Bad:", fmla
         raise Exception('Expected formula to be put in nnf')
 
 class Count(object):
-	def __init__(self):
-		self.i = 1
-		
-	def next(self):
-		self.i += 1
-		return self.i - 1
+    def __init__(self):
+        self.i = 1
+
+    def next(self):
+        self.i += 1
+        return self.i - 1
 
 cntr = Count()
 
@@ -400,11 +402,11 @@ def fix_scopes(fmla1):
         elif isinstance(fmla, Or):
             return Or(*[helper(c) for c in fmla.disjuncts])
         elif isinstance(fmla, Implies):
-            return Implies(helper(fmla.hyp), helper(fmla.conc))
+            return Implies(helper(fmla.hyp), helper(fmla.con))
         elif isinstance(fmla, Not):
             return Not(helper(fmla.formula))
         elif isinstance(fmla, terms.TermComparison):
-        	return fmla
+            return fmla
     return helper(fmla1)
 
 # def kill_arrows(fmla):
@@ -422,18 +424,18 @@ def fix_scopes(fmla1):
 #         pass
 
 def init_q_finder(term):
-	"""
-	Takes a term that is an initial sequence of quantifiers Q1...Qn.
-	Returns a function that maps term t to Q1...Qn t.
-	"""
-	if isinstance(term, Univ):
-		qs, t2 = init_q_finder(term.formula)
-		return lambda t: Univ(term.vars, qs(t)), t2
-	elif isinstance(term, Exist):
-		qs, t2 = init_q_finder(term.formula)
-		return lambda t: Exist(term.vars, qs(t)), t2
-	else:
-		return lambda t: t, term
+    """
+    Takes a term that is an initial sequence of quantifiers Q1...Qn.
+    Returns a function that maps term t to Q1...Qn t.
+    """
+    if isinstance(term, Univ):
+        qs, t2 = init_q_finder(term.formula)
+        return lambda t: Univ(term.vars, qs(t)), t2
+    elif isinstance(term, Exist):
+        qs, t2 = init_q_finder(term.formula)
+        return lambda t: Exist(term.vars, qs(t)), t2
+    else:
+        return lambda t: t, term
 
 
 def pnf_helper(fmla1):
@@ -470,10 +472,10 @@ def pnf_helper(fmla1):
         qstring = reduce(lambda f, g: lambda z: f(g(z)), [p[0] for p in pnfcnjs], lambda x: x)
         return qstring(Or(*[p[1] for p in pnfcnjs]))
     elif isinstance(fmla1, terms.TermComparison):
-    	return fmla1
+        return fmla1
         
 def pnf(fmla):
-	return pnf_helper(fix_scopes(kill_arrows(fmla)))
+    return pnf_helper(fix_scopes(kill_arrows(fmla)))
 
 def cnf(formula):
     """

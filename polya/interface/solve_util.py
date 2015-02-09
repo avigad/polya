@@ -151,6 +151,8 @@ class Solver:
             B = run_util.copy_and_add(self.B, a)
         except terms.Contradiction as e:
             messages.announce(e.msg+'\n', messages.ASSERTION)
+            self.contradiction = True
+            return True
         else:
             return run_util.run_modules(B, self.modules, self.split_depth, self.split_breadth)
 

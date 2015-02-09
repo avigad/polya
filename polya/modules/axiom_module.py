@@ -494,6 +494,78 @@ def instantiate(axiom, used_envs, B):
         used_envs.add((axiom, str(env)))
     return clauses
 
+def instantiate_triggerless(axiom, used_envs, B):
+    """
+    Given an Axiom object whose variables occur in non-trigger terms,
+    finds appropriate instantiations by looking at extrema of valid intervals.
+    Returns a list of clauses.
+    """
+    def has_uvar(t):
+        if isinstance(t, terms.Var):
+            return isinstance(t, terms.UVar)
+        elif isinstance(t, terms.One):
+            return False
+        else:
+            return any(has_uvar(a.term) for a in t.args)
+
+    def is_bd_lit(l, v):
+        if l.term1.key == v.key:
+            if has_uvar(l.term2.term):
+                return False
+            try:
+                find_problem_term(B, l.term2.term)
+                return l.comp in [terms.LT, terms.GT, terms.NE]
+            except NoTermException:
+                return False
+        elif l.term2.term.key == v.key:
+            if has_uvar(l.term1):
+                return False
+            try:
+                find_problem_term(B, l.term1)
+                return l.comp in [terms.LT, terms.GT, terms.NE]
+            except NoTermException:
+                return False
+
+    bd_clauses = {v: [l for l in axiom.literals if is_bd_lit(l, terms.UVar(v))] for v in axiom.vars}
+    if any(len(bd_clauses[k]) == 0 for k in bd_clauses.keys()):
+        return []
+
+    clauses = []
+    for assn in itertools.product(*[[(v, c) for c in bd_clauses[v]] for v in axiom.vars]):
+        # assn is a list of tuples (v, l), where l is a literal and each v in axiom.vars occurs once
+        literals = []
+        env = {}
+        for (v, l) in assn:
+            if l.term2.term.key == terms.UVar(v).key:
+                c, ind = find_problem_term(B, l.term1)
+                c *= fractions.Fraction(1, l.term2.coeff)
+            else:
+                c, ind = find_problem_term(B, l.term2.term)
+                c *= l.term2.coeff
+            env[v] = (c, ind)
+        if (axiom, str(env)) in used_envs:
+            continue
+        err = False
+        for l in axiom.literals:
+            comp = l.comp
+            redl = reduce_term(l.term1, env)[0].canonize()
+            redr = l.term2.coeff*reduce_term(l.term2.term, env)[0].canonize()
+            try:
+                lcoeff, lterm = find_problem_term(B, redl.term)
+                rcoeff, rterm = find_problem_term(B, redr.term)
+                lcoeff *= redl.coeff
+                rcoeff *= redr.coeff
+                literals.append(terms.comp_eval[comp](lcoeff*terms.IVar(lterm),
+                                                      rcoeff*terms.IVar(rterm)))
+            except NoTermException:
+                err = True
+                break
+        if not err:
+            clauses.append(literals)
+            used_envs.add((axiom, str(env)))
+    return clauses
+
+
 
 class AxiomModule:
 
@@ -537,9 +609,14 @@ class AxiomModule:
 
         for a in self.axioms:
             messages.announce("Instantiating axiom: {}".format(a), messages.DEBUG)
-            clauses = instantiate(a, self.used_envs, B)
-            for c in clauses:
-                B.assert_clause(*c)
+            if a.unifiable:
+                clauses = instantiate(a, self.used_envs, B)
+                for c in clauses:
+                    B.assert_clause(*c)
+            else:
+                clauses = instantiate_triggerless(a, self.used_envs, B)
+                for c in clauses:
+                    B.assert_clause(*c)
         timer.stop(timer.FUN)
 
     def get_split_weight(self, B):
