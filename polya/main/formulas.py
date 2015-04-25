@@ -212,7 +212,7 @@ class Not(Formula):
             return And(*[Not(a) for a in self.formula.disjuncts])
 
         elif isinstance(self.formula, Not):
-            return self.formula
+            return self.formula.formula
 
         elif isinstance(self.formula, Implies):
             return And(self.formula.hyp, Not(self.formula.con))
