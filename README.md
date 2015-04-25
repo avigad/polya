@@ -27,9 +27,4 @@ There are a tutorial and sample problems in the folder 'examples'. See the 'READ
 
 For benchmark comparisons, see 'examples/results.md' and the data in the folder 'examples/other_systems'.
 
-
-
-
-
-
-    
+Polya can now take SMTLIB input: https://github.com/rlewis1988/smtlib2polya
