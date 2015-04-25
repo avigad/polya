@@ -505,6 +505,32 @@ def cnf(formula):
         disjuncts = [cnf(d) for d in formula.disjuncts]
         return reduce(distribute_or, disjuncts)
 
+def dnf(formula):
+    """
+    Returns an equivalent formula in disjunctive normal form.
+    Specifically, returns a list of lists of TermComparisons.
+    Each list denotes the conjunction of its contents; the overall list represents the disjunction.
+    """
+    def distribute_and(d1, d2):
+        rlist = []
+        for d in d1:
+            for c in d2:
+                rlist.append(c + d)
+        return rlist
+    if isinstance(formula, bool):
+        return [[]] if formula else []
+    if isinstance(formula, terms.TermComparison):
+        return [[formula.canonize()]]
+    if isinstance(formula, Not):
+        return dnf(formula.negate())
+    if isinstance(formula, Implies):
+        return dnf(Or(Not(formula.hyp), formula.con))
+    if isinstance(formula, Or):
+        return reduce (lambda a, b: a+b, (dnf(a) for a in formula.disjuncts), [])
+    if isinstance(formula, And):
+        conjuncts = [dnf(c) for c in formula.conjuncts]
+        return reduce(distribute_and, conjuncts)
+
 ####################################################################################################
 #
 # Tests
