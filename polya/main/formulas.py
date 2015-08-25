@@ -190,6 +190,10 @@ class Not(Formula):
     """
 
     def __init__(self, formula):
+        if isinstance(formula, bool):
+            self.formula = terms.one == terms.one if formula else terms.one != terms.one
+            Formula.__init__(self)
+            return
         if not isinstance(formula, (Formula, terms.TermComparison)):
             print "BAD:", formula
             raise AxiomException('Badly formed Not:' + str(formula))
