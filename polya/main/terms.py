@@ -369,7 +369,7 @@ class AddTerm(AppTerm):
         for b in args2:
             for a in args:
                 if b.term.key == a.term.key:
-                    args.remove(a)
+                    args = [t for t in args if t.term.key != a.term.key]
                     if a.coeff != -b.coeff:
                         args.append(STerm(a.coeff + b.coeff, a.term))
                     break
